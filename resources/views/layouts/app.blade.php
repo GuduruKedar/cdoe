@@ -423,13 +423,17 @@
         }
     }
 
+    if (! $currentRoleName && $currentRoleId) {
+        $currentRoleName = \App\Models\Role::where('role_id', $currentRoleId)->value('role_name');
+    }
+
     if (! $currentRoleName && ! empty($assignedRoles)) {
-        $adminRole = collect($assignedRoles)->firstWhere('role_name', 'Administrator');
+        $adminRole = collect($assignedRoles)->firstWhere('role_name', 'Super Admin');
         $currentRoleName = $adminRole ? $adminRole['role_name'] : $assignedRoles[0]['role_name'];
     }
 
     if (! $currentRoleName) {
-        $currentRoleName = (session('user.user_type') == 1) ? 'Student' : 'Administrator';
+        $currentRoleName = (session('user.user_type') == 1) ? 'Student' : 'Super Admin';
     }
 
     // Resolve real full name from HRMS employee profile or student registration

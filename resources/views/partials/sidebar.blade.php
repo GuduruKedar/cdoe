@@ -26,7 +26,7 @@
             </span>
             <div style="min-width: 0; flex: 1;">
                 <div class="uname text-truncate">{{ $displayName ?? ($user->usercode ?? session('user.usercode', 'User')) }}</div>
-                <div class="uemail text-truncate">{{ $currentRoleName ?? 'Administrator' }} • {{ $user->usercode ?? session('user.usercode', '02266') }}</div>
+                <div class="uemail text-truncate">{{ $currentRoleName ?? 'Super Admin' }} • {{ $user->usercode ?? session('user.usercode', '02266') }}</div>
             </div>
         </div>
     </div>

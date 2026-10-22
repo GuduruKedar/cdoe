@@ -10,26 +10,54 @@ class MenuService
 {
     public static function getMenusForUser($user): ?array
     {
-        // Prefer session role (switcher may have changed it)
+        if (! $user) {
+            return null;
+        }
+
+        $userCode = $user->usercode ?? session('user.usercode');
         $sessionRoleId = session('user.role_id');
         $roleId = $sessionRoleId ?: ($user->role_id ?? null);
 
-        if (! $user || ! $roleId) {
-            return null;
+        // Check if current role has active status and menu access
+        $role = $roleId ? Role::where('role_id', $roleId)->where('role_status', 1)->first() : null;
+        $rows = $role ? MenuAccessRole::where('role_id', $roleId)->orderBy('mposition')->orderBy('morder')->get() : collect();
+
+        // If current role is invalid or has no menus, fallback to user's assigned roles with menus
+        if (($rows->isEmpty() || ! $role) && $userCode) {
+            $assigned = RoleService::getAssignedRoles($userCode);
+            foreach ($assigned as $ar) {
+                $candidateRows = MenuAccessRole::where('role_id', $ar['role_id'])
+                    ->orderBy('mposition')
+                    ->orderBy('morder')
+                    ->get();
+                if (! $candidateRows->isEmpty()) {
+                    $roleId = (int) $ar['role_id'];
+                    $role = Role::where('role_id', $roleId)->where('role_status', 1)->first();
+                    $rows = $candidateRows;
+                    session(['user.role_id' => $roleId]);
+                    break;
+                }
+            }
         }
 
-        $role = Role::where('role_id', $roleId)
-            ->where('role_status', 1)
-            ->first();
-        if (! $role) {
-            return null;
+        // If still empty, check primary role from master.login
+        if ($rows->isEmpty() && ! empty($user->role_id) && (int) $user->role_id !== (int) $roleId) {
+            $fallbackRole = Role::where('role_id', $user->role_id)->where('role_status', 1)->first();
+            if ($fallbackRole) {
+                $candidateRows = MenuAccessRole::where('role_id', $user->role_id)
+                    ->orderBy('mposition')
+                    ->orderBy('morder')
+                    ->get();
+                if (! $candidateRows->isEmpty()) {
+                    $roleId = (int) $user->role_id;
+                    $role = $fallbackRole;
+                    $rows = $candidateRows;
+                    session(['user.role_id' => $roleId]);
+                }
+            }
         }
 
-        $rows = MenuAccessRole::where('role_id', $roleId)
-            ->orderBy('mposition')
-            ->orderBy('morder')
-            ->get();
-        if ($rows->isEmpty()) {
+        if (! $role || $rows->isEmpty()) {
             return null;
         }
 

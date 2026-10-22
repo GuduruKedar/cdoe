@@ -10,8 +10,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $existing = DB::table('master.menus')->where('menu_code', 'HRMS0005')->first();
-        $menuId = $existing ? $existing->menu_id : 122;
+        $menuId = 130;
 
         DB::table('master.menus')->updateOrInsert(
             ['menu_code' => 'HRMS0005'],

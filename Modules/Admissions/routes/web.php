@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Admissions\Http\Controllers\AdmissionDataDownloadController;
+use Modules\Admissions\Http\Controllers\AdmissionDataUploadController;
 use Modules\Admissions\Http\Controllers\DocumentUploadController;
 use Modules\Admissions\Http\Controllers\DocumentViewController;
 use Modules\Admissions\Http\Controllers\StudentAdmissionController;
@@ -57,4 +58,19 @@ Route::middleware(['web'])->group(function () {
 
     Route::get('admissions/datadownload/export', [AdmissionDataDownloadController::class, 'exportCsv'])
         ->name('admissions.datadownload.export');
+
+    // ================= 4. ADMISSION DATA UPLOAD =================
+    Route::get('admissions/addatauplaod', [AdmissionDataUploadController::class, 'index'])
+        ->name('admissions.dataupload');
+    Route::post('admissions/addatauplaod', [AdmissionDataUploadController::class, 'upload'])
+        ->name('admissions.dataupload.post');
+    Route::get('admissions/addatauplaod/sample-template', [AdmissionDataUploadController::class, 'sampleTemplate'])
+        ->name('admissions.dataupload.sample');
+
+    // Database menu aliases (controller_ref compatibility)
+    Route::get('admissions/docuploadsd', [DocumentUploadController::class, 'index']);
+    Route::get('admissions/docdownloadsd', [DocumentViewController::class, 'index']);
+    Route::get('admissions/addatauplaodsd', [AdmissionDataUploadController::class, 'index']);
+    Route::post('admissions/addatauplaodsd', [AdmissionDataUploadController::class, 'upload']);
+    Route::get('admissions/admdatadownlaodsd', [AdmissionDataDownloadController::class, 'index']);
 });

@@ -3,7 +3,9 @@
 namespace Modules\Auth\Http\Controllers;
 
 use App\Common\Services\ActivityLogger;
+use App\Common\Services\RoleService;
 use App\Http\Controllers\Controller;
+use App\Models\MenuAccessRole;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -193,15 +195,31 @@ class AuthController extends Controller
      ========================================================== */
     private function loginUser(Login $user)
     {
+        $roleId = $user->role_id;
+        $assigned = RoleService::getAssignedRoles($user->usercode);
+        if (! empty($assigned)) {
+            $super = collect($assigned)->firstWhere('role_id', 2);
+            if ($super && MenuAccessRole::where('role_id', 2)->exists()) {
+                $roleId = 2;
+            } else {
+                foreach ($assigned as $ar) {
+                    if (MenuAccessRole::where('role_id', $ar['role_id'])->exists()) {
+                        $roleId = (int) $ar['role_id'];
+                        break;
+                    }
+                }
+            }
+        }
+
         Session::put('user', [
             'usercode' => $user->usercode,
             'user_type' => $user->user_type,
-            'role_id' => $user->role_id,     // from master.login
+            'role_id' => $roleId,
         ]);
 
         ActivityLogger::log('AUTH', 'LOGIN', "User {$user->usercode} authenticated and logged in successfully.", [
             'user_code' => $user->usercode,
-            'role_id' => $user->role_id,
+            'role_id' => $roleId,
             'status' => 'success',
         ]);
 

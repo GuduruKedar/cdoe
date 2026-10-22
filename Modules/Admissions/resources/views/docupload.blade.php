@@ -180,7 +180,7 @@
 
                 <div class="col-lg-3 col-md-3">
                     <label class="form-label fw-semibold small text-muted mb-1 d-none d-md-block">&nbsp;</label>
-                    <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center" id="addToFileQueueBtn" style="background: var(--theme-gradient); border-color: var(--theme-primary);">
+                    <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center" id="addToFileQueueBtn">
                         <i class="bi bi-plus-circle me-1"></i> Add to Queue
                     </button>
                 </div>
@@ -774,269 +774,147 @@
 </script>
 
 <style>
+    /* ==========================================================================
+       DOCUMENT UPLOAD — MODERN UI ENHANCEMENT
+       ========================================================================== */
+
     .cdoe-doc-upload-wrap {
-        animation: fadeIn 0.3s ease;
+        animation: docFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        max-width: 1400px;
+        margin: 0 auto;
     }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(6px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Cards adhering to global dark/light theme */
-    .cdoe-card {
-        border-radius: 14px;
-        background-color: var(--bg-card) !important;
-        border: 1px solid var(--border-card) !important;
-        box-shadow: var(--card-shadow, 0 4px 18px rgba(0, 0, 0, 0.08)) !important;
-        color: var(--text-primary);
-        backdrop-filter: blur(12px);
+    @keyframes docFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-    .cdoe-summary-card {
-        background-color: var(--bg-surface) !important;
-        border: 1px solid var(--border-subtle) !important;
-    }
-
-    .queue-container {
-        background-color: var(--bg-surface) !important;
-        border: 1px solid var(--border-subtle) !important;
-    }
-
-    /* Input controls adhering to dark/light theme */
-    .cdoe-form-control, .cdoe-select {
-        height: 44px;
-        background-color: var(--bg-surface) !important;
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-subtle) !important;
-        border-radius: 8px;
-        font-size: 13.5px;
-    }
-    .cdoe-select {
-        cursor: pointer;
-    }
-    .cdoe-form-control:focus, .cdoe-select:focus {
-        background-color: var(--bg-surface) !important;
-        color: var(--text-primary) !important;
-        border-color: #0d6efd !important;
-        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2) !important;
-    }
-    .cdoe-form-control::placeholder {
-        color: var(--text-muted) !important;
-        opacity: 0.8;
-    }
-    input[type="file"].cdoe-form-control {
-        padding: 5px 8px;
-        display: flex;
-        align-items: center;
-        line-height: normal;
-    }
-    input[type="file"].cdoe-form-control::file-selector-button {
-        background-color: var(--bg-card);
-        color: var(--text-primary);
-        border: 1px solid var(--border-subtle);
-        border-radius: 6px;
-        padding: 5px 14px;
-        margin-right: 12px;
-        font-weight: 500;
-        font-size: 13px;
-        height: 32px;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    input[type="file"].cdoe-form-control::file-selector-button:hover {
-        background-color: var(--bg-hover-row);
-        border-color: var(--theme-primary);
-    }
-    #addToFileQueueBtn {
-        height: 44px;
-        font-size: 14px;
-        font-weight: 600;
-        letter-spacing: 0.2px;
-        border-radius: 8px;
-        white-space: nowrap;
-        box-shadow: 0 2px 6px rgba(193, 18, 31, 0.25);
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    #addToFileQueueBtn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(193, 18, 31, 0.35);
-    }
-    .cdoe-input-addon {
-        background-color: var(--bg-surface) !important;
-        color: var(--text-muted) !important;
-        border: 1px solid var(--border-subtle) !important;
-    }
-
-    /* Quick select student pills */
-    .btn-quick-student {
-        background-color: var(--bg-surface);
-        color: var(--text-primary);
-        border: 1px solid var(--border-subtle);
-        border-radius: 20px;
-        font-size: 11.5px;
-        padding: 4px 12px;
-        transition: all 0.15s ease;
-    }
-    .btn-quick-student:hover {
-        background-color: var(--bg-elevated, #1a2844);
-        border-color: #0d6efd;
-        color: #0d6efd;
-        transform: translateY(-1px);
-    }
-    .btn-quick-student.active {
-        background-color: #0d6efd !important;
-        color: #ffffff !important;
-        border-color: #0d6efd !important;
-    }
-    .btn-quick-student.active .quick-name {
-        color: rgba(255, 255, 255, 0.9) !important;
-    }
-    .quick-name {
-        color: var(--text-muted);
-    }
-
-    /* Autocomplete list */
-    #studentSearchResults {
-        background: var(--bg-card);
-        border: 1px solid var(--border-card);
-    }
-    #studentSearchResults .list-group-item {
-        background-color: var(--bg-surface) !important;
-        color: var(--text-primary) !important;
-        border-color: var(--border-subtle) !important;
-    }
-    #studentSearchResults .list-group-item:hover {
-        background-color: var(--bg-hover-row) !important;
-    }
-
-    /* Tables */
-    .cdoe-table {
-        color: var(--text-primary);
-        border-color: var(--border-subtle) !important;
-    }
-    .cdoe-table thead th {
-        background: var(--theme-gradient, linear-gradient(135deg, #9b111e 0%, #c1121f 50%, #780000 100%)) !important;
-        color: #ffffff !important;
-        border-color: rgba(255, 255, 255, 0.15) !important;
-        font-size: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-        padding: 12px 14px;
-        white-space: nowrap;
-    }
-    .cdoe-table tbody td {
-        background-color: transparent !important;
-        color: var(--text-primary) !important;
-        border-color: var(--border-subtle) !important;
-        vertical-align: middle;
-        padding: 11px 14px;
-        font-size: 13px;
-    }
-    .cdoe-table tbody tr:hover td {
-        background-color: var(--bg-hover-row) !important;
-    }
-    .queue-container {
-        background-color: var(--bg-surface) !important;
-        border: 1px solid var(--border-subtle) !important;
-        border-radius: 12px;
-    }
-    .queue-container .table-responsive {
-        border-radius: 8px;
-        overflow: hidden;
-        border: 1px solid var(--border-subtle);
-    }
-
-    /* Modal styling */
-    .cdoe-modal-content {
-        background-color: var(--bg-card) !important;
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-card) !important;
-        border-radius: 16px;
-    }
-
-    /* Hero Banner */
+    /* --------------------------------------------------------------------------
+       1. HERO HEADER BANNER (Glassmorphism + Specular Highlights)
+       -------------------------------------------------------------------------- */
     .dash-hero-card {
-        background: var(--theme-gradient, linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%));
-        border-radius: 16px;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #090d16 0%, #111827 45%, #1e1b4b 100%);
+        border-radius: 18px;
         padding: 28px 32px;
         color: #ffffff;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 24px;
-        box-shadow: 0 10px 25px -5px rgba(49, 46, 129, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+    .dash-hero-card::before {
+        content: '';
+        position: absolute;
+        top: -40%;
+        right: -10%;
+        width: 320px;
+        height: 320px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.28) 0%, rgba(56, 189, 248, 0.08) 50%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .dash-hero-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.4), rgba(129, 140, 248, 0.4), transparent);
     }
     .dash-hero-badge {
         display: inline-flex;
         align-items: center;
-        padding: 4px 12px;
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.25);
+        padding: 5px 14px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
         border-radius: 9999px;
         font-size: 11.5px;
         font-weight: 600;
         margin-bottom: 12px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.6px;
+        color: #38bdf8;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
     .dash-hero-title {
-        font-size: 26px;
+        font-size: 28px;
         font-weight: 800;
         margin: 0 0 8px 0;
-        letter-spacing: -0.5px;
+        letter-spacing: -0.6px;
+        line-height: 1.25;
+        color: #ffffff;
     }
     .dash-hero-name {
-        background: linear-gradient(135deg, #38bdf8, #818cf8);
+        background: linear-gradient(135deg, #38bdf8 0%, #a78bfa 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
     .dash-hero-sub {
         font-size: 13.5px;
-        color: rgba(255, 255, 255, 0.82);
-        margin: 0 0 18px 0;
-        max-width: 720px;
-        line-height: 1.5;
+        color: rgba(241, 245, 249, 0.85);
+        margin: 0 0 20px 0;
+        max-width: 740px;
+        line-height: 1.55;
     }
     .dash-hero-actions {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
         flex-wrap: wrap;
     }
     .dash-hero-btn.outline {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 8px 16px;
-        background: rgba(255, 255, 255, 0.12);
+        padding: 8px 18px;
+        background: rgba(255, 255, 255, 0.08);
         color: #ffffff;
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        border-radius: 9999px;
-        font-size: 12.5px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        font-size: 13px;
         font-weight: 600;
         text-decoration: none;
-        transition: all 0.2s ease;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        backdrop-filter: blur(8px);
     }
     .dash-hero-btn.outline:hover {
-        background: rgba(255, 255, 255, 0.25);
-        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.18);
+        border-color: rgba(255, 255, 255, 0.35);
+        color: #ffffff;
+        transform: translateY(-1.5px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
     }
     .dash-session-pill {
         display: inline-flex;
         align-items: center;
         gap: 8px;
         padding: 8px 16px;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(16, 185, 129, 0.28);
         border-radius: 9999px;
         font-size: 12px;
         font-weight: 600;
+        color: #34d399;
+        backdrop-filter: blur(8px);
     }
     .dash-pulse-dot {
         width: 8px;
         height: 8px;
         border-radius: 50%;
+        background-color: #10b981;
         box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
         animation: pulseDot 2s infinite;
     }
@@ -1044,6 +922,375 @@
         0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
         70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
         100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* --------------------------------------------------------------------------
+       2. MODERN CARDS & SURFACES
+       -------------------------------------------------------------------------- */
+    .cdoe-card {
+        border-radius: 16px;
+        background-color: var(--bg-card, #ffffff) !important;
+        border: 1px solid var(--border-card, #e2e8f0) !important;
+        box-shadow: var(--card-shadow, 0 4px 20px -2px rgba(15, 23, 42, 0.06)) !important;
+        color: var(--text-primary, #0f172a);
+        backdrop-filter: blur(12px);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .cdoe-card:hover {
+        border-color: var(--border-hover, #cbd5e1) !important;
+    }
+
+    .cdoe-summary-card {
+        background-color: var(--bg-surface, #f8fafc) !important;
+        border: 1px solid var(--border-subtle, #e2e8f0) !important;
+        border-radius: 14px;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    /* --------------------------------------------------------------------------
+       3. FORM CONTROLS & SEARCH INPUTS
+       -------------------------------------------------------------------------- */
+    .cdoe-form-control, .cdoe-select {
+        height: 46px;
+        background-color: var(--bg-surface, #ffffff) !important;
+        color: var(--text-primary, #0f172a) !important;
+        border: 1.5px solid var(--border-subtle, #e2e8f0) !important;
+        border-radius: 10px;
+        font-size: 13.5px;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .cdoe-select {
+        cursor: pointer;
+        font-weight: 500;
+    }
+    .cdoe-form-control:focus, .cdoe-select:focus {
+        background-color: var(--bg-surface, #ffffff) !important;
+        color: var(--text-primary, #0f172a) !important;
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.16) !important;
+        outline: none;
+    }
+    .cdoe-form-control::placeholder {
+        color: var(--text-muted, #94a3b8) !important;
+        font-size: 13.5px;
+    }
+    .cdoe-input-addon {
+        background-color: var(--bg-surface, #f8fafc) !important;
+        color: var(--text-muted, #64748b) !important;
+        border: 1.5px solid var(--border-subtle, #e2e8f0) !important;
+        border-right: none !important;
+        border-radius: 10px 0 0 10px !important;
+        padding-left: 16px;
+        padding-right: 14px;
+        font-size: 15px;
+    }
+    .input-group > .cdoe-form-control {
+        border-radius: 0 10px 10px 0 !important;
+    }
+
+    /* Custom File Input Styling */
+    input[type="file"].cdoe-form-control {
+        padding: 6px 10px;
+        display: flex;
+        align-items: center;
+        line-height: normal;
+        cursor: pointer;
+    }
+    input[type="file"].cdoe-form-control::file-selector-button {
+        background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        padding: 6px 16px;
+        margin-right: 14px;
+        font-weight: 600;
+        font-size: 12.5px;
+        letter-spacing: 0.2px;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+        transition: all 0.2s ease;
+    }
+    input[type="file"].cdoe-form-control::file-selector-button:hover {
+        background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.38);
+    }
+
+    /* Add To Queue Button */
+    #addToFileQueueBtn {
+        height: 46px;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        border-radius: 10px;
+        white-space: nowrap;
+        background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%) !important;
+        border: none !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 14px rgba(79, 70, 229, 0.32);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #addToFileQueueBtn:hover {
+        transform: translateY(-1.5px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45);
+        filter: brightness(1.04);
+    }
+    #addToFileQueueBtn:active {
+        transform: translateY(0);
+    }
+
+    /* --------------------------------------------------------------------------
+       4. QUICK SELECT PILLS & AUTOCOMPLETE
+       -------------------------------------------------------------------------- */
+    .btn-quick-student {
+        background-color: var(--bg-surface, #f8fafc);
+        color: var(--text-primary, #0f172a);
+        border: 1px solid var(--border-subtle, #cbd5e1);
+        border-radius: 9999px;
+        font-size: 12px;
+        padding: 5px 14px;
+        font-weight: 500;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+    .btn-quick-student:hover {
+        background-color: var(--bg-hover-row, #f1f5f9);
+        border-color: #6366f1;
+        color: #6366f1;
+        transform: translateY(-1.5px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+    }
+    .btn-quick-student.active {
+        background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+        box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+        font-weight: 600;
+    }
+    .btn-quick-student.active .quick-name {
+        color: rgba(255, 255, 255, 0.92) !important;
+    }
+    .quick-name {
+        color: var(--text-muted, #64748b);
+        font-size: 11.5px;
+    }
+
+    /* Autocomplete Dropdown List */
+    #studentSearchResults {
+        background: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-card, #cbd5e1);
+        border-radius: 12px;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+        overflow: hidden;
+    }
+    #studentSearchResults .list-group-item {
+        background-color: var(--bg-surface, #ffffff) !important;
+        color: var(--text-primary, #0f172a) !important;
+        border-color: var(--border-subtle, #f1f5f9) !important;
+        padding: 12px 18px;
+        transition: all 0.15s ease;
+        border-left: 3px solid transparent !important;
+    }
+    #studentSearchResults .list-group-item:hover {
+        background-color: var(--bg-hover-row, #f8fafc) !important;
+        border-left-color: #4f46e5 !important;
+        transform: translateX(2px);
+    }
+
+    /* --------------------------------------------------------------------------
+       5. QUEUE CONTAINER & MODERN TABLES
+       -------------------------------------------------------------------------- */
+    .queue-container {
+        background-color: var(--bg-surface, #f8fafc) !important;
+        border: 1px solid var(--border-subtle, #e2e8f0) !important;
+        border-radius: 14px;
+        padding: 20px;
+    }
+    .queue-container .table-responsive {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border-subtle, #e2e8f0);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    }
+
+    .cdoe-table {
+        color: var(--text-primary, #0f172a);
+        margin-bottom: 0;
+        vertical-align: middle;
+    }
+    .cdoe-table thead th {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+        color: #f8fafc !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+        font-size: 11.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        padding: 14px 16px;
+        white-space: nowrap;
+    }
+    .cdoe-table tbody td {
+        background-color: transparent !important;
+        color: var(--text-primary, #0f172a) !important;
+        border-color: var(--border-subtle, #e2e8f0) !important;
+        vertical-align: middle;
+        padding: 12px 16px;
+        font-size: 13.5px;
+        transition: background-color 0.15s ease;
+    }
+    .cdoe-table tbody tr {
+        transition: background-color 0.15s ease;
+    }
+    .cdoe-table tbody tr:hover td {
+        background-color: var(--bg-hover-row, rgba(99, 102, 241, 0.04)) !important;
+    }
+
+    /* Image Thumbnail in Table */
+    .cdoe-table img {
+        border-radius: 8px;
+        border: 2px solid #6366f1;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+    }
+    .cdoe-table img:hover {
+        transform: scale(1.12);
+        box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+    }
+
+    /* Queue Action Bottom Bar */
+    #queueActionBar {
+        border-top: 1px solid var(--border-subtle, #e2e8f0) !important;
+        padding-top: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    #uploadAllQueueBtn {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 10px 24px;
+        font-size: 14.5px;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #uploadAllQueueBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(16, 185, 129, 0.45);
+        filter: brightness(1.05);
+    }
+    #clearQueueBtn {
+        border-radius: 8px;
+        font-size: 13px;
+        padding: 8px 16px;
+        transition: all 0.2s ease;
+    }
+
+    /* --------------------------------------------------------------------------
+       6. INTERACTIVE PREVIEW MODAL
+       -------------------------------------------------------------------------- */
+    .cdoe-modal-content {
+        background-color: var(--bg-card, #ffffff) !important;
+        color: var(--text-primary, #0f172a) !important;
+        border: 1px solid var(--border-card, #cbd5e1) !important;
+        border-radius: 18px;
+        box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.35) !important;
+        overflow: hidden;
+    }
+    .modal-header {
+        border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+        padding: 18px 24px;
+    }
+    .modal-footer {
+        border-top: 1px solid var(--border-subtle, #e2e8f0);
+        padding: 14px 24px;
+    }
+
+    /* --------------------------------------------------------------------------
+       7. DARK MODE SPECIFIC REFINEMENTS
+       -------------------------------------------------------------------------- */
+    html.dark .dash-hero-card {
+        background: linear-gradient(135deg, #030712 0%, #0f172a 50%, #1e1b4b 100%);
+        border-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.6);
+    }
+    html.dark .cdoe-card {
+        background-color: #0b1120 !important;
+        border-color: #1e293b !important;
+        box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45) !important;
+    }
+    html.dark .cdoe-summary-card,
+    html.dark .queue-container {
+        background-color: #0f172a !important;
+        border-color: #1e293b !important;
+    }
+    html.dark .cdoe-form-control,
+    html.dark .cdoe-select,
+    html.dark .cdoe-input-addon {
+        background-color: #131d33 !important;
+        color: #f1f5f9 !important;
+        border-color: #27354f !important;
+    }
+    html.dark .cdoe-form-control:focus,
+    html.dark .cdoe-select:focus {
+        border-color: #818cf8 !important;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25) !important;
+    }
+    html.dark .btn-quick-student {
+        background-color: #131d33;
+        color: #cbd5e1;
+        border-color: #27354f;
+    }
+    html.dark .btn-quick-student:hover {
+        background-color: #1e293b;
+        color: #38bdf8;
+        border-color: #38bdf8;
+    }
+    html.dark .cdoe-table thead th {
+        background: linear-gradient(135deg, #030712 0%, #0f172a 100%) !important;
+        color: #f8fafc !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+    html.dark .cdoe-table tbody td {
+        border-color: #1e293b !important;
+        color: #cbd5e1 !important;
+    }
+    html.dark .cdoe-table tbody tr:hover td {
+        background-color: rgba(99, 102, 241, 0.08) !important;
+    }
+    html.dark .cdoe-modal-content {
+        background-color: #0f172a !important;
+        border-color: #1e293b !important;
+    }
+
+    /* --------------------------------------------------------------------------
+       8. RESPONSIVE BREAKPOINTS
+       -------------------------------------------------------------------------- */
+    @media (max-width: 768px) {
+        .dash-hero-card {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 22px 20px;
+        }
+        .dash-hero-title {
+            font-size: 22px;
+        }
+        .dash-hero-actions {
+            width: 100%;
+        }
+        .dash-hero-btn.outline {
+            width: 100%;
+            justify-content: center;
+        }
+        .dash-hero-aside {
+            width: 100%;
+        }
+        .dash-session-pill {
+            width: 100%;
+            justify-content: center;
+        }
     }
 </style>
 @endsection
