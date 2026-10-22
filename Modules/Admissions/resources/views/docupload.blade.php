@@ -142,10 +142,10 @@
             </h5>
 
             {{-- File Selection Form Controls --}}
-            <div class="row g-3 align-items-end mb-4">
-                <div class="col-lg-4 col-md-6">
-                    <label class="form-label fw-semibold small text-muted">DOCUMENT TYPE</label>
-                    <select id="docTypeSelect" class="form-select form-select-lg cdoe-select">
+            <div class="row g-3 align-items-start mb-3">
+                <div class="col-lg-4 col-md-4">
+                    <label class="form-label fw-semibold small text-muted mb-1">DOCUMENT TYPE</label>
+                    <select id="docTypeSelect" class="form-select cdoe-select">
                         <option value="">-- Choose Document Type --</option>
                         <optgroup label="Core Academic & ID (Photo = JPG, Rest = PDF)">
                             <option value="photo" data-ext="jpg,jpeg,png" data-isimage="1">Passport Photo (JPG / JPEG / PNG)</option>
@@ -167,19 +167,20 @@
                     </select>
                 </div>
 
-                <div class="col-lg-6 col-md-6">
-                    <label class="form-label fw-semibold small text-muted">CHOOSE FILE</label>
+                <div class="col-lg-5 col-md-5">
+                    <label class="form-label fw-semibold small text-muted mb-1">CHOOSE FILE</label>
                     <input type="file"
                            id="fileInput"
-                           class="form-control form-control-lg cdoe-form-control"
+                           class="form-control cdoe-form-control"
                            accept=".jpg,.jpeg,.png,.pdf">
-                    <div class="form-text small" id="fileHelpText">
+                    <div class="form-text small mt-1" id="fileHelpText">
                         <i class="bi bi-info-circle me-1"></i> Select a document type first. Photos accept JPG/PNG; all other documents require PDF.
                     </div>
                 </div>
 
-                <div class="col-lg-2 col-md-12">
-                    <button type="button" class="btn btn-primary btn-lg w-100" id="addToFileQueueBtn" style="background: var(--theme-gradient); border-color: var(--theme-primary);">
+                <div class="col-lg-3 col-md-3">
+                    <label class="form-label fw-semibold small text-muted mb-1 d-none d-md-block">&nbsp;</label>
+                    <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center" id="addToFileQueueBtn" style="background: var(--theme-gradient); border-color: var(--theme-primary);">
                         <i class="bi bi-plus-circle me-1"></i> Add to Queue
                     </button>
                 </div>
@@ -803,9 +804,15 @@
 
     /* Input controls adhering to dark/light theme */
     .cdoe-form-control, .cdoe-select {
+        height: 44px;
         background-color: var(--bg-surface) !important;
         color: var(--text-primary) !important;
         border: 1px solid var(--border-subtle) !important;
+        border-radius: 8px;
+        font-size: 13.5px;
+    }
+    .cdoe-select {
+        cursor: pointer;
     }
     .cdoe-form-control:focus, .cdoe-select:focus {
         background-color: var(--bg-surface) !important;
@@ -816,6 +823,43 @@
     .cdoe-form-control::placeholder {
         color: var(--text-muted) !important;
         opacity: 0.8;
+    }
+    input[type="file"].cdoe-form-control {
+        padding: 5px 8px;
+        display: flex;
+        align-items: center;
+        line-height: normal;
+    }
+    input[type="file"].cdoe-form-control::file-selector-button {
+        background-color: var(--bg-card);
+        color: var(--text-primary);
+        border: 1px solid var(--border-subtle);
+        border-radius: 6px;
+        padding: 5px 14px;
+        margin-right: 12px;
+        font-weight: 500;
+        font-size: 13px;
+        height: 32px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    input[type="file"].cdoe-form-control::file-selector-button:hover {
+        background-color: var(--bg-hover-row);
+        border-color: var(--theme-primary);
+    }
+    #addToFileQueueBtn {
+        height: 44px;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+        border-radius: 8px;
+        white-space: nowrap;
+        box-shadow: 0 2px 6px rgba(193, 18, 31, 0.25);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    #addToFileQueueBtn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(193, 18, 31, 0.35);
     }
     .cdoe-input-addon {
         background-color: var(--bg-surface) !important;
@@ -871,14 +915,14 @@
         border-color: var(--border-subtle) !important;
     }
     .cdoe-table thead th {
-        background-color: #e83e8c !important;
+        background: var(--theme-gradient, linear-gradient(135deg, #9b111e 0%, #c1121f 50%, #780000 100%)) !important;
         color: #ffffff !important;
-        border-color: #d63384 !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
         font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.3px;
-        padding: 10px 12px;
+        letter-spacing: 0.4px;
+        padding: 12px 14px;
         white-space: nowrap;
     }
     .cdoe-table tbody td {
@@ -886,11 +930,21 @@
         color: var(--text-primary) !important;
         border-color: var(--border-subtle) !important;
         vertical-align: middle;
-        padding: 10px 12px;
+        padding: 11px 14px;
         font-size: 13px;
     }
     .cdoe-table tbody tr:hover td {
         background-color: var(--bg-hover-row) !important;
+    }
+    .queue-container {
+        background-color: var(--bg-surface) !important;
+        border: 1px solid var(--border-subtle) !important;
+        border-radius: 12px;
+    }
+    .queue-container .table-responsive {
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid var(--border-subtle);
     }
 
     /* Modal styling */
