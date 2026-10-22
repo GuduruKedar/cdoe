@@ -146,6 +146,23 @@ class NewMenusAndScreensTest extends TestCase
         $this->assertStringContainsString('text/csv', $export->headers->get('content-type'));
     }
 
+    public function test_sub_co_po_pso_screen_and_export(): void
+    {
+        $response = $this->withSession($this->getAdminSession())
+            ->get('/academics/subcopopso');
+
+        $response->assertStatus(200);
+        $response->assertSee('Sub CO-PO-PSO Mapping');
+        $response->assertSee('Course / Subject');
+        $response->assertSee('Course Outcome (CO)');
+
+        $export = $this->withSession($this->getAdminSession())
+            ->get('/academics/subcopopso/export');
+
+        $export->assertStatus(200);
+        $this->assertStringContainsString('text/csv', $export->headers->get('content-type'));
+    }
+
     public function test_document_upload_validation(): void
     {
         // Try uploading jpg for a pdf requirement
