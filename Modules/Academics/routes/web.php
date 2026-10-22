@@ -17,7 +17,13 @@ Route::middleware(['web'])->group(function () {
     Route::get('academics/coursereg/export', [CourseRegistrationDownloadController::class, 'exportCsv'])
         ->name('academics.coursereg.export');
 
-    // ================= 2. SUBJECT LIST =================
+    // ================= 2. SUBJECT LIST & SUBJECTS VIEW =================
+    Route::get('academics/subjectsview', [SubjectListController::class, 'index'])
+        ->name('academics.subjectsview');
+
+    Route::get('academics/subjectsview/export', [SubjectListController::class, 'exportCsv'])
+        ->name('academics.subjectsview.export');
+
     Route::get('academics/subjectlist', [SubjectListController::class, 'index'])
         ->name('academics.subjectlist');
 

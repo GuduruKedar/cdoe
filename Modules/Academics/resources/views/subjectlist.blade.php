@@ -7,7 +7,7 @@
 
     {{-- Filter Toolbar --}}
     <div class="filter-toolbar-box mb-3">
-        <form method="GET" action="{{ route('academics.subjectlist') }}" id="filterForm">
+        <form method="GET" action="{{ url()->current() }}" id="filterForm">
             <div class="row g-2 align-items-end">
 
                 <div class="col-lg-3 col-md-4 col-sm-6">
@@ -45,10 +45,10 @@
                     <button type="submit" class="btn btn-action btn-apply">
                         <i class="bi bi-search me-1"></i> Apply Filter
                     </button>
-                    <a href="{{ route('academics.subjectlist') }}" class="btn btn-action btn-clear">
+                    <a href="{{ url()->current() }}" class="btn btn-action btn-clear">
                         <i class="bi bi-trash3-fill me-1"></i> Clear All
                     </a>
-                    <a href="{{ route('academics.subjectlist.export', request()->all()) }}" class="btn btn-action btn-download">
+                    <a href="{{ request()->is('*subjectsview*') ? route('academics.subjectsview.export', request()->all()) : route('academics.subjectlist.export', request()->all()) }}" class="btn btn-action btn-download">
                         <i class="bi bi-download me-1"></i> Download
                     </a>
                 </div>

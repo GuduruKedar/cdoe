@@ -129,6 +129,23 @@ class NewMenusAndScreensTest extends TestCase
         $this->assertStringContainsString('text/csv', $export->headers->get('content-type'));
     }
 
+    public function test_subjects_view_screen_and_export(): void
+    {
+        $response = $this->withSession($this->getAdminSession())
+            ->get('/academics/subjectsview');
+
+        $response->assertStatus(200);
+        $response->assertSee('Curriculum & Subject List');
+        $response->assertSee('Subject Type');
+        $response->assertSee('Delivery Mode');
+
+        $export = $this->withSession($this->getAdminSession())
+            ->get('/academics/subjectsview/export');
+
+        $export->assertStatus(200);
+        $this->assertStringContainsString('text/csv', $export->headers->get('content-type'));
+    }
+
     public function test_document_upload_validation(): void
     {
         // Try uploading jpg for a pdf requirement
