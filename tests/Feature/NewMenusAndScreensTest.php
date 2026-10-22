@@ -182,4 +182,39 @@ class NewMenusAndScreensTest extends TestCase
         ]);
         $this->assertStringContainsString('PDF', $response->json('message'));
     }
+
+    public function test_dynamic_navbar_brand_title_per_role(): void
+    {
+        // 1. Super Admin role
+        $response = $this->withSession($this->getAdminSession())
+            ->get('/dashboard');
+        $response->assertStatus(200);
+        $response->assertSee('CDOE Super Admin');
+
+        // 2. Administrator role
+        $adminSession = [
+            'user' => [
+                'usercode' => '02266',
+                'role_id' => 2,
+                'user_type' => 2,
+            ],
+        ];
+        $responseAdmin = $this->withSession($adminSession)
+            ->get('/dashboard');
+        $responseAdmin->assertStatus(200);
+        $responseAdmin->assertSee('CDOE Administrator');
+
+        // 3. Student role
+        $studentSession = [
+            'user' => [
+                'usercode' => '261CC01014',
+                'role_id' => 5,
+                'user_type' => 1,
+            ],
+        ];
+        $responseStudent = $this->withSession($studentSession)
+            ->get('/dashboard');
+        $responseStudent->assertStatus(200);
+        $responseStudent->assertSee('CDOE Student');
+    }
 }

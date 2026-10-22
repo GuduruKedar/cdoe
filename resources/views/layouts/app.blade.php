@@ -453,7 +453,7 @@
             <img src="{{ asset('images/vignan-emblem.png') }}?v={{ file_exists(public_path('images/vignan-emblem.png')) ? filemtime(public_path('images/vignan-emblem.png')) : '1.0' }}" class="brand-emblem" alt="Vignan Emblem">
         </div>
         <span class="brand-title">
-            <span class="d-none d-sm-inline">CDOE Administrator</span>
+            <span class="d-none d-sm-inline">{{ str_starts_with($currentRoleName ?? '', 'CDOE') ? $currentRoleName : 'CDOE ' . ($currentRoleName ?: 'Administrator') }}</span>
             <span class="d-inline d-sm-none">CDOE</span>
         </span>
     </div>
