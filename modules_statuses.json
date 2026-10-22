@@ -1,0 +1,11 @@
+{
+    "Dashboard": true,
+    "Academics": true,
+    "Admissions": true,
+    "Examinations": true,
+    "Finance": true,
+    "Hrms": true,
+    "Master": true,
+    "Auth": true,
+    "Visa": true
+}
