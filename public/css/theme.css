@@ -647,6 +647,20 @@ html.dark .modal-backdrop.show {
 /* ==============================================================================
    7. LMS BRAND & TOPNAV ENHANCEMENTS
    ============================================================================== */
+.topnav {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 64px !important;
+    z-index: 1000 !important;
+}
+
+.layout {
+    margin-top: 64px !important;
+}
+
 .brand,
 .topnav-brand-wrap {
     display: flex;
@@ -1029,8 +1043,14 @@ body.sidebar-collapsed .sidebar {
     opacity: 0;
     pointer-events: none;
 }
+body.sidebar-collapsed .main {
+    margin-left: 0 !important;
+}
 .sidebar {
     transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s ease, background 0.3s ease, border-color 0.3s ease;
+}
+.main {
+    transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Mobile Sidebar Drawer */

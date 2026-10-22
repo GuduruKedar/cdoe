@@ -32,7 +32,6 @@
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { height: 100%; }
         html {
             background-color: var(--bg-main);
             color-scheme: light;
@@ -56,16 +55,24 @@
             color: var(--text-secondary);
         }
 
-        /* ============ TOP NAVBAR ============ */
+        /* ============ TOP NAVBAR (PERMANENTLY FIXED & NEVER CUT OFF) ============ */
         .topnav {
-            height: 64px; padding: 0 24px;
-            display: flex; align-items: center; justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: 64px;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             background: var(--topnav-bg);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-bottom: 1.5px solid var(--topnav-border);
-            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
-            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+            z-index: 1000;
             transition: background 0.3s ease, border-color 0.3s ease;
         }
         .brand,
@@ -113,7 +120,12 @@
         }
 
         /* ============ LAYOUT ============ */
-        .layout { display: flex; min-height: calc(100vh - 64px); position: relative; }
+        .layout {
+            display: flex;
+            margin-top: 64px;
+            min-height: calc(100vh - 64px);
+            position: relative;
+        }
 
         /* ============ ROLE SWITCHER ============ */
         .role-switcher { position: relative; }
@@ -219,11 +231,15 @@
             -webkit-backdrop-filter: blur(16px);
             border-right: 1.5px solid var(--sidebar-border);
             box-shadow: 2px 0 8px rgba(15, 23, 42, 0.05);
-            position: sticky; top: 64px;
+            position: fixed;
+            top: 64px;
+            bottom: 0;
+            left: 0;
             height: calc(100vh - 64px);
             display: flex;
             flex-direction: column;
-            transition: background 0.3s ease, border-color 0.3s ease;
+            z-index: 900;
+            transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s ease, background 0.3s ease, border-color 0.3s ease;
         }
 
         .menu-tree { list-style: none; padding: 0; margin: 0; flex: 1; }
@@ -284,7 +300,17 @@
         }
 
         /* ============ MAIN CONTENT ============ */
-        .main { flex: 1; padding: 24px 28px; min-width: 0; position: relative; }
+        .main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 24px 28px;
+            min-width: 0;
+            position: relative;
+            transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        body.sidebar-collapsed .main {
+            margin-left: 0;
+        }
         .page-title { font-size: 24px; font-weight: 700; color: var(--text-primary); transition: color 0.3s ease; }
         .page-sub { color: var(--text-muted); font-size: 13px; margin-top: 4px; transition: color 0.3s ease; }
 
@@ -361,11 +387,11 @@
 
         /* ============ RESPONSIVE ============ */
         @media (max-width: 768px) {
-            .sidebar { width: 100%; position: relative; top: 0; height: auto; }
-            .layout { flex-direction: column; }
             .topnav { padding: 0 14px; }
-            .topnav .breadcrumb { display: none; }
+            .topnav .breadcrumb,
+            .topnav .topnav-breadcrumb { display: none !important; }
             .topnav .user-pill { padding: 7px 12px; font-size: 12px; }
+            .main { margin-left: 0 !important; padding: 18px 14px; }
         }
     </style>
 
