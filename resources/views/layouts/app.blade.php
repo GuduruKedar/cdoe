@@ -452,10 +452,13 @@
         <div class="brand-logo-card">
             <img src="{{ asset('images/vignan-emblem.png') }}?v={{ file_exists(public_path('images/vignan-emblem.png')) ? filemtime(public_path('images/vignan-emblem.png')) : '1.0' }}" class="brand-emblem" alt="Vignan Emblem">
         </div>
-        <span class="brand-title">CDOE Administrator</span>
+        <span class="brand-title">
+            <span class="d-none d-sm-inline">CDOE Administrator</span>
+            <span class="d-inline d-sm-none">CDOE</span>
+        </span>
     </div>
 
-    <div class="topnav-breadcrumb">
+    <div class="topnav-breadcrumb d-none d-lg-inline-flex">
         <span class="bc-root"><i class="bi bi-mortarboard-fill me-1"></i> CDOE</span>
         <span class="bc-sep">/</span>
         <span class="bc-role">{{ $currentRoleName }}</span>
@@ -471,11 +474,11 @@
                 <span class="user-avatar-circle">
                     {{ $avatarInitial }}
                 </span>
-                <div class="user-pill-info">
+                <div class="user-pill-info d-none d-md-flex">
                     <span class="user-pill-name">{{ $displayName }}</span>
                     <span class="user-pill-role">{{ $currentRoleName }}</span>
                 </div>
-                <i class="bi bi-chevron-down role-caret"></i>
+                <i class="bi bi-chevron-down role-caret d-none d-md-inline-block"></i>
             </button>
 
             <div class="role-menu" id="roleMenu">

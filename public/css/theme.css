@@ -1082,6 +1082,42 @@ body.sidebar-collapsed .main {
     body.sidebar-open .sidebar-backdrop {
         display: block;
     }
+
+    /* Mobile Compact Topnav & Dropdown */
+    .topnav {
+        padding: 0 12px !important;
+        gap: 8px;
+    }
+    .topnav-brand-wrap {
+        gap: 8px !important;
+    }
+    .brand-logo-card {
+        width: 32px !important;
+        height: 32px !important;
+    }
+    .brand-title {
+        font-size: 15px !important;
+    }
+    .user-pill-btn {
+        padding: 2px !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .user-avatar-circle {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 13.5px !important;
+    }
+    .role-menu {
+        position: fixed !important;
+        top: 68px !important;
+        right: 12px !important;
+        left: 12px !important;
+        max-width: calc(100vw - 24px) !important;
+        width: auto !important;
+        min-width: unset !important;
+    }
 }
 
 /* ==============================================================================
