@@ -3,8 +3,8 @@
 namespace Modules\Academics\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
-// use Modules\Academics\Database\Factories\SubjectFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Examinations\Models\MarksMemo;
 
 class Subject extends Model
 {
@@ -18,13 +18,22 @@ class Subject extends Model
 
     protected $keyType = 'string';
 
-    /**
-     * The attributes that are mass assignable.
-     */
-    protected $fillable = [];
+    public $timestamps = false;
 
-    // protected static function newFactory(): SubjectFactory
-    // {
-    //     // return SubjectFactory::new();
-    // }
+    protected $guarded = [];
+
+    public function courseRegistrations(): HasMany
+    {
+        return $this->hasMany(CourseRegistration::class, 'subcode', 'subcode');
+    }
+
+    public function coPoPsoMappings(): HasMany
+    {
+        return $this->hasMany(CoPoPsoMapping::class, 'subcode', 'subcode');
+    }
+
+    public function marks(): HasMany
+    {
+        return $this->hasMany(MarksMemo::class, 'subcode', 'subcode');
+    }
 }

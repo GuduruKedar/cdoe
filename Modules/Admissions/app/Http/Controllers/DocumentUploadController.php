@@ -8,16 +8,18 @@ use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Modules\Admissions\Models\Programs;
+use Modules\Admissions\Models\StudentDocument;
+use Modules\Admissions\Models\StudentRegistration;
 
 class DocumentUploadController extends Controller
 {
     use RequiresLogin;
 
     /**
-     * Display the Document Upload interface.
+     * Display the document upload portal interface.
      */
     public function index(Request $request)
     {
@@ -27,30 +29,32 @@ class DocumentUploadController extends Controller
             return view('errors.no-role', compact('user'));
         }
 
-        // Available document types according to requirements
+        $userType = (int) ($user->user_type ?? session('user.user_type', 0));
+        $isStudent = ($userType === 1);
+
         $docTypes = [
-            'photo' => ['label' => 'Passport Photo', 'ext' => 'jpg,jpeg,png', 'mime' => 'image/jpeg,image/png'],
-            '10th' => ['label' => '10th / SSC Certificate', 'ext' => 'pdf', 'mime' => 'application/pdf'],
-            'inter' => ['label' => 'Intermediate / +2 Certificate', 'ext' => 'pdf', 'mime' => 'application/pdf'],
-            'ug' => ['label' => 'UG Degree / Marks Memo', 'ext' => 'pdf', 'mime' => 'application/pdf'],
-            'ug1' => ['label' => 'UG Provisional / CMM (UG1)', 'ext' => 'pdf', 'mime' => 'application/pdf'],
-            'pg' => ['label' => 'PG Degree / Marks Memo', 'ext' => 'pdf', 'mime' => 'application/pdf'],
-            'pg1' => ['label' => 'PG Provisional / CMM (PG1)', 'ext' => 'pdf', 'mime' => 'application/pdf'],
-            'aadhar' => ['label' => 'Aadhar Card', 'ext' => 'pdf', 'mime' => 'application/pdf'],
-            'pan' => ['label' => 'PAN Card', 'ext' => 'pdf', 'mime' => 'application/pdf'],
-            'apaar' => ['label' => 'APAAR ID Card', 'ext' => 'pdf', 'mime' => 'application/pdf'],
-            'diploma' => ['label' => 'Diploma Certificate', 'ext' => 'pdf', 'mime' => 'application/pdf'],
-            'phd' => ['label' => 'PhD / Doctorate Degree', 'ext' => 'pdf', 'mime' => 'application/pdf'],
-            'other' => ['label' => 'Other Identification / Certificate', 'ext' => 'pdf', 'mime' => 'application/pdf'],
+            'photo' => 'Student Photograph (Passport Size)',
+            'ssc' => 'SSC / 10th Class Marks Memo',
+            'inter' => 'Intermediate / +2 / Diploma Certificate',
+            'ug' => 'Undergraduate (UG) Degree Certificate & Consolidated Memo',
+            'pg' => 'Postgraduate (PG) Certificate (if applicable)',
+            'aadhar' => 'Aadhar Card (Identity Proof)',
+            'pan' => 'PAN Card',
+            'apaar' => 'APAAR / ABC ID Card',
+            'other' => 'Other Academic / Official Document',
         ];
 
-        // If user is a student, lock to their register_no
-        $isStudent = (session('user.user_type') == 1);
-        $defaultRegNo = $isStudent ? ($user->usercode ?? '') : (string) $request->input('regno', '');
+        $defaultRegNo = $request->input('reg_no');
+        if ($isStudent && empty($defaultRegNo)) {
+            $defaultRegNo = $user->usercode ?? session('user.usercode');
+        }
 
-        // Fetch top recent students for quick one-click selection
-        $recentStudents = DB::table('admissions.student_registrations as sr')
-            ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
+        $srTable = (new StudentRegistration)->getTable();
+        $pTable = (new Programs)->getTable();
+
+        // Fetch top recent students for quick one-click selection via Eloquent
+        $recentStudents = StudentRegistration::from("{$srTable} as sr")
+            ->leftJoin("{$pTable} as p", 'sr.progid', '=', 'p.program_id')
             ->orderBy('sr.application_no', 'asc')
             ->limit(6)
             ->select(
@@ -74,8 +78,8 @@ class DocumentUploadController extends Controller
         $uploadedDocuments = collect();
 
         if (! empty($defaultRegNo)) {
-            $selectedStudent = DB::table('admissions.student_registrations as sr')
-                ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
+            $selectedStudent = StudentRegistration::from("{$srTable} as sr")
+                ->leftJoin("{$pTable} as p", 'sr.progid', '=', 'p.program_id')
                 ->where('sr.register_no', $defaultRegNo)
                 ->orWhere('sr.application_no', is_numeric($defaultRegNo) ? (int) $defaultRegNo : -1)
                 ->select(
@@ -92,13 +96,12 @@ class DocumentUploadController extends Controller
                 ->first();
 
             if ($selectedStudent) {
-                $uploadedDocuments = DB::table('admissions.student_documents')
-                    ->where('application_no', $selectedStudent->application_no)
+                $uploadedDocuments = StudentDocument::where('application_no', (string) $selectedStudent->application_no)
                     ->orderBy('doc_id', 'desc')
                     ->get()
                     ->map(function ($d) {
                         $d->file_url = $this->resolveFileUrl($d->docfile);
-                        $d->is_image = in_array(strtolower($d->doctype), ['photo', 'avatar', 'image']);
+                        $d->is_image = in_array(strtolower((string) $d->doctype), ['photo', 'avatar', 'image'], true);
 
                         return $d;
                     });
@@ -128,8 +131,11 @@ class DocumentUploadController extends Controller
             return response()->json(['students' => []]);
         }
 
-        $students = DB::table('admissions.student_registrations as sr')
-            ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
+        $srTable = (new StudentRegistration)->getTable();
+        $pTable = (new Programs)->getTable();
+
+        $students = StudentRegistration::from("{$srTable} as sr")
+            ->leftJoin("{$pTable} as p", 'sr.progid', '=', 'p.program_id')
             ->where(function ($w) use ($q) {
                 $w->where('sr.register_no', 'ILIKE', "%{$q}%")
                     ->orWhere('sr.student_name', 'ILIKE', "%{$q}%")
@@ -162,9 +168,9 @@ class DocumentUploadController extends Controller
         $appNo = (int) $request->input('application_no');
         $regNo = trim((string) $request->input('register_no', ''));
 
-        $query = DB::table('admissions.student_documents');
+        $query = StudentDocument::query();
         if ($appNo > 0) {
-            $query->where('application_no', $appNo);
+            $query->where('application_no', (string) $appNo);
         } elseif (! empty($regNo)) {
             $query->where('register_no', $regNo);
         } else {
@@ -175,7 +181,7 @@ class DocumentUploadController extends Controller
             ->get()
             ->map(function ($d) {
                 $d->file_url = $this->resolveFileUrl($d->docfile);
-                $d->is_image = in_array(strtolower($d->doctype), ['photo', 'avatar', 'image']);
+                $d->is_image = in_array(strtolower((string) $d->doctype), ['photo', 'avatar', 'image'], true);
 
                 return $d;
             });
@@ -201,10 +207,8 @@ class DocumentUploadController extends Controller
             ], 422);
         }
 
-        // Validate student exists
-        $student = DB::table('admissions.student_registrations')
-            ->where('application_no', $appNo)
-            ->first();
+        // Validate student exists via Eloquent
+        $student = StudentRegistration::where('application_no', (string) $appNo)->first();
 
         if (! $student) {
             return response()->json([
@@ -244,12 +248,12 @@ class DocumentUploadController extends Controller
         $storedPath = $file->storeAs('documents', $filename, 'public');
         $docNo = 'DOC-'.strtoupper(Str::random(8));
 
-        // Insert into database
+        // Insert into database via StudentDocument model
         $userCode = session('user.usercode', $user->usercode ?? 'SYSTEM');
         $ip = $request->ip();
 
-        $insertedId = DB::table('admissions.student_documents')->insertGetId([
-            'application_no' => $appNo,
+        $doc = StudentDocument::create([
+            'application_no' => (string) $appNo,
             'register_no' => $regNo,
             'docno' => $docNo,
             'docname' => $file->getClientOriginalName(),
@@ -259,7 +263,9 @@ class DocumentUploadController extends Controller
             'log_userid' => $userCode,
             'log_ipaddress' => $ip,
             'log_timestamp' => now(),
-        ], 'doc_id');
+        ]);
+
+        $insertedId = $doc->doc_id;
 
         ActivityLogger::log('ADMISSION', 'DOC_UPLOAD', "Uploaded {$docType} for student {$regNo} (App: {$appNo})", [
             'application_no' => $appNo,
@@ -280,7 +286,7 @@ class DocumentUploadController extends Controller
                 'doctype' => $docType,
                 'docfile' => $storedPath,
                 'file_url' => asset('storage/'.$storedPath),
-                'is_image' => in_array($docType, ['photo', 'avatar', 'image']),
+                'is_image' => in_array($docType, ['photo', 'avatar', 'image'], true),
                 'log_timestamp' => now()->format('Y-m-d H:i:s'),
             ],
         ]);
@@ -293,7 +299,7 @@ class DocumentUploadController extends Controller
     {
         $this->requireLogin();
 
-        $doc = DB::table('admissions.student_documents')->where('doc_id', $docId)->first();
+        $doc = StudentDocument::find($docId);
         if (! $doc) {
             return response()->json(['success' => false, 'message' => 'Document not found.'], 404);
         }
@@ -303,7 +309,7 @@ class DocumentUploadController extends Controller
             Storage::disk('public')->delete($doc->docfile);
         }
 
-        DB::table('admissions.student_documents')->where('doc_id', $docId)->delete();
+        $doc->delete();
 
         ActivityLogger::log('ADMISSION', 'DOC_DELETE', "Deleted document #{$docId} ({$doc->doctype}) for student {$doc->register_no}", [
             'doc_id' => $docId,

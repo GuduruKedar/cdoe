@@ -8,10 +8,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Modules\Admissions\Models\StudentRegistration;
-use Modules\Examinations\Models\marksMemo;
+use Modules\Examinations\Models\MarksMemo;
 
 class ExamResultsController extends Controller
 {
@@ -59,8 +58,11 @@ class ExamResultsController extends Controller
             $perPage = 15;
         }
 
-        $query = DB::table('examinations.marks_cgpa as m')
-            ->leftJoin('admissions.student_registrations as s', 'm.regno', '=', 's.register_no')
+        $mTable = (new MarksMemo)->getTable();
+        $sTable = (new StudentRegistration)->getTable();
+
+        $query = MarksMemo::from("{$mTable} as m")
+            ->leftJoin("{$sTable} as s", 'm.regno', '=', 's.register_no')
             ->select(
                 'm.mmno',
                 'm.regno',
@@ -111,9 +113,7 @@ class ExamResultsController extends Controller
             $page = 1;
         }
 
-        $totalCount = DB::table(DB::raw("({$query->toSql()}) as sub"))
-            ->mergeBindings($query)
-            ->count();
+        $totalCount = MarksMemo::query()->fromSub($query, 'sub')->count();
 
         $items = $query->orderBy('m.mmno')
             ->orderBy('m.s_year')
@@ -149,11 +149,11 @@ class ExamResultsController extends Controller
             ]);
         }
 
-        $semesters = DB::table('examinations.marks_cgpa')->whereNotNull('s_sem')->distinct()->orderBy('s_sem')->pluck('s_sem');
-        $types = DB::table('examinations.marks_cgpa')->whereNotNull('mm_type')->distinct()->orderBy('mm_type')->pluck('mm_type');
-        $divisions = DB::table('examinations.marks_cgpa')->whereNotNull('division_name')->distinct()->orderBy('division_name')->pluck('division_name');
-        $examMonths = DB::table('examinations.marks_cgpa')->whereNotNull('exam_mon_yyyy')->distinct()->orderBy('exam_mon_yyyy')->pluck('exam_mon_yyyy');
-        $totalRecords = DB::table('examinations.marks_cgpa')->distinct()->count('mmno');
+        $semesters = MarksMemo::whereNotNull('s_sem')->distinct()->orderBy('s_sem')->pluck('s_sem');
+        $types = MarksMemo::whereNotNull('mm_type')->distinct()->orderBy('mm_type')->pluck('mm_type');
+        $divisions = MarksMemo::whereNotNull('division_name')->distinct()->orderBy('division_name')->pluck('division_name');
+        $examMonths = MarksMemo::whereNotNull('exam_mon_yyyy')->distinct()->orderBy('exam_mon_yyyy')->pluck('exam_mon_yyyy');
+        $totalRecords = MarksMemo::distinct()->count('mmno');
 
         return view('examinations::stdmarks', compact(
             'user',
@@ -187,7 +187,7 @@ class ExamResultsController extends Controller
         if ($menus === null) {
             return view('errors.no-role', compact('user'));
         }
-        $marksMemoList = marksMemo::select(['mmno', 'regno', 'division_name', 'mm_type', 'exam_mon_yyyy',
+        $marksMemoList = MarksMemo::select(['mmno', 'regno', 'division_name', 'mm_type', 'exam_mon_yyyy',
             's_year', 's_sem', 'sgpa_perc', 'cgpa_perc', 'appno'])
             ->distinct('mmno')
             ->orderBy('mmno')
@@ -230,7 +230,7 @@ class ExamResultsController extends Controller
         }
 
         try {
-            $query = marksMemo::byRegno($regno)
+            $query = MarksMemo::byRegno($regno)
                 ->where('mmno', $mmno);
 
             if (! empty($appno)) {
@@ -244,7 +244,7 @@ class ExamResultsController extends Controller
         }
 
         $student_info = StudentRegistration::select(['student_name', 'adm_batch_code', 'register_no', 'progid', 'electiveid'])->with(['program:program_id,program_long_name', 'electives:elective_id,elective_long_name'])->where('register_no', $regno)->first();
-        $results = marksMemo::byMmno($mmno)->with('subject:subcode,subname,credits')->get();
+        $results = MarksMemo::byMmno($mmno)->with('subject:subcode,subname,credits')->get();
         $basic_info = $valid->only([
             'mmno',
             's_sem',
@@ -252,7 +252,6 @@ class ExamResultsController extends Controller
             'results_mon_yyyy',
             'sgpa_perc',
             'division_name',
-
         ]);
         $totalMarks = $results->sum('total_earned');
         $examMarks = (int) $results->count() * 100;
@@ -274,7 +273,7 @@ class ExamResultsController extends Controller
         if ($menus === null) {
             return view('errors.no-role', compact('user'));
         }
-        $marksMemoList = marksMemo::byRegno($reg_no)
+        $marksMemoList = MarksMemo::byRegno($reg_no)
             ->select(['mmno', 'regno', 'division_name', 'mm_type', 'exam_mon_yyyy',
                 's_year', 's_sem', 'sgpa_perc', 'cgpa_perc', 'appno'])
             ->distinct('mmno')
@@ -285,6 +284,5 @@ class ExamResultsController extends Controller
             ->get();
 
         return view('examinations::markslist', compact('marksMemoList', 'user', 'menus'));
-
     }
 }

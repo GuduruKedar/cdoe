@@ -6,16 +6,23 @@ use App\Common\Services\ActivityLogger;
 use App\Common\Services\MenuService;
 use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Modules\Auth\Models\Login;
+use Modules\Hrms\Models\Campus;
+use Modules\Hrms\Models\Department;
+use Modules\Hrms\Models\Designation;
+use Modules\Hrms\Models\Employee;
+use Modules\Hrms\Models\RoleAssigned;
 
 class EmployeeCreationController extends Controller
 {
     use RequiresLogin;
 
     /**
-     * Show the Employee Creation form.
+     * Show form to create new employee.
      */
     public function create(Request $request)
     {
@@ -25,24 +32,20 @@ class EmployeeCreationController extends Controller
             return view('errors.no-role', compact('user'));
         }
 
-        $designations = DB::table('master.designations')
-            ->where('lock_status', 0)
+        $designations = Designation::where('lock_status', 0)
             ->orderBy('designation_level')
             ->orderBy('designation_name')
             ->get();
 
-        $campuses = DB::table('master.campuses')
-            ->where('lock_status', 0)
+        $campuses = Campus::where('lock_status', 0)
             ->orderBy('campus_name')
             ->get();
 
-        $roles = DB::table('master.roles')
-            ->where('role_status', 1)
+        $roles = Role::where('role_status', 1)
             ->orderBy('role_name')
             ->get();
 
-        $departments = DB::table('master.departments')
-            ->orderBy('department_name')
+        $departments = Department::orderBy('department_name')
             ->get();
 
         $empTypes = ['PERMANENT', 'INTERN', 'CONTRACT', 'VISITING', 'GUEST'];
@@ -102,8 +105,8 @@ class EmployeeCreationController extends Controller
         $empCode = trim($validated['emp_code']);
 
         DB::transaction(function () use ($validated, $empCode, $isActive, $createLogin, $user, $request) {
-            // 1. Insert into hrms.employees
-            DB::table('hrms.employees')->insert([
+            // 1. Insert into hrms.employees via Employee model
+            Employee::create([
                 'emp_code' => $empCode,
                 'full_name' => trim($validated['full_name']),
                 'ofc_mailid' => trim($validated['ofc_mailid']),
@@ -122,10 +125,10 @@ class EmployeeCreationController extends Controller
                 'log_timestamp' => now(),
             ]);
 
-            // 2. Optionally create portal login account
+            // 2. Optionally create portal login account via Login model
             if ($createLogin) {
                 $plainPassword = $validated['password'] ?? 'Vignan@123';
-                DB::table('master.login')->insert([
+                Login::create([
                     'usercode' => $empCode,
                     'phnno' => trim($validated['phone_primary']),
                     'officialmail' => trim($validated['ofc_mailid']),
@@ -144,9 +147,9 @@ class EmployeeCreationController extends Controller
                     'log_timestamp' => now(),
                 ]);
 
-                // 3. Assign default or selected role in master.roles_assigned
+                // 3. Assign default or selected role in master.roles_assigned via RoleAssigned model
                 $assignedRoleId = ! empty($validated['role_id']) ? (int) $validated['role_id'] : 1;
-                DB::table('master.roles_assigned')->insert([
+                RoleAssigned::create([
                     'emp_id' => $empCode,
                     'campus_id' => ! empty($validated['campus_id']) ? (string) $validated['campus_id'] : '1',
                     'roles_role_id' => $assignedRoleId,

@@ -5,13 +5,20 @@ namespace Modules\Dashboard\Http\Controllers;
 use App\Common\Services\MenuService;
 use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use Modules\Admissions\Models\Programs;
+use Modules\Admissions\Models\StudentRegistration;
+use Modules\Examinations\Models\MarksMemo;
+use Modules\Hrms\Models\Employee;
 
 class DashboardController extends Controller
 {
     use RequiresLogin;
 
-    public function index()
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
     {
         $user = $this->requireLogin();
         $menus = MenuService::getMenusForUser($user);
@@ -21,43 +28,38 @@ class DashboardController extends Controller
         }
 
         $userCode = $user->usercode ?? session('user.usercode');
-        $userName = DB::table('hrms.employees')->where('emp_code', $userCode)->value('full_name')
-            ?: DB::table('admissions.student_registrations')->where('register_no', $userCode)->value('student_name')
+        $userName = Employee::where('emp_code', $userCode)->value('full_name')
+            ?: StudentRegistration::where('register_no', $userCode)->value('student_name')
             ?: ($user->usercode ?? 'Administrator');
 
-        // Dashboard statistics
+        // Dashboard statistics via Eloquent models
         $stats = [
-            'students' => DB::table('admissions.student_registrations')->count(),
-            'employees' => DB::table('hrms.employees')->count(),
-            'marks' => DB::table('examinations.marks_cgpa')->distinct()->count('mmno'),
-            'programs' => DB::table('master.programs')->count(),
+            'students' => StudentRegistration::count(),
+            'employees' => Employee::count(),
+            'marks' => MarksMemo::distinct()->count('mmno'),
+            'programs' => Programs::count(),
         ];
 
         // Recent student registrations preview
-        $recentStudents = DB::table('admissions.student_registrations as sr')
-            ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
-            ->select('sr.register_no', 'sr.student_name', 'p.program_short_name', 'sr.std_status')
-            ->orderBy('sr.register_no', 'desc')
+        $recentStudents = StudentRegistration::with('program:program_id,program_short_name')
+            ->orderBy('register_no', 'desc')
             ->limit(5)
-            ->get();
+            ->get(['register_no', 'student_name', 'progid', 'std_status']);
 
-        // Dashboard chart datasets
-        $programDistribution = DB::table('admissions.student_registrations as sr')
-            ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
-            ->selectRaw("COALESCE(p.program_short_name, 'Other') as name, count(*) as total")
-            ->groupBy('p.program_short_name')
+        // Dashboard chart datasets: optimal Eloquent relationship aggregation
+        $programDistribution = Programs::select('program_short_name as name')
+            ->withCount('students as total')
+            ->has('students')
             ->orderByDesc('total')
             ->get();
 
-        $gradeDistribution = DB::table('examinations.marks_cgpa')
-            ->selectRaw('letter_grade, count(*) as total')
+        $gradeDistribution = MarksMemo::selectRaw('letter_grade, count(*) as total')
             ->whereNotNull('letter_grade')
             ->groupBy('letter_grade')
             ->orderByDesc('total')
             ->get();
 
-        $genderDistribution = DB::table('admissions.student_registrations')
-            ->selectRaw("COALESCE(gender, 'Unspecified') as gender, count(*) as total")
+        $genderDistribution = StudentRegistration::selectRaw("COALESCE(gender, 'Unspecified') as gender, count(*) as total")
             ->groupBy('gender')
             ->get();
 

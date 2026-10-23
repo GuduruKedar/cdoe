@@ -8,7 +8,8 @@ use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Modules\Admissions\Models\StudentRegistration;
+use Modules\Examinations\Models\MarksMemo;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CgpaMarksUploadController extends Controller
@@ -16,7 +17,7 @@ class CgpaMarksUploadController extends Controller
     use RequiresLogin;
 
     /**
-     * Display CGPA marks upload dashboard.
+     * Show Marks Upload interface with summary statistics and recent records.
      */
     public function index(Request $request)
     {
@@ -27,15 +28,18 @@ class CgpaMarksUploadController extends Controller
         }
 
         $stats = [
-            'total_records' => DB::table('examinations.marks_cgpa')->count(),
-            'total_students' => DB::table('examinations.marks_cgpa')->distinct()->count('regno'),
-            'distinct_exams' => DB::table('examinations.marks_cgpa')->whereNotNull('exam_mon_yyyy')->distinct()->count('exam_mon_yyyy'),
-            'distinct_subjects' => DB::table('examinations.marks_cgpa')->whereNotNull('subcode')->distinct()->count('subcode'),
+            'total_records' => MarksMemo::count(),
+            'total_students' => MarksMemo::distinct()->count('regno'),
+            'distinct_exams' => MarksMemo::whereNotNull('exam_mon_yyyy')->distinct()->count('exam_mon_yyyy'),
+            'distinct_subjects' => MarksMemo::whereNotNull('subcode')->distinct()->count('subcode'),
         ];
 
+        $mTable = (new MarksMemo)->getTable();
+        $sTable = (new StudentRegistration)->getTable();
+
         // Recent marks uploads (latest 15)
-        $recentMarks = DB::table('examinations.marks_cgpa as m')
-            ->leftJoin('admissions.student_registrations as s', 'm.regno', '=', 's.register_no')
+        $recentMarks = MarksMemo::from("{$mTable} as m")
+            ->leftJoin("{$sTable} as s", 'm.regno', '=', 's.register_no')
             ->select(
                 'm.regno',
                 's.student_name',
@@ -54,8 +58,7 @@ class CgpaMarksUploadController extends Controller
             ->limit(15)
             ->get();
 
-        $examMonths = DB::table('examinations.marks_cgpa')
-            ->whereNotNull('exam_mon_yyyy')
+        $examMonths = MarksMemo::whereNotNull('exam_mon_yyyy')
             ->distinct()
             ->orderBy('exam_mon_yyyy')
             ->pluck('exam_mon_yyyy');
@@ -261,20 +264,18 @@ class CgpaMarksUploadController extends Controller
             ];
 
             try {
-                // Upsert on primary key (mmno, subcode)
-                $existing = DB::table('examinations.marks_cgpa')
-                    ->where('mmno', $mmno)
+                // Upsert on primary key (mmno, subcode) via MarksMemo Eloquent model
+                $existing = MarksMemo::where('mmno', $mmno)
                     ->where('subcode', $subcode)
                     ->exists();
 
                 if ($existing) {
-                    DB::table('examinations.marks_cgpa')
-                        ->where('mmno', $mmno)
+                    MarksMemo::where('mmno', $mmno)
                         ->where('subcode', $subcode)
                         ->update($record);
                     $updatedCount++;
                 } else {
-                    DB::table('examinations.marks_cgpa')->insert($record);
+                    MarksMemo::create($record);
                     $insertedCount++;
                 }
             } catch (\Throwable $e) {

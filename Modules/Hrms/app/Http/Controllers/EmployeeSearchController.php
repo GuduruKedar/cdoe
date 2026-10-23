@@ -6,17 +6,20 @@ use App\Common\Services\MenuService;
 use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Modules\Hrms\Models\Employee;
 
 class EmployeeSearchController extends Controller
 {
     use RequiresLogin;
 
+    /**
+     * Display a listing of employees with search and filter capabilities.
+     */
     public function index(Request $request)
     {
         $user = $this->requireLogin();
         $menus = MenuService::getMenusForUser($user);
-        if ($menus === null && ! ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest')) {
+        if ($menus === null) {
             return view('errors.no-role', compact('user'));
         }
 
@@ -28,7 +31,9 @@ class EmployeeSearchController extends Controller
             $perPage = 15;
         }
 
-        $query = DB::table('hrms.employees as e')
+        $eTable = (new Employee)->getTable();
+
+        $query = Employee::from("{$eTable} as e")
             ->select(
                 'e.emp_code',
                 'e.full_name',
@@ -95,14 +100,13 @@ class EmployeeSearchController extends Controller
             ]);
         }
 
-        // Initial Filter Options
-        $types = DB::table('hrms.employees')
-            ->whereNotNull('emp_type')
+        // Initial Filter Options via Eloquent
+        $types = Employee::whereNotNull('emp_type')
             ->distinct()
             ->orderBy('emp_type')
             ->pluck('emp_type');
 
-        $totalEmployees = DB::table('hrms.employees')->count();
+        $totalEmployees = Employee::count();
 
         return view('hrms::empsearch', compact(
             'user',

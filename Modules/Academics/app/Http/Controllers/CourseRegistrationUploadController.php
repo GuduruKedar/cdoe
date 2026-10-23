@@ -8,7 +8,9 @@ use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Modules\Academics\Models\CourseRegistration;
+use Modules\Academics\Models\Subject;
+use Modules\Admissions\Models\StudentRegistration;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CourseRegistrationUploadController extends Controller
@@ -16,7 +18,7 @@ class CourseRegistrationUploadController extends Controller
     use RequiresLogin;
 
     /**
-     * Display Course Registration Upload dashboard.
+     * Show Course Registration upload interface with summary stats and preview.
      */
     public function index(Request $request)
     {
@@ -27,16 +29,20 @@ class CourseRegistrationUploadController extends Controller
         }
 
         $stats = [
-            'total_registrations' => DB::table('academics.course_registration')->count(),
-            'total_students' => DB::table('academics.course_registration')->distinct()->count('regno'),
-            'distinct_subjects' => DB::table('academics.course_registration')->whereNotNull('subcode')->distinct()->count('subcode'),
-            'distinct_semesters' => DB::table('academics.course_registration')->whereNotNull('semcode')->distinct()->count('semcode'),
+            'total_registrations' => CourseRegistration::count(),
+            'total_students' => CourseRegistration::distinct()->count('regno'),
+            'distinct_subjects' => CourseRegistration::whereNotNull('subcode')->distinct()->count('subcode'),
+            'distinct_semesters' => CourseRegistration::whereNotNull('semcode')->distinct()->count('semcode'),
         ];
 
+        $crTable = (new CourseRegistration)->getTable();
+        $sTable = (new StudentRegistration)->getTable();
+        $subTable = (new Subject)->getTable();
+
         // Recent course registrations (latest 15)
-        $recentRegistrations = DB::table('academics.course_registration as cr')
-            ->leftJoin('admissions.student_registrations as s', 'cr.regno', '=', 's.register_no')
-            ->leftJoin('academics.subjects as sub', 'cr.subcode', '=', 'sub.subcode')
+        $recentRegistrations = CourseRegistration::from("{$crTable} as cr")
+            ->leftJoin("{$sTable} as s", 'cr.regno', '=', 's.register_no')
+            ->leftJoin("{$subTable} as sub", 'cr.subcode', '=', 'sub.subcode')
             ->select(
                 'cr.regno',
                 's.student_name',
@@ -53,8 +59,7 @@ class CourseRegistrationUploadController extends Controller
             ->limit(15)
             ->get();
 
-        $semcodes = DB::table('academics.course_registration')
-            ->whereNotNull('semcode')
+        $semcodes = CourseRegistration::whereNotNull('semcode')
             ->distinct()
             ->orderBy('semcode')
             ->pluck('semcode');
@@ -225,23 +230,21 @@ class CourseRegistrationUploadController extends Controller
             ];
 
             try {
-                // Check if registration exists for (regno, subcode, semcode)
-                $existing = DB::table('academics.course_registration')
-                    ->where('regno', $regno)
+                // Check if registration exists for (regno, subcode, semcode) via Eloquent
+                $existing = CourseRegistration::where('regno', $regno)
                     ->where('subcode', $subcode)
                     ->where('semcode', $semcode)
                     ->exists();
 
                 if ($existing) {
-                    DB::table('academics.course_registration')
-                        ->where('regno', $regno)
+                    CourseRegistration::where('regno', $regno)
                         ->where('subcode', $subcode)
                         ->where('semcode', $semcode)
                         ->update($record);
                     $updatedCount++;
                 } else {
                     $record['reg_date'] = $now->toDateString();
-                    DB::table('academics.course_registration')->insert($record);
+                    CourseRegistration::create($record);
                     $insertedCount++;
                 }
             } catch (\Throwable $e) {

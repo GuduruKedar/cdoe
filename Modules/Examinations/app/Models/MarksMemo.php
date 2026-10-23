@@ -7,8 +7,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Academics\Models\Subject;
 use Modules\Admissions\Models\StudentRegistration;
 
-// use Modules\Examinations\Database\Factories\MarksmemoFactory;
-
 class MarksMemo extends Model
 {
     protected $connection = 'pgsql';
@@ -21,12 +19,23 @@ class MarksMemo extends Model
 
     public $timestamps = false;
 
-    protected $fillable = [];
+    protected $guarded = [];
+
+    protected $casts = [
+        'appno' => 'integer',
+        's_year' => 'integer',
+        's_sem' => 'integer',
+        'log_timestamp' => 'datetime',
+    ];
 
     public function scopeByRegno($query, string $regno)
     {
-
         return $query->where('regno', $regno);
+    }
+
+    public function scopeByMmno($query, string $mmno)
+    {
+        return $query->where('mmno', $mmno);
     }
 
     public function subject(): BelongsTo
@@ -39,9 +48,8 @@ class MarksMemo extends Model
         return $this->belongsTo(StudentRegistration::class, 'regno', 'register_no');
     }
 
-    public function scopeByMmno($query, string $mmno)
+    public function studentByAppno(): BelongsTo
     {
-
-        return $query->where('mmno', $mmno);
+        return $this->belongsTo(StudentRegistration::class, 'appno', 'application_no');
     }
 }

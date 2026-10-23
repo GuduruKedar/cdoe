@@ -6,7 +6,8 @@ use App\Common\Services\MenuService;
 use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Modules\Academics\Models\CourseRegistration;
+use Modules\Admissions\Models\StudentRegistration;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CourseRegistrationDownloadController extends Controller
@@ -14,7 +15,7 @@ class CourseRegistrationDownloadController extends Controller
     use RequiresLogin;
 
     /**
-     * Display course registrations table with filters and download options.
+     * Display a listing of course registrations with filters and search.
      */
     public function index(Request $request)
     {
@@ -36,48 +37,45 @@ class CourseRegistrationDownloadController extends Controller
             $perPage = 25;
         }
 
-        // Distinct filter options from database
-        $semcodes = DB::table('academics.course_registration')
-            ->whereNotNull('semcode')
+        // Distinct filter options from database via Eloquent
+        $semcodes = CourseRegistration::whereNotNull('semcode')
             ->distinct()
             ->orderBy('semcode')
             ->pluck('semcode');
 
-        $subcodes = DB::table('academics.course_registration')
-            ->whereNotNull('subcode')
+        $subcodes = CourseRegistration::whereNotNull('subcode')
             ->distinct()
             ->orderBy('subcode')
             ->pluck('subcode');
 
-        $years = DB::table('academics.course_registration')
-            ->whereNotNull('s_year')
+        $years = CourseRegistration::whereNotNull('s_year')
             ->distinct()
             ->orderBy('s_year')
             ->pluck('s_year');
 
-        $sems = DB::table('academics.course_registration')
-            ->whereNotNull('s_sem')
+        $sems = CourseRegistration::whereNotNull('s_sem')
             ->distinct()
             ->orderBy('s_sem')
             ->pluck('s_sem');
 
-        $sections = DB::table('academics.course_registration')
-            ->whereNotNull('section_no')
+        $sections = CourseRegistration::whereNotNull('section_no')
             ->distinct()
             ->orderBy('section_no')
             ->pluck('section_no');
 
-        $regTypes = DB::table('academics.course_registration')
-            ->whereNotNull('reg_type')
+        $regTypes = CourseRegistration::whereNotNull('reg_type')
             ->distinct()
             ->orderBy('reg_type')
             ->pluck('reg_type');
 
-        $totalRecords = DB::table('academics.course_registration')->count();
+        $totalRecords = CourseRegistration::count();
+
+        $crTable = (new CourseRegistration)->getTable();
+        $srTable = (new StudentRegistration)->getTable();
 
         // Build query joined with student name for richness
-        $query = DB::table('academics.course_registration as cr')
-            ->leftJoin('admissions.student_registrations as sr', 'cr.appno', '=', 'sr.application_no')
+        $query = CourseRegistration::from("{$crTable} as cr")
+            ->leftJoin("{$srTable} as sr", 'cr.appno', '=', 'sr.application_no')
             ->select(
                 'cr.semcode',
                 'cr.classno',
@@ -166,8 +164,11 @@ class CourseRegistrationDownloadController extends Controller
         $regType = $request->input('reg_type');
         $q = trim((string) $request->input('q', ''));
 
-        $query = DB::table('academics.course_registration as cr')
-            ->leftJoin('admissions.student_registrations as sr', 'cr.appno', '=', 'sr.application_no')
+        $crTable = (new CourseRegistration)->getTable();
+        $srTable = (new StudentRegistration)->getTable();
+
+        $query = CourseRegistration::from("{$crTable} as cr")
+            ->leftJoin("{$srTable} as sr", 'cr.appno', '=', 'sr.application_no')
             ->select(
                 'cr.semcode',
                 'cr.classno',

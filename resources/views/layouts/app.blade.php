@@ -439,8 +439,8 @@
     // Resolve real full name from HRMS employee profile or student registration
     $userName = session('user.name');
     if (! $userName && $userCode) {
-        $userName = \Illuminate\Support\Facades\DB::table('hrms.employees')->where('emp_code', $userCode)->value('full_name')
-            ?: \Illuminate\Support\Facades\DB::table('admissions.student_registrations')->where('register_no', $userCode)->value('student_name');
+        $userName = \Modules\Hrms\Models\Employee::where('emp_code', $userCode)->value('full_name')
+            ?: \Modules\Admissions\Models\StudentRegistration::where('register_no', $userCode)->value('student_name');
     }
     $displayName = $userName ?: ($user->usercode ?? $userCode ?? 'Administrator');
     $avatarInitial = strtoupper(substr(trim(preg_replace('/^(Mr\.|Mrs\.|Ms\.|Dr\.|Prof\.)\s+/i', '', $displayName)), 0, 1)) ?: 'A';

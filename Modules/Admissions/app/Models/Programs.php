@@ -3,8 +3,7 @@
 namespace Modules\Admissions\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
-// use Modules\Admissions\Database\Factories\ProgramsFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Programs extends Model
 {
@@ -22,8 +21,8 @@ class Programs extends Model
 
     protected $guarded = [];
 
-    /**
-     * The attributes that are mass assignable.
-     */
-    protected $fillable = [];
+    public function students(): HasMany
+    {
+        return $this->hasMany(StudentRegistration::class, 'progid', 'program_id');
+    }
 }

@@ -6,8 +6,10 @@ use App\Common\Services\MenuService;
 use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Modules\Admissions\Models\Programs;
+use Modules\Admissions\Models\StudentDocument;
+use Modules\Admissions\Models\StudentRegistration;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentViewController extends Controller
@@ -15,7 +17,7 @@ class DocumentViewController extends Controller
     use RequiresLogin;
 
     /**
-     * Display the Document Verification / View matrix table.
+     * Display a grid/matrix of students and their uploaded documents.
      */
     public function index(Request $request)
     {
@@ -34,29 +36,29 @@ class DocumentViewController extends Controller
             $perPage = 20;
         }
 
-        // Distinct filter options
-        $programs = DB::table('master.programs')
-            ->orderBy('program_code')
+        // Distinct filter options via Eloquent
+        $programs = Programs::orderBy('program_code')
             ->select('program_id', 'program_code', 'program_long_name')
             ->get();
 
-        $batches = DB::table('admissions.student_registrations')
-            ->whereNotNull('adm_batch_code')
+        $batches = StudentRegistration::whereNotNull('adm_batch_code')
             ->distinct()
             ->orderBy('adm_batch_code')
             ->pluck('adm_batch_code');
 
-        $statuses = DB::table('admissions.student_registrations')
-            ->whereNotNull('std_status')
+        $statuses = StudentRegistration::whereNotNull('std_status')
             ->distinct()
             ->orderBy('std_status')
             ->pluck('std_status');
 
-        $totalRecords = DB::table('admissions.student_registrations')->count();
+        $totalRecords = StudentRegistration::count();
+
+        $srTable = (new StudentRegistration)->getTable();
+        $pTable = (new Programs)->getTable();
 
         // Build main student query
-        $query = DB::table('admissions.student_registrations as sr')
-            ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
+        $query = StudentRegistration::from("{$srTable} as sr")
+            ->leftJoin("{$pTable} as p", 'sr.progid', '=', 'p.program_id')
             ->select(
                 'sr.application_no',
                 'sr.register_no',
@@ -89,10 +91,9 @@ class DocumentViewController extends Controller
         $filteredCount = (clone $query)->count();
         $students = $query->orderBy('sr.application_no', 'asc')->paginate($perPage);
 
-        // Fetch documents for the current page of students
+        // Fetch documents for the current page of students via StudentDocument model
         $appNos = $students->pluck('application_no')->toArray();
-        $docsRaw = DB::table('admissions.student_documents')
-            ->whereIn('application_no', $appNos)
+        $docsRaw = StudentDocument::whereIn('application_no', array_map('strval', $appNos))
             ->get();
 
         // Group documents by application_no and normalized doctype
@@ -125,7 +126,7 @@ class DocumentViewController extends Controller
             }
 
             $d->file_url = $this->resolveFileUrl($d->docfile);
-            $d->is_image = in_array(strtolower($d->doctype), ['photo', 'avatar', 'image']);
+            $d->is_image = in_array(strtolower((string) $d->doctype), ['photo', 'avatar', 'image'], true);
             $studentDocs[$d->application_no][$normType] = $d;
             // Also store first docno found
             if (! isset($studentDocs[$d->application_no]['_docno'])) {
@@ -157,7 +158,7 @@ class DocumentViewController extends Controller
     {
         $this->requireLogin();
 
-        $doc = DB::table('admissions.student_documents')->where('doc_id', $docId)->first();
+        $doc = StudentDocument::find($docId);
         if (! $doc || empty($doc->docfile)) {
             abort(404, 'Document record not found');
         }
@@ -187,8 +188,11 @@ class DocumentViewController extends Controller
         $status = $request->input('status');
         $q = trim((string) $request->input('q', ''));
 
-        $query = DB::table('admissions.student_registrations as sr')
-            ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
+        $srTable = (new StudentRegistration)->getTable();
+        $pTable = (new Programs)->getTable();
+
+        $query = StudentRegistration::from("{$srTable} as sr")
+            ->leftJoin("{$pTable} as p", 'sr.progid', '=', 'p.program_id')
             ->select('sr.application_no', 'sr.register_no', 'sr.student_name', 'sr.adm_batch_code', 'sr.std_status', 'p.program_code');
 
         if ($program && $program !== 'all') {
@@ -210,8 +214,7 @@ class DocumentViewController extends Controller
         $records = $query->orderBy('sr.application_no', 'asc')->get();
         $appNos = $records->pluck('application_no')->toArray();
 
-        $docs = DB::table('admissions.student_documents')
-            ->whereIn('application_no', $appNos)
+        $docs = StudentDocument::whereIn('application_no', array_map('strval', $appNos))
             ->get()
             ->groupBy('application_no');
 

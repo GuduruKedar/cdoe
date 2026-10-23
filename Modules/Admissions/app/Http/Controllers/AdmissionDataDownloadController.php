@@ -6,7 +6,8 @@ use App\Common\Services\MenuService;
 use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Modules\Admissions\Models\Programs;
+use Modules\Admissions\Models\StudentRegistration;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdmissionDataDownloadController extends Controller
@@ -14,7 +15,7 @@ class AdmissionDataDownloadController extends Controller
     use RequiresLogin;
 
     /**
-     * Display student registrations table with filters and download options.
+     * Display a listing of admitted students with rich filtering, search, and pagination.
      */
     public function index(Request $request)
     {
@@ -35,35 +36,34 @@ class AdmissionDataDownloadController extends Controller
             $perPage = 25;
         }
 
-        // Distinct dropdown options
-        $programs = DB::table('master.programs')
-            ->orderBy('program_code')
+        // Distinct dropdown options via Eloquent
+        $programs = Programs::orderBy('program_code')
             ->select('program_id', 'program_code', 'program_long_name')
             ->get();
 
-        $batches = DB::table('admissions.student_registrations')
-            ->whereNotNull('adm_batch_code')
+        $batches = StudentRegistration::whereNotNull('adm_batch_code')
             ->distinct()
             ->orderBy('adm_batch_code')
             ->pluck('adm_batch_code');
 
-        $regulations = DB::table('admissions.student_registrations')
-            ->whereNotNull('regulation')
+        $regulations = StudentRegistration::whereNotNull('regulation')
             ->distinct()
             ->orderBy('regulation')
             ->pluck('regulation');
 
-        $statuses = DB::table('admissions.student_registrations')
-            ->whereNotNull('std_status')
+        $statuses = StudentRegistration::whereNotNull('std_status')
             ->distinct()
             ->orderBy('std_status')
             ->pluck('std_status');
 
-        $totalRecords = DB::table('admissions.student_registrations')->count();
+        $totalRecords = StudentRegistration::count();
+
+        $srTable = (new StudentRegistration)->getTable();
+        $pTable = (new Programs)->getTable();
 
         // Build query
-        $query = DB::table('admissions.student_registrations as sr')
-            ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
+        $query = StudentRegistration::from("{$srTable} as sr")
+            ->leftJoin("{$pTable} as p", 'sr.progid', '=', 'p.program_id')
             ->select(
                 'sr.application_no',
                 'sr.enrollment_no',
@@ -151,8 +151,11 @@ class AdmissionDataDownloadController extends Controller
         $status = $request->input('status');
         $q = trim((string) $request->input('q', ''));
 
-        $query = DB::table('admissions.student_registrations as sr')
-            ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
+        $srTable = (new StudentRegistration)->getTable();
+        $pTable = (new Programs)->getTable();
+
+        $query = StudentRegistration::from("{$srTable} as sr")
+            ->leftJoin("{$pTable} as p", 'sr.progid', '=', 'p.program_id')
             ->select(
                 'sr.application_no',
                 'sr.enrollment_no',

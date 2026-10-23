@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Support\Facades\DB;
+use Modules\Auth\Models\Login;
+use Modules\Hrms\Models\Employee;
+use Modules\Hrms\Models\RoleAssigned;
 use Tests\TestCase;
 
 class EmployeeCreationTest extends TestCase
@@ -63,9 +65,9 @@ class EmployeeCreationTest extends TestCase
     {
         $testEmpCode = 'TEST9999';
 
-        DB::table('master.login')->where('usercode', $testEmpCode)->delete();
-        DB::table('master.roles_assigned')->where('emp_id', $testEmpCode)->delete();
-        DB::table('hrms.employees')->where('emp_code', $testEmpCode)->delete();
+        Login::where('usercode', $testEmpCode)->delete();
+        RoleAssigned::where('emp_id', $testEmpCode)->delete();
+        Employee::where('emp_code', $testEmpCode)->delete();
 
         try {
             $response = $this->withSession([
@@ -96,9 +98,9 @@ class EmployeeCreationTest extends TestCase
                 'usercode' => $testEmpCode,
             ], 'pgsql');
         } finally {
-            DB::table('master.login')->where('usercode', $testEmpCode)->delete();
-            DB::table('master.roles_assigned')->where('emp_id', $testEmpCode)->delete();
-            DB::table('hrms.employees')->where('emp_code', $testEmpCode)->delete();
+            Login::where('usercode', $testEmpCode)->delete();
+            RoleAssigned::where('emp_id', $testEmpCode)->delete();
+            Employee::where('emp_code', $testEmpCode)->delete();
         }
     }
 }

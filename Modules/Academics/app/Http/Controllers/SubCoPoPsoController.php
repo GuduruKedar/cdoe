@@ -6,7 +6,8 @@ use App\Common\Services\MenuService;
 use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Modules\Academics\Models\CoPoPsoMapping;
+use Modules\Academics\Models\Subject;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SubCoPoPsoController extends Controller
@@ -25,23 +26,25 @@ class SubCoPoPsoController extends Controller
         $selectedCo = $request->input('coname');
         $q = trim((string) $request->input('q', ''));
 
+        $mappingTable = (new CoPoPsoMapping)->getTable();
+        $subjectTable = (new Subject)->getTable();
+
         // Distinct subjects for dropdown
-        $subjectsList = DB::table('academics.co_po_pso_mapping as m')
-            ->leftJoin('academics.subjects as s', 'm.subcode', '=', 's.subcode')
+        $subjectsList = CoPoPsoMapping::from("{$mappingTable} as m")
+            ->leftJoin("{$subjectTable} as s", 'm.subcode', '=', 's.subcode')
             ->select('m.subcode', 's.subname')
             ->distinct()
             ->orderBy('m.subcode')
             ->get();
 
         // Distinct CO names for dropdown
-        $coList = DB::table('academics.co_po_pso_mapping')
-            ->whereNotNull('coname')
+        $coList = CoPoPsoMapping::whereNotNull('coname')
             ->distinct()
             ->orderBy('coname')
             ->pluck('coname');
 
-        $query = DB::table('academics.co_po_pso_mapping as m')
-            ->leftJoin('academics.subjects as s', 'm.subcode', '=', 's.subcode')
+        $query = CoPoPsoMapping::from("{$mappingTable} as m")
+            ->leftJoin("{$subjectTable} as s", 'm.subcode', '=', 's.subcode')
             ->select(
                 'm.*',
                 's.subname',
@@ -66,7 +69,7 @@ class SubCoPoPsoController extends Controller
             });
         }
 
-        $totalRecords = DB::table('academics.co_po_pso_mapping')->count();
+        $totalRecords = CoPoPsoMapping::count();
         $filteredCount = (clone $query)->count();
         $mappings = $query->orderBy('m.subcode')->orderBy('m.coname')->paginate(20);
 
@@ -92,8 +95,11 @@ class SubCoPoPsoController extends Controller
         $selectedCo = $request->input('coname');
         $q = trim((string) $request->input('q', ''));
 
-        $query = DB::table('academics.co_po_pso_mapping as m')
-            ->leftJoin('academics.subjects as s', 'm.subcode', '=', 's.subcode')
+        $mappingTable = (new CoPoPsoMapping)->getTable();
+        $subjectTable = (new Subject)->getTable();
+
+        $query = CoPoPsoMapping::from("{$mappingTable} as m")
+            ->leftJoin("{$subjectTable} as s", 'm.subcode', '=', 's.subcode')
             ->select('m.*', 's.subname');
 
         if ($selectedSubject && $selectedSubject !== 'all') {

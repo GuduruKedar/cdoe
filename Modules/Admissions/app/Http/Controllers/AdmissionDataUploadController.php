@@ -8,7 +8,8 @@ use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Modules\Admissions\Models\Programs;
+use Modules\Admissions\Models\StudentRegistration;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdmissionDataUploadController extends Controller
@@ -16,7 +17,7 @@ class AdmissionDataUploadController extends Controller
     use RequiresLogin;
 
     /**
-     * Display Admission Data Upload dashboard.
+     * Show Admission Data upload interface with statistics, recent uploads, and program reference.
      */
     public function index(Request $request)
     {
@@ -27,15 +28,18 @@ class AdmissionDataUploadController extends Controller
         }
 
         $stats = [
-            'total_students' => DB::table('admissions.student_registrations')->count(),
-            'active_students' => DB::table('admissions.student_registrations')->where('std_status', 'Admitted')->count(),
-            'total_programs' => DB::table('master.programs')->count(),
-            'total_batches' => DB::table('admissions.student_registrations')->whereNotNull('adm_batch_code')->distinct()->count('adm_batch_code'),
+            'total_students' => StudentRegistration::count(),
+            'active_students' => StudentRegistration::where('std_status', 'Admitted')->count(),
+            'total_programs' => Programs::count(),
+            'total_batches' => StudentRegistration::whereNotNull('adm_batch_code')->distinct()->count('adm_batch_code'),
         ];
 
+        $srTable = (new StudentRegistration)->getTable();
+        $pTable = (new Programs)->getTable();
+
         // Recent student registrations preview (latest 15)
-        $recentStudents = DB::table('admissions.student_registrations as sr')
-            ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
+        $recentStudents = StudentRegistration::from("{$srTable} as sr")
+            ->leftJoin("{$pTable} as p", 'sr.progid', '=', 'p.program_id')
             ->select(
                 'sr.application_no',
                 'sr.register_no',
@@ -51,7 +55,7 @@ class AdmissionDataUploadController extends Controller
             ->limit(15)
             ->get();
 
-        $programs = DB::table('master.programs')->orderBy('program_code')->get();
+        $programs = Programs::orderBy('program_code')->get();
 
         return view('admissions::admdataupload', compact('user', 'menus', 'stats', 'recentStudents', 'programs'));
     }
@@ -250,18 +254,14 @@ class AdmissionDataUploadController extends Controller
             ];
 
             try {
-                // Upsert on primary key application_no
-                $existing = DB::table('admissions.student_registrations')
-                    ->where('application_no', (string) $applicationNo)
-                    ->exists();
+                // Upsert on primary key application_no via Eloquent
+                $existing = StudentRegistration::where('application_no', (string) $applicationNo)->first();
 
                 if ($existing) {
-                    DB::table('admissions.student_registrations')
-                        ->where('application_no', (string) $applicationNo)
-                        ->update($record);
+                    $existing->update($record);
                     $updatedCount++;
                 } else {
-                    DB::table('admissions.student_registrations')->insert($record);
+                    StudentRegistration::create($record);
                     $insertedCount++;
                 }
             } catch (\Throwable $e) {

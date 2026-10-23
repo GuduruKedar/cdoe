@@ -6,7 +6,8 @@ use App\Common\Services\MenuService;
 use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Modules\Admissions\Models\StudentRegistration;
+use Modules\Examinations\Models\MarksMemo;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CgpaMarksDownloadController extends Controller
@@ -14,7 +15,7 @@ class CgpaMarksDownloadController extends Controller
     use RequiresLogin;
 
     /**
-     * Display CGPA marks report table with filters and download options.
+     * Display a listing of CGPA marks records with rich filtering, search, and pagination.
      */
     public function index(Request $request)
     {
@@ -36,50 +37,47 @@ class CgpaMarksDownloadController extends Controller
             $perPage = 25;
         }
 
-        // Distinct filter options from database
-        $examMonths = DB::table('examinations.marks_cgpa')
-            ->whereNotNull('exam_mon_yyyy')
+        // Distinct filter options from database via Eloquent
+        $examMonths = MarksMemo::whereNotNull('exam_mon_yyyy')
             ->distinct()
             ->orderBy('exam_mon_yyyy')
             ->pluck('exam_mon_yyyy');
 
-        $resultMonths = DB::table('examinations.marks_cgpa')
-            ->whereNotNull('results_mon_yyyy')
+        $resultMonths = MarksMemo::whereNotNull('results_mon_yyyy')
             ->distinct()
             ->orderBy('results_mon_yyyy')
             ->pluck('results_mon_yyyy');
 
-        $years = DB::table('examinations.marks_cgpa')
-            ->whereNotNull('s_year')
+        $years = MarksMemo::whereNotNull('s_year')
             ->distinct()
             ->orderBy('s_year')
             ->pluck('s_year');
 
-        $sems = DB::table('examinations.marks_cgpa')
-            ->whereNotNull('s_sem')
+        $sems = MarksMemo::whereNotNull('s_sem')
             ->distinct()
             ->orderBy('s_sem')
             ->pluck('s_sem');
 
-        $grades = DB::table('examinations.marks_cgpa')
-            ->whereNotNull('letter_grade')
+        $grades = MarksMemo::whereNotNull('letter_grade')
             ->where('letter_grade', '!=', '')
             ->distinct()
             ->orderBy('letter_grade')
             ->pluck('letter_grade');
 
-        $divisions = DB::table('examinations.marks_cgpa')
-            ->whereNotNull('division_name')
+        $divisions = MarksMemo::whereNotNull('division_name')
             ->where('division_name', '!=', '')
             ->distinct()
             ->orderBy('division_name')
             ->pluck('division_name');
 
-        $totalRecords = DB::table('examinations.marks_cgpa')->count();
+        $totalRecords = MarksMemo::count();
+
+        $mcTable = (new MarksMemo)->getTable();
+        $srTable = (new StudentRegistration)->getTable();
 
         // Build query joined with student name
-        $query = DB::table('examinations.marks_cgpa as mc')
-            ->leftJoin('admissions.student_registrations as sr', 'mc.appno', '=', 'sr.application_no')
+        $query = MarksMemo::from("{$mcTable} as mc")
+            ->leftJoin("{$srTable} as sr", 'mc.appno', '=', 'sr.application_no')
             ->select(
                 'mc.appno',
                 'mc.regno',
@@ -172,8 +170,11 @@ class CgpaMarksDownloadController extends Controller
         $division = $request->input('division');
         $q = trim((string) $request->input('q', ''));
 
-        $query = DB::table('examinations.marks_cgpa as mc')
-            ->leftJoin('admissions.student_registrations as sr', 'mc.appno', '=', 'sr.application_no')
+        $mcTable = (new MarksMemo)->getTable();
+        $srTable = (new StudentRegistration)->getTable();
+
+        $query = MarksMemo::from("{$mcTable} as mc")
+            ->leftJoin("{$srTable} as sr", 'mc.appno', '=', 'sr.application_no')
             ->select(
                 'mc.appno',
                 'mc.regno',

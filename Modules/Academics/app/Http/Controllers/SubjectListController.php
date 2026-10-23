@@ -6,7 +6,7 @@ use App\Common\Services\MenuService;
 use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Modules\Academics\Models\Subject;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SubjectListController extends Controller
@@ -25,10 +25,10 @@ class SubjectListController extends Controller
         $mode = $request->input('submode');
         $q = trim((string) $request->input('q', ''));
 
-        $subtypes = DB::table('academics.subjects')->whereNotNull('subtype')->distinct()->pluck('subtype');
-        $submodes = DB::table('academics.subjects')->whereNotNull('submode')->distinct()->pluck('submode');
+        $subtypes = Subject::whereNotNull('subtype')->distinct()->pluck('subtype');
+        $submodes = Subject::whereNotNull('submode')->distinct()->pluck('submode');
 
-        $query = DB::table('academics.subjects');
+        $query = Subject::query();
 
         if ($type && $type !== 'all') {
             $query->where('subtype', $type);
@@ -43,7 +43,7 @@ class SubjectListController extends Controller
             });
         }
 
-        $totalRecords = DB::table('academics.subjects')->count();
+        $totalRecords = Subject::count();
         $filteredCount = (clone $query)->count();
         $subjects = $query->orderBy('subcode')->paginate(20);
 
@@ -65,7 +65,7 @@ class SubjectListController extends Controller
     {
         $this->requireLogin();
 
-        $query = DB::table('academics.subjects')->orderBy('subcode');
+        $query = Subject::orderBy('subcode');
 
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',

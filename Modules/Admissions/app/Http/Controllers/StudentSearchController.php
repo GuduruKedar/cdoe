@@ -6,12 +6,16 @@ use App\Common\Services\MenuService;
 use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Modules\Admissions\Models\Programs;
+use Modules\Admissions\Models\StudentRegistration;
 
 class StudentSearchController extends Controller
 {
     use RequiresLogin;
 
+    /**
+     * Display a listing of students with search and filter capabilities.
+     */
     public function index(Request $request)
     {
         $user = $this->requireLogin();
@@ -30,8 +34,11 @@ class StudentSearchController extends Controller
             $perPage = 15;
         }
 
-        $query = DB::table('admissions.student_registrations as sr')
-            ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
+        $srTable = (new StudentRegistration)->getTable();
+        $pTable = (new Programs)->getTable();
+
+        $query = StudentRegistration::from("{$srTable} as sr")
+            ->leftJoin("{$pTable} as p", 'sr.progid', '=', 'p.program_id')
             ->select(
                 'sr.application_no',
                 'sr.register_no',
@@ -124,31 +131,27 @@ class StudentSearchController extends Controller
             ]);
         }
 
-        // Filter dropdown options for the initial page load
-        $batches = DB::table('admissions.student_registrations')
-            ->whereNotNull('adm_batch_code')
+        // Filter dropdown options for the initial page load via Eloquent
+        $batches = StudentRegistration::whereNotNull('adm_batch_code')
             ->distinct()
             ->orderBy('adm_batch_code', 'desc')
             ->pluck('adm_batch_code');
 
-        $regulations = DB::table('admissions.student_registrations')
-            ->whereNotNull('regulation')
+        $regulations = StudentRegistration::whereNotNull('regulation')
             ->distinct()
             ->orderBy('regulation', 'asc')
             ->pluck('regulation');
 
-        $programs = DB::table('master.programs')
-            ->select('program_id', 'program_code', 'program_short_name', 'program_long_name')
+        $programs = Programs::select('program_id', 'program_code', 'program_short_name', 'program_long_name')
             ->orderBy('program_code')
             ->get();
 
-        $statuses = DB::table('admissions.student_registrations')
-            ->whereNotNull('std_status')
+        $statuses = StudentRegistration::whereNotNull('std_status')
             ->distinct()
             ->orderBy('std_status')
             ->pluck('std_status');
 
-        $totalStudents = DB::table('admissions.student_registrations')->count();
+        $totalStudents = StudentRegistration::count();
 
         return view('admissions::stdsearch', compact(
             'user',

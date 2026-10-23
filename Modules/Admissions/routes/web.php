@@ -68,6 +68,8 @@ Route::middleware(['web'])->group(function () {
         ->name('admissions.dataupload.sample');
 
     // Database menu aliases (controller_ref compatibility)
+    Route::get('admissions/admdataupload', [AdmissionDataUploadController::class, 'index']);
+    Route::post('admissions/admdataupload', [AdmissionDataUploadController::class, 'upload']);
     Route::get('admissions/docuploadsd', [DocumentUploadController::class, 'index']);
     Route::get('admissions/docdownloadsd', [DocumentViewController::class, 'index']);
     Route::get('admissions/addatauplaodsd', [AdmissionDataUploadController::class, 'index']);
