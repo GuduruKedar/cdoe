@@ -252,6 +252,108 @@ class VisaController extends Controller
     }
 
     /**
+     * Display Tickets KPI & Resolution Metrics
+     * Shows:
+     * 1. 4 Cards for Raised (0), Pending (1), In Process (2), Resolved (3)
+     * 2. Key Metrics: Total Tickets, Avg Resolution Time, Resolution Rate
+     * 3. Comprehensive Tickets Table with Raised -> Solved Time Difference
+     * 4. Interactive Row Click & Modal to view full ticket details
+     */
+    public function ticketsKpi(Request $request)
+    {
+        $user = $this->requireLogin();
+        $menus = MenuService::getMenusForUser($user);
+
+        if ($menus === null && ! ($request->ajax() || $request->wantsJson())) {
+            return view('errors.no-role', compact('user'));
+        }
+
+        $roleId = (int) (session('user.role_id') ?: ($user->role_id ?? 0));
+
+        // If user is a student (Role 5), redirect to student's raise ticket screen
+        if ($roleId === 5) {
+            return redirect()->route('visa.ticketraise');
+        }
+
+        // 1. The 4 Status Variables (Raised, Pending, In Process, Resolved)
+        $statsRow = TicketDetail::selectRaw('
+            COUNT(*) as total,
+            COUNT(CASE WHEN std_tkt_status = '.TicketDetail::STATUS_RAISED.' THEN 1 END) as raised,
+            COUNT(CASE WHEN std_tkt_status = '.TicketDetail::STATUS_PENDING.' THEN 1 END) as pending,
+            COUNT(CASE WHEN std_tkt_status = '.TicketDetail::STATUS_IN_PROCESS.' THEN 1 END) as in_process,
+            COUNT(CASE WHEN std_tkt_status = '.TicketDetail::STATUS_RESOLVED.' THEN 1 END) as resolved
+        ')->first();
+
+        $stats = [
+            'total' => (int) ($statsRow?->total ?? 0),
+            'raised' => (int) ($statsRow?->raised ?? 0),
+            'pending' => (int) ($statsRow?->pending ?? 0),
+            'in_process' => (int) ($statsRow?->in_process ?? 0),
+            'resolved' => (int) ($statsRow?->resolved ?? 0),
+        ];
+
+        // 2. Average Resolution Time across resolved tickets
+        $avgSecRow = TicketDetail::where('std_tkt_status', TicketDetail::STATUS_RESOLVED)
+            ->whereNotNull('tkt_raised_datetime')
+            ->whereNotNull('emp_timestamp')
+            ->selectRaw('AVG(EXTRACT(EPOCH FROM (emp_timestamp - tkt_raised_datetime))) as avg_sec')
+            ->first();
+
+        $avgSec = (int) round($avgSecRow?->avg_sec ?? 0);
+        $avgResolutionFormatted = '—';
+        if ($avgSec > 0) {
+            if ($avgSec < 60) {
+                $avgResolutionFormatted = $avgSec.'s';
+            } else {
+                $days = (int) floor($avgSec / 86400);
+                $rem = $avgSec % 86400;
+                $hrs = (int) floor($rem / 3600);
+                $mins = (int) floor(($rem % 3600) / 60);
+
+                if ($days > 0) {
+                    $avgResolutionFormatted = $hrs > 0 ? "{$days}d {$hrs}h" : "{$days}d";
+                } elseif ($hrs > 0) {
+                    $avgResolutionFormatted = $mins > 0 ? "{$hrs}h {$mins}m" : "{$hrs}h";
+                } else {
+                    $avgResolutionFormatted = "{$mins}m";
+                }
+            }
+        }
+
+        // 3. Query tickets with relationships
+        $query = TicketDetail::with(['ticketMaster', 'student.program', 'assignedEmployee', 'handlerEmployee'])
+            ->orderByDesc('tkt_raised_datetime');
+
+        $activeStatus = $request->query('status');
+        if ($activeStatus !== null && $activeStatus !== '' && $activeStatus !== 'all') {
+            $query->where('std_tkt_status', (int) $activeStatus);
+        }
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('tkt_id', 'ILIKE', "%{$search}%")
+                    ->orWhere('regno', 'ILIKE', "%{$search}%")
+                    ->orWhere('applino', 'ILIKE', "%{$search}%")
+                    ->orWhere('assigned_empcode', 'ILIKE', "%{$search}%")
+                    ->orWhere('emp_userid', 'ILIKE', "%{$search}%")
+                    ->orWhere('std_tkt_query', 'ILIKE', "%{$search}%");
+            });
+        }
+
+        $tickets = $query->paginate(20)->withQueryString();
+
+        return view('visa::tickets_kpi', compact(
+            'user',
+            'menus',
+            'stats',
+            'tickets',
+            'activeStatus',
+            'avgResolutionFormatted'
+        ));
+    }
+
+    /**
      * Root VISA hub redirect
      */
     public function index(Request $request)
@@ -276,8 +378,9 @@ class VisaController extends Controller
         $userCode = $user->usercode ?? session('user.usercode');
         $roleId = (int) (session('user.role_id') ?: ($user->role_id ?? 0));
         $isStaff = $roleId !== 5;
+        $isReadOnly = $request->boolean('readonly');
 
-        $ticket = TicketDetail::with(['ticketMaster', 'student.program'])
+        $ticket = TicketDetail::with(['ticketMaster', 'student.program', 'assignedEmployee', 'handlerEmployee'])
             ->where('tkt_id', $ticketId)
             ->firstOrFail();
 
@@ -288,8 +391,8 @@ class VisaController extends Controller
 
         $statusChanged = false;
 
-        // If viewed by DSM/staff and status is 0 (Raised), automatically update to 1 (Pending)
-        if ($isStaff && (int) $ticket->std_tkt_status === TicketDetail::STATUS_RAISED) {
+        // If viewed by DSM/staff on review screen and status is 0 (Raised), automatically update to 1 (Pending)
+        if ($isStaff && ! $isReadOnly && (int) $ticket->std_tkt_status === TicketDetail::STATUS_RAISED) {
             $ticket->update([
                 'std_tkt_status' => TicketDetail::STATUS_PENDING,
                 'emp_tkt_status' => TicketDetail::STATUS_PENDING,
@@ -344,6 +447,12 @@ class VisaController extends Controller
                 'std_tkt_status' => (int) $ticket->std_tkt_status,
                 'status_label' => $ticket->status_label,
                 'status_class' => $ticket->status_class,
+                'duration_formatted' => $ticket->duration_formatted,
+                'is_resolved' => $ticket->is_resolved,
+                'assigned_emp_code' => $ticket->assigned_empcode ?: '—',
+                'assigned_emp_name' => $ticket->assignedEmployee?->full_name ?? ($ticket->assigned_empcode ? 'Emp: '.$ticket->assigned_empcode : 'Unassigned'),
+                'handler_emp_code' => $ticket->emp_userid ?: '—',
+                'handler_emp_name' => $ticket->handlerEmployee?->full_name ?? ($ticket->emp_userid ? 'Emp: '.$ticket->emp_userid : 'Unassigned'),
                 'emp_tkt_comment' => $ticket->emp_tkt_comment,
                 'emp_tkt_file_name' => $ticket->emp_tkt_file_name,
                 'emp_tkt_file_path' => $ticket->emp_tkt_file_path,

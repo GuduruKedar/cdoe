@@ -24,6 +24,12 @@ Route::middleware(['web'])->group(function () {
     Route::get('visa/ticketslist', [VisaController::class, 'ticketsList'])
         ->name('visa.ticketslist');
 
+    // Tickets KPI / Performance (menu: visa/ticketskpi)
+    Route::get('visa/ticketskpi', [VisaController::class, 'ticketsKpi'])
+        ->name('visa.ticketskpi');
+    Route::get('visa/ticket-kpi', [VisaController::class, 'ticketsKpi']);
+    Route::get('visa/tickets-kpi', [VisaController::class, 'ticketsKpi']);
+
     // Root VISA hub (menu: visa/index)
     Route::get('visa/index', [VisaController::class, 'index'])
         ->name('visa.index');
