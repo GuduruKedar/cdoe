@@ -38,6 +38,13 @@ class AuthController extends Controller
 
         $user = Login::where('usercode', $usercode)->first();
         if (! $user) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid User Code / Register Number.',
+                ], 422);
+            }
+
             return back()->with('error', 'Invalid User Code.');
         }
         if (app()->environment('local') && filter_var(config('auth.dev_auto_login', false), FILTER_VALIDATE_BOOLEAN)) {
@@ -61,6 +68,13 @@ class AuthController extends Controller
         }
 
         if (! $toEmail) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No email registered for your account type.',
+                ], 422);
+            }
+
             return back()->with('error', 'No email registered for your account type.');
         }
 
@@ -121,6 +135,13 @@ class AuthController extends Controller
 
         $usercode = Session::get('otp_usercode');
         if (! $usercode) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Session expired. Please request a new OTP.',
+                ], 422);
+            }
+
             return redirect()->route('login');
         }
 
@@ -130,20 +151,48 @@ class AuthController extends Controller
             ->first();
 
         if (! $row) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No OTP found. Request a new one.',
+                ], 422);
+            }
+
             return back()->with('error', 'No OTP found. Request a new one.');
         }
         if ($row->is_used) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This OTP has already been used. Request a new one.',
+                ], 422);
+            }
+
             return back()->with('error', 'This OTP has already been used. Request a new one.');
         }
         if ((int) $row->attempt_count >= 5) {
             $row->is_used = true;
             $row->save();
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Too many attempts.',
+                ], 422);
+            }
+
             return redirect()->route('login')->with('error', 'Too many attempts.');
         }
         if (Carbon::parse($row->expires_at)->isPast()) {
             $row->is_used = true;
             $row->save();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'OTP expired.',
+                ], 422);
+            }
 
             return back()->with('error', 'OTP expired.');
         }
@@ -152,6 +201,13 @@ class AuthController extends Controller
             $row->log_ipaddress = $request->ip();
             $row->log_timestamp = Carbon::now();
             $row->save();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid OTP.',
+                ], 422);
+            }
 
             return back()->with('error', 'Invalid OTP.');
         }
@@ -164,6 +220,13 @@ class AuthController extends Controller
 
         $user = Login::where('usercode', $usercode)->first();
         if (! $user) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found.',
+                ], 422);
+            }
+
             return redirect()->route('login')->with('error', 'User not found.');
         }
 

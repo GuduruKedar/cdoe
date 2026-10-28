@@ -308,7 +308,13 @@
                 credentials: 'same-origin'
             });
 
-            const data = await response.json();
+            const contentType = response.headers.get('content-type') || '';
+            let data = {};
+            if (contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                throw new Error('Invalid User Code / Register Number.');
+            }
 
             if (!response.ok || data.success !== true) {
                 let errorMessage =

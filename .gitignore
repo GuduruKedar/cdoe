@@ -27,3 +27,4 @@ Homestead.yaml
 Thumbs.db
 /scratch
 /.playwright-mcp/
+*.zip
