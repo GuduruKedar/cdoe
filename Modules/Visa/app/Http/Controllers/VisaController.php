@@ -221,8 +221,9 @@ class VisaController extends Controller
             'resolved' => (int) ($statsRow?->resolved ?? 0),
         ];
 
-        // Query tickets
+        // Query tickets — active tickets (Raised/Pending/In Process) first, Resolved last, then newest within each group
         $query = TicketDetail::with(['ticketMaster', 'student.program'])
+            ->orderByRaw('CASE WHEN std_tkt_status = '.TicketDetail::STATUS_RESOLVED.' THEN 1 ELSE 0 END ASC')
             ->orderByDesc('tkt_raised_datetime');
 
         $activeStatus = $request->query('status');
@@ -300,27 +301,48 @@ class VisaController extends Controller
             ->first();
 
         $avgSec = (int) round($avgSecRow?->avg_sec ?? 0);
-        $avgResolutionFormatted = '—';
-        if ($avgSec > 0) {
-            if ($avgSec < 60) {
-                $avgResolutionFormatted = $avgSec.'s';
-            } else {
-                $days = (int) floor($avgSec / 86400);
-                $rem = $avgSec % 86400;
-                $hrs = (int) floor($rem / 3600);
-                $mins = (int) floor(($rem % 3600) / 60);
+        $avgResolutionFormatted = $this->formatDurationHuman($avgSec);
 
-                if ($days > 0) {
-                    $avgResolutionFormatted = $hrs > 0 ? "{$days}d {$hrs}h" : "{$days}d";
-                } elseif ($hrs > 0) {
-                    $avgResolutionFormatted = $mins > 0 ? "{$hrs}h {$mins}m" : "{$hrs}h";
-                } else {
-                    $avgResolutionFormatted = "{$mins}m";
-                }
-            }
+        // 3. Average Pending Time across pending / open tickets
+        $avgPendingRow = TicketDetail::where('std_tkt_status', TicketDetail::STATUS_PENDING)
+            ->whereNotNull('tkt_raised_datetime')
+            ->selectRaw('AVG(EXTRACT(EPOCH FROM (NOW() - tkt_raised_datetime))) as avg_sec')
+            ->first();
+        $avgPendingSec = (int) round($avgPendingRow?->avg_sec ?? 0);
+
+        if ($avgPendingSec <= 0) {
+            $avgOpenRow = TicketDetail::where('std_tkt_status', '!=', TicketDetail::STATUS_RESOLVED)
+                ->whereNotNull('tkt_raised_datetime')
+                ->selectRaw('AVG(EXTRACT(EPOCH FROM (NOW() - tkt_raised_datetime))) as avg_sec')
+                ->first();
+            $avgPendingSec = (int) round($avgOpenRow?->avg_sec ?? 0);
         }
 
-        // 3. Query tickets with relationships
+        $avgPendingFormatted = $this->formatDurationHuman($avgPendingSec);
+
+        // 4. SLA Compliance Rate (resolved within 24 hours target)
+        $totalResolved = $stats['resolved'] ?? 0;
+        $withinSla = TicketDetail::where('std_tkt_status', TicketDetail::STATUS_RESOLVED)
+            ->whereNotNull('tkt_raised_datetime')
+            ->whereNotNull('emp_timestamp')
+            ->whereRaw('EXTRACT(EPOCH FROM (emp_timestamp - tkt_raised_datetime)) <= 86400')
+            ->count();
+        $slaRate = $totalResolved > 0 ? round(($withinSla / $totalResolved) * 100) : 100;
+
+        // 5. Daily Activity & Overdue Counters
+        $resolvedToday = TicketDetail::where('std_tkt_status', TicketDetail::STATUS_RESOLVED)
+            ->whereNotNull('emp_timestamp')
+            ->whereDate('emp_timestamp', today())
+            ->count();
+        $raisedToday = TicketDetail::whereNotNull('tkt_raised_datetime')
+            ->whereDate('tkt_raised_datetime', today())
+            ->count();
+        $overdueCount = TicketDetail::where('std_tkt_status', '!=', TicketDetail::STATUS_RESOLVED)
+            ->whereNotNull('tkt_raised_datetime')
+            ->whereRaw('EXTRACT(EPOCH FROM (NOW() - tkt_raised_datetime)) > 86400')
+            ->count();
+
+        // 6. Query tickets with relationships
         $query = TicketDetail::with(['ticketMaster', 'student.program', 'assignedEmployee', 'handlerEmployee'])
             ->orderByDesc('tkt_raised_datetime');
 
@@ -349,7 +371,12 @@ class VisaController extends Controller
             'stats',
             'tickets',
             'activeStatus',
-            'avgResolutionFormatted'
+            'avgResolutionFormatted',
+            'avgPendingFormatted',
+            'slaRate',
+            'resolvedToday',
+            'raisedToday',
+            'overdueCount'
         ));
     }
 
@@ -639,5 +666,37 @@ class VisaController extends Controller
         }
 
         return redirect()->route('visa.ticketraise')->with('success', "Ticket #{$ticketId} was deleted successfully.");
+    }
+
+    /**
+     * Format duration seconds into readable human string: e.g. "24 mns", "4 days 20 mns"
+     */
+    protected function formatDurationHuman(int $seconds): string
+    {
+        if ($seconds <= 0) {
+            return '—';
+        }
+
+        if ($seconds < 60) {
+            return $seconds.'s';
+        }
+
+        $days = (int) floor($seconds / 86400);
+        $rem = $seconds % 86400;
+        $hours = (int) floor($rem / 3600);
+        $mins = (int) floor(($rem % 3600) / 60);
+
+        $parts = [];
+        if ($days > 0) {
+            $parts[] = $days.' '.($days === 1 ? 'day' : 'days');
+        }
+        if ($hours > 0) {
+            $parts[] = $hours.' '.($hours === 1 ? 'hr' : 'hrs');
+        }
+        if ($mins > 0 || empty($parts)) {
+            $parts[] = $mins.' mns';
+        }
+
+        return implode(' ', $parts);
     }
 }

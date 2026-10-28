@@ -79,8 +79,8 @@
                 @endif
             </div>
 
-            {{-- Search & Total Records --}}
-            <div class="d-flex align-items-center gap-3">
+            {{-- Search, Records & Download --}}
+            <div class="d-flex align-items-center gap-2">
                 <form action="{{ route('visa.ticketslist') }}" method="GET" class="d-flex align-items-center">
                     @if ($activeStatus !== null && $activeStatus !== '' && $activeStatus !== 'all')
                         <input type="hidden" name="status" value="{{ $activeStatus }}">
@@ -91,6 +91,34 @@
                     </div>
                 </form>
                 <span class="sample-rect-badge">{{ $tickets->total() }} records</span>
+
+                {{-- Download Button --}}
+                <div class="dropdown" id="downloadDropdownList">
+                    <button class="btn-download-tbl" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Download table data">
+                        <i class="bi bi-download me-1"></i> Download
+                        <i class="bi bi-chevron-down ms-1" style="font-size:10px;"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 download-menu" style="min-width:150px;">
+                        <li>
+                            <button class="dropdown-item download-opt" onclick="exportTablePDF('dsmTicketsTable','Student_Support_Tickets')" type="button">
+                                <span class="download-icon" style="background:#fee2e2;color:#dc2626;"><i class="bi bi-file-earmark-pdf-fill"></i></span>
+                                PDF
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item download-opt" onclick="exportTableExcel('dsmTicketsTable','Student_Support_Tickets')" type="button">
+                                <span class="download-icon" style="background:#dcfce7;color:#16a34a;"><i class="bi bi-file-earmark-spreadsheet-fill"></i></span>
+                                Excel (.xlsx)
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item download-opt" onclick="exportTableCSV('dsmTicketsTable','Student_Support_Tickets')" type="button">
+                                <span class="download-icon" style="background:#e0f2fe;color:#0284c7;"><i class="bi bi-filetype-csv"></i></span>
+                                CSV
+                            </button>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
 
@@ -602,10 +630,125 @@
         font-size: 10.5px;
         color: #64748b;
     }
+
+    /* ===== DOWNLOAD BUTTON ===== */
+    .btn-download-tbl {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #0f172a;
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.15s ease, transform 0.12s ease;
+        white-space: nowrap;
+    }
+    .btn-download-tbl:hover {
+        background: #1e40af;
+        transform: translateY(-1px);
+    }
+    .download-menu {
+        border-radius: 10px !important;
+        padding: 6px !important;
+    }
+    .download-opt {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #0f172a;
+        border-radius: 7px;
+        padding: 6px 10px;
+        transition: background 0.12s ease;
+    }
+    .download-opt:hover { background: #f1f5f9; }
+    .download-icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
 </style>
+
+{{-- Export Libraries --}}
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 
 {{-- ================= JAVASCRIPT LOGIC ================= --}}
 <script>
+    // ===== SHARED EXPORT HELPERS =====
+    function getTableData(tableId) {
+        const table = document.getElementById(tableId);
+        if (!table) return { headers: [], rows: [] };
+        const headerCells = table.querySelectorAll('thead th');
+        // Exclude last column (ACTION)
+        const headers = Array.from(headerCells).slice(0, -1).map(th => th.innerText.trim());
+        const rows = [];
+        table.querySelectorAll('tbody tr').forEach(tr => {
+            const cells = tr.querySelectorAll('td');
+            const row = Array.from(cells).slice(0, -1).map(td => td.innerText.replace(/\s+/g, ' ').trim());
+            if (row.length) rows.push(row);
+        });
+        return { headers, rows };
+    }
+
+    function exportTableCSV(tableId, fileName) {
+        const { headers, rows } = getTableData(tableId);
+        const escape = v => `"${String(v).replace(/"/g, '""')}"`;
+        const csv = [headers.map(escape).join(','), ...rows.map(r => r.map(escape).join(','))].join('\n');
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${fileName}_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+    }
+
+    function exportTableExcel(tableId, fileName) {
+        const { headers, rows } = getTableData(tableId);
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        // Style header row bold
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let C = range.s.c; C <= range.e.c; C++) {
+            const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
+            if (cell) cell.s = { font: { bold: true } };
+        }
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Tickets');
+        XLSX.writeFile(wb, `${fileName}_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function exportTablePDF(tableId, fileName) {
+        const { jsPDF } = window.jspdf;
+        const { headers, rows } = getTableData(tableId);
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.text(fileName.replace(/_/g, ' '), 40, 40);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Exported: ${new Date().toLocaleString()}`, 40, 56);
+        doc.autoTable({
+            head: [headers],
+            body: rows,
+            startY: 70,
+            styles: { fontSize: 8, cellPadding: 4 },
+            headStyles: { fillColor: [15, 23, 42], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [248, 250, 252] },
+            margin: { left: 40, right: 40 },
+        });
+        doc.save(`${fileName}_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+
     let currentTicket = null;
 
     function openReviewModal(ticketId) {

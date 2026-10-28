@@ -22,7 +22,7 @@
         </div>
     @endif
 
-    {{-- ================= 1. FOUR FILTER STAT CARDS ================= --}}
+    {{-- ================= 1. FOUR FILTER STAT CARDS + TIME SUMMARY ================= --}}
     <div class="stat-pills-row mb-3">
         {{-- Raised (Code 0) --}}
         <a href="{{ (string)$activeStatus === '0' ? route('visa.ticketskpi') : route('visa.ticketskpi', ['status' => 0]) }}" class="stat-pill-link text-decoration-none">
@@ -63,12 +63,111 @@
                 <div class="stat-pill-val" id="statValResolved">{{ $stats['resolved'] ?? 0 }}</div>
             </div>
         </a>
+
+        {{-- 5. Time Summary Box --}}
+        <div class="stat-pill stat-pill-time-summary" title="Average Ticket Handling & Resolution Times">
+            <div class="time-summary-body">
+                <div class="time-summary-item">
+                    <span class="time-summary-label">
+                        <i class="bi bi-hourglass-split time-icon" style="color:#0284c7;"></i>
+                        <span>Average Pending time</span>
+                        <span class="time-summary-sep">::</span>
+                    </span>
+                    <span class="time-summary-val val-pending" id="statAvgPending">{{ $avgPendingFormatted }}</span>
+                </div>
+                <div class="time-summary-item">
+                    <span class="time-summary-label">
+                        <i class="bi bi-check2-circle time-icon" style="color:#16a34a;"></i>
+                        <span>Average Resolve time</span>
+                        <span class="time-summary-sep">::</span>
+                    </span>
+                    <span class="time-summary-val val-resolve" id="statAvgResolve">{{ $avgResolutionFormatted }}</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- Horizontal separator line --}}
     <div class="dsm-divider mb-3"></div>
 
-    {{-- ================= 2. TICKETS PERFORMANCE TABLE CONTAINER ================= --}}
+    {{-- ================= 2. CHARTS ROW ================= --}}
+    <div class="kpi-charts-row mb-3">
+
+        {{-- Donut: Status Distribution --}}
+        <div class="kpi-chart-card">
+            <div class="kpi-chart-card-header">
+                <i class="bi bi-pie-chart-fill text-primary me-2"></i>
+                <span>Status Distribution</span>
+            </div>
+            <div class="kpi-chart-body donut-wrap">
+                <canvas id="statusDonutChart" height="220"></canvas>
+                <div class="donut-legend">
+                    <div class="donut-legend-item"><span class="donut-dot" style="background:#d97706"></span>Raised <strong>{{ $stats['raised'] }}</strong></div>
+                    <div class="donut-legend-item"><span class="donut-dot" style="background:#0284c7"></span>Pending <strong>{{ $stats['pending'] }}</strong></div>
+                    <div class="donut-legend-item"><span class="donut-dot" style="background:#7c3aed"></span>In Process <strong>{{ $stats['in_process'] }}</strong></div>
+                    <div class="donut-legend-item"><span class="donut-dot" style="background:#16a34a"></span>Resolved <strong>{{ $stats['resolved'] }}</strong></div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Bar: Ticket Volume by Status --}}
+        <div class="kpi-chart-card">
+            <div class="kpi-chart-card-header">
+                <i class="bi bi-bar-chart-fill text-indigo me-2"></i>
+                <span>Ticket Volume by Status</span>
+            </div>
+            <div class="kpi-chart-body">
+                <canvas id="statusBarChart" height="220"></canvas>
+            </div>
+        </div>
+
+        {{-- KPI Summary Card --}}
+        <div class="kpi-chart-card">
+            <div class="kpi-chart-card-header">
+                <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
+                <span>Key Metrics</span>
+            </div>
+            <div class="kpi-chart-body kpi-metrics-grid">
+                @php
+                    $total = $stats['total'] ?? 0;
+                    $resolved = $stats['resolved'] ?? 0;
+                    $resRate = $total > 0 ? round(($resolved / $total) * 100) : 0;
+                    $openTickets = ($stats['raised'] ?? 0) + ($stats['pending'] ?? 0) + ($stats['in_process'] ?? 0);
+                @endphp
+                <div class="kpi-metric-item">
+                    <div class="kpi-metric-icon" style="background:#eff6ff; color:#1d4ed8"><i class="bi bi-ticket-detailed-fill"></i></div>
+                    <div>
+                        <div class="kpi-metric-val">{{ $total }}</div>
+                        <div class="kpi-metric-label">Total Tickets</div>
+                    </div>
+                </div>
+                <div class="kpi-metric-item">
+                    <div class="kpi-metric-icon" style="background:#f0fdf4; color:#16a34a"><i class="bi bi-check2-circle"></i></div>
+                    <div>
+                        <div class="kpi-metric-val" style="color:#16a34a">{{ $resRate }}%</div>
+                        <div class="kpi-metric-label">Resolution Rate</div>
+                    </div>
+                </div>
+                <div class="kpi-metric-item">
+                    <div class="kpi-metric-icon" style="background:#fef9c3; color:#ca8a04"><i class="bi bi-clock-history"></i></div>
+                    <div>
+                        <div class="kpi-metric-val" style="color:#d97706">{{ $openTickets }}</div>
+                        <div class="kpi-metric-label">Open Tickets</div>
+                    </div>
+                </div>
+                <div class="kpi-metric-item">
+                    <div class="kpi-metric-icon" style="background:#faf5ff; color:#7c3aed"><i class="bi bi-shield-check"></i></div>
+                    <div>
+                        <div class="kpi-metric-val" style="color:#7c3aed">{{ $slaRate ?? 100 }}%</div>
+                        <div class="kpi-metric-label">SLA Met (&lt;24h)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- ================= 3. TICKETS PERFORMANCE TABLE CONTAINER ================= --}}
     <div class="sample-rect-box">
         <div class="sample-rect-header d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div class="d-flex align-items-center gap-2">
@@ -83,7 +182,7 @@
                 @endif
             </div>
 
-            {{-- Search & Total Records --}}
+            {{-- Search, Records & Download --}}
             <div class="d-flex align-items-center gap-2">
                 <form action="{{ route('visa.ticketskpi') }}" method="GET" class="d-flex align-items-center">
                     @if ($activeStatus !== null && $activeStatus !== '' && $activeStatus !== 'all')
@@ -95,6 +194,34 @@
                     </div>
                 </form>
                 <span class="sample-rect-badge">{{ $tickets->total() }} records</span>
+
+                {{-- Download Button --}}
+                <div class="dropdown" id="downloadDropdownKpi">
+                    <button class="btn-download-tbl" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Download table data">
+                        <i class="bi bi-download me-1"></i> Download
+                        <i class="bi bi-chevron-down ms-1" style="font-size:10px;"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 download-menu" style="min-width:150px;">
+                        <li>
+                            <button class="dropdown-item download-opt" onclick="exportTablePDF('kpiTicketsTable','Resolution_Response_Metrics')" type="button">
+                                <span class="download-icon" style="background:#fee2e2;color:#dc2626;"><i class="bi bi-file-earmark-pdf-fill"></i></span>
+                                PDF
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item download-opt" onclick="exportTableExcel('kpiTicketsTable','Resolution_Response_Metrics')" type="button">
+                                <span class="download-icon" style="background:#dcfce7;color:#16a34a;"><i class="bi bi-file-earmark-spreadsheet-fill"></i></span>
+                                Excel (.xlsx)
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item download-opt" onclick="exportTableCSV('kpiTicketsTable','Resolution_Response_Metrics')" type="button">
+                                <span class="download-icon" style="background:#e0f2fe;color:#0284c7;"><i class="bi bi-filetype-csv"></i></span>
+                                CSV
+                            </button>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
 
@@ -305,23 +432,26 @@
         padding: 6px 8px 28px;
     }
 
-    /* 1. TOP ROW: 4 SMALL COMPACT PILLS */
+    /* 1. TOP ROW: 4 COMPACT FILTER PILLS + 1 TIME SUMMARY BOX */
     .stat-pills-row {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(4, 1fr) 1.55fr;
         gap: 12px;
+        align-items: stretch;
     }
     .stat-pill {
         background: var(--bg-card, #ffffff);
         border: 1.5px solid #000000;
         border-radius: 12px;
-        padding: 8px 14px;
+        padding: 8px 12px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
         cursor: pointer;
+        height: 100%;
+        min-height: 48px;
     }
     .stat-pill:hover {
         transform: translateY(-2px);
@@ -339,6 +469,7 @@
         font-weight: 700;
         color: #0f172a;
         letter-spacing: -0.2px;
+        white-space: nowrap;
     }
     .stat-pill-val {
         font-size: 18px;
@@ -369,6 +500,70 @@
     .stat-pill-pending .stat-pill-val { color: #0284c7; }
     .stat-pill-in-process .stat-pill-val { color: #7c3aed; }
     .stat-pill-resolved .stat-pill-val { color: #16a34a; }
+
+    /* 5th Box: Time Summary */
+    .stat-pill-time-summary {
+        background: #ffffff;
+        border: 1.5px solid #4f46e5 !important;
+        border-radius: 12px;
+        padding: 6px 14px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        cursor: default;
+        height: 100%;
+        min-height: 48px;
+    }
+    .stat-pill-time-summary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.12);
+    }
+    .time-summary-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 3px;
+        width: 100%;
+    }
+    .time-summary-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 11.5px;
+        line-height: 1.25;
+    }
+    .time-summary-label {
+        color: #334155;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+        font-size: 11.5px;
+    }
+    .time-summary-label .time-icon {
+        font-size: 11.5px;
+    }
+    .time-summary-sep {
+        color: #64748b;
+        font-weight: 700;
+        margin-left: 1px;
+    }
+    .time-summary-val {
+        font-size: 11.5px;
+        font-weight: 800;
+        font-family: inherit;
+        white-space: nowrap;
+        text-align: right;
+    }
+    .time-summary-val.val-pending {
+        color: #0284c7;
+    }
+    .time-summary-val.val-resolve {
+        color: #16a34a;
+    }
 
     /* DIVIDER */
     .dsm-divider {
@@ -529,23 +724,369 @@
         border-color: #0f172a;
     }
 
+    @media (max-width: 1199px) {
+        .stat-pills-row {
+            grid-template-columns: repeat(4, 1fr) 1.55fr;
+        }
+    }
     @media (max-width: 991px) {
         .stat-pills-row {
             grid-template-columns: repeat(2, 1fr);
+        }
+        .stat-pill-time-summary {
+            grid-column: span 2;
         }
     }
     @media (max-width: 575px) {
         .stat-pills-row {
             grid-template-columns: 1fr;
         }
+        .stat-pill-time-summary {
+            grid-column: span 1;
+        }
         .dsm-search-input {
             width: 100%;
         }
     }
+
+    /* ====== CHARTS ROW ====== */
+    .kpi-charts-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+    }
+    .kpi-chart-card {
+        background: #ffffff;
+        border: 1.5px solid #000000;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        display: flex;
+        flex-direction: column;
+    }
+    .kpi-chart-card-header {
+        background: #f8fafc;
+        border-bottom: 1.5px solid #000000;
+        padding: 9px 14px;
+        font-size: 12.5px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.2px;
+        display: flex;
+        align-items: center;
+    }
+    .kpi-chart-body {
+        padding: 14px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .donut-wrap {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 14px;
+    }
+    .donut-wrap canvas {
+        flex-shrink: 0;
+        max-width: 110px;
+        max-height: 110px;
+    }
+    .donut-legend {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+    .donut-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 12px;
+        color: #334155;
+        justify-content: space-between;
+    }
+    .donut-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
+    /* KPI Metrics Grid */
+    .kpi-metrics-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        padding: 10px 14px 14px;
+    }
+    .kpi-metric-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 10px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        transition: transform 0.15s ease;
+    }
+    .kpi-metric-item:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+    }
+    .kpi-metric-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    .kpi-metric-val {
+        font-size: 18px;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.1;
+    }
+    .kpi-metric-label {
+        font-size: 10.5px;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-top: 1px;
+    }
+
+    @media (max-width: 991px) {
+        .kpi-charts-row {
+            grid-template-columns: 1fr 1fr;
+        }
+        .kpi-chart-card:last-child {
+            grid-column: 1 / -1;
+        }
+    }
+    @media (max-width: 575px) {
+        .kpi-charts-row {
+            grid-template-columns: 1fr;
+        }
+        .kpi-chart-card:last-child {
+            grid-column: auto;
+        }
+        .donut-wrap {
+            flex-direction: column;
+        }
+    }
+
+    /* ===== DOWNLOAD BUTTON ===== */
+    .btn-download-tbl {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #0f172a;
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.15s ease, transform 0.12s ease;
+        white-space: nowrap;
+    }
+    .btn-download-tbl:hover {
+        background: #1e40af;
+        transform: translateY(-1px);
+    }
+    .download-menu {
+        border-radius: 10px !important;
+        padding: 6px !important;
+    }
+    .download-opt {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #0f172a;
+        border-radius: 7px;
+        padding: 6px 10px;
+        transition: background 0.12s ease;
+    }
+    .download-opt:hover { background: #f1f5f9; }
+    .download-icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
 </style>
+
+{{-- Chart.js CDN --}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+{{-- Export Libraries --}}
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 
 {{-- ================= JAVASCRIPT ================= --}}
 <script>
+    // ===== EXPORT HELPERS =====
+    function getTableData(tableId) {
+        const table = document.getElementById(tableId);
+        if (!table) return { headers: [], rows: [] };
+        const headerCells = table.querySelectorAll('thead th');
+        const headers = Array.from(headerCells).slice(0, -1).map(th => th.innerText.trim());
+        const rows = [];
+        table.querySelectorAll('tbody tr').forEach(tr => {
+            const cells = tr.querySelectorAll('td');
+            const row = Array.from(cells).slice(0, -1).map(td => td.innerText.replace(/\s+/g, ' ').trim());
+            if (row.length) rows.push(row);
+        });
+        return { headers, rows };
+    }
+
+    function exportTableCSV(tableId, fileName) {
+        const { headers, rows } = getTableData(tableId);
+        const escape = v => `"${String(v).replace(/"/g, '""')}"`;
+        const csv = [headers.map(escape).join(','), ...rows.map(r => r.map(escape).join(','))].join('\n');
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${fileName}_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+    }
+
+    function exportTableExcel(tableId, fileName) {
+        const { headers, rows } = getTableData(tableId);
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Tickets');
+        XLSX.writeFile(wb, `${fileName}_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function exportTablePDF(tableId, fileName) {
+        const { jsPDF } = window.jspdf;
+        const { headers, rows } = getTableData(tableId);
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.text(fileName.replace(/_/g, ' '), 40, 40);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Exported: ${new Date().toLocaleString()}`, 40, 56);
+        doc.autoTable({
+            head: [headers],
+            body: rows,
+            startY: 70,
+            styles: { fontSize: 8, cellPadding: 4 },
+            headStyles: { fillColor: [15, 23, 42], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [248, 250, 252] },
+            margin: { left: 40, right: 40 },
+        });
+        doc.save(`${fileName}_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+
+    // ---- CHART DATA FROM SERVER ----
+    const kpiStats = {
+        raised:     {{ $stats['raised'] ?? 0 }},
+        pending:    {{ $stats['pending'] ?? 0 }},
+        inProcess:  {{ $stats['in_process'] ?? 0 }},
+        resolved:   {{ $stats['resolved'] ?? 0 }},
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // 1. Donut Chart — Status Distribution
+        const donutCtx = document.getElementById('statusDonutChart');
+        if (donutCtx) {
+            new Chart(donutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Raised', 'Pending', 'In Process', 'Resolved'],
+                    datasets: [{
+                        data: [kpiStats.raised, kpiStats.pending, kpiStats.inProcess, kpiStats.resolved],
+                        backgroundColor: ['#d97706', '#0284c7', '#7c3aed', '#16a34a'],
+                        borderColor: ['#fff','#fff','#fff','#fff'],
+                        borderWidth: 3,
+                        hoverOffset: 6,
+                    }]
+                },
+                options: {
+                    cutout: '68%',
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ` ${ctx.label}: ${ctx.parsed}`
+                            }
+                        }
+                    },
+                    animation: { animateRotate: true, duration: 700 }
+                }
+            });
+        }
+
+        // 2. Bar Chart — Ticket Volume by Status
+        const barCtx = document.getElementById('statusBarChart');
+        if (barCtx) {
+            new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Raised', 'Pending', 'In Process', 'Resolved'],
+                    datasets: [{
+                        label: 'Tickets',
+                        data: [kpiStats.raised, kpiStats.pending, kpiStats.inProcess, kpiStats.resolved],
+                        backgroundColor: [
+                            'rgba(217,119,6,0.18)',
+                            'rgba(2,132,199,0.18)',
+                            'rgba(124,58,237,0.18)',
+                            'rgba(22,163,74,0.18)',
+                        ],
+                        borderColor: ['#d97706','#0284c7','#7c3aed','#16a34a'],
+                        borderWidth: 2,
+                        borderRadius: 7,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ` ${ctx.parsed.y} ticket${ctx.parsed.y !== 1 ? 's' : ''}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, font: { size: 11 } },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            ticks: { font: { size: 11 } },
+                            grid: { display: false }
+                        }
+                    },
+                    animation: { duration: 700 }
+                }
+            });
+        }
+    });
+
     function openViewModal(ticketId) {
         const modalEl = document.getElementById('viewTicketModal');
         const modal = new bootstrap.Modal(modalEl);
