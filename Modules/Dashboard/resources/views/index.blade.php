@@ -37,7 +37,7 @@
             <div class="quick-actions">
                 <a href="#" class="btn-navy">View Results</a>
                 <a href="#" class="btn-outline">Fee Payments</a>
-                <a href="#" class="btn-red">Raise Ticket</a>
+                <a href="{{ route('visa.ticketraise') }}" class="btn-red">Raise Ticket</a>
                 <a href="#" class="btn-outline">Certificates</a>
             </div>
         </div>
