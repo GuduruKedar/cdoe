@@ -19,16 +19,4 @@
         @endforeach
     </ul>
 
-    <div class="user-box">
-        <div class="d-flex align-items-center gap-2">
-            <span class="user-avatar-circle sm" style="width: 32px; height: 32px; font-size: 13px;">
-                {{ $avatarInitial ?? strtoupper(substr($user->usercode ?? session('user.usercode', 'U'), 0, 1)) }}
-            </span>
-            <div style="min-width: 0; flex: 1;">
-                <div class="uname text-truncate">{{ $displayName ?? ($user->usercode ?? session('user.usercode', 'User')) }}</div>
-                <div class="uemail text-truncate">{{ $currentRoleName ?? 'Super Admin' }} • {{ $user->usercode ?? session('user.usercode', '02266') }}</div>
-            </div>
-        </div>
-    </div>
-
 </aside>

@@ -50,7 +50,6 @@ class DashboardController extends Controller
         $programDistribution = Programs::select('program_short_name as name')
             ->withCount('students as total')
             ->has('students')
-            ->orderByDesc('total')
             ->get();
 
         $gradeDistribution = MarksMemo::selectRaw('letter_grade, count(*) as total')

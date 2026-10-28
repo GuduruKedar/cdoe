@@ -267,12 +267,16 @@ class ExamResultsController extends Controller
 
     public function marksMemoList(Request $request)
     {
-        $reg_no = Session::get('user.usercode');
         $user = $this->requireLogin();
         $menus = MenuService::getMenusForUser($user);
         if ($menus === null) {
             return view('errors.no-role', compact('user'));
         }
+
+        // Support previewing with ?regno= query param, falling back to authenticated usercode
+        $sessionCode = Session::get('user.usercode') ?: ($user->usercode ?? null);
+        $reg_no = $request->query('regno') ?: $sessionCode;
+
         $marksMemoList = MarksMemo::byRegno($reg_no)
             ->select(['mmno', 'regno', 'division_name', 'mm_type', 'exam_mon_yyyy',
                 's_year', 's_sem', 'sgpa_perc', 'cgpa_perc', 'appno'])
@@ -283,6 +287,8 @@ class ExamResultsController extends Controller
             ->orderBy('exam_mon_yyyy')
             ->get();
 
-        return view('examinations::markslist', compact('marksMemoList', 'user', 'menus'));
+        $gradeStats = MarksMemo::getGradeStatsForStudent($reg_no);
+
+        return view('examinations::markslist', compact('marksMemoList', 'gradeStats', 'user', 'menus', 'reg_no', 'sessionCode'));
     }
 }
