@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Examinations\Http\Controllers\CgpaMarksDownloadController;
 use Modules\Examinations\Http\Controllers\CgpaMarksUploadController;
 use Modules\Examinations\Http\Controllers\ExamResultsController;
+use Modules\Examinations\Http\Controllers\MarksKpiController;
 
 Route::middleware(['web'])->group(function () {
 
@@ -43,6 +44,11 @@ Route::middleware(['web'])->group(function () {
     Route::get('examinations/cgpamarkuploadsd', [CgpaMarksUploadController::class, 'index']);
     Route::post('examinations/cgpamarkuploadsd', [CgpaMarksUploadController::class, 'upload']);
     Route::get('examinations/cgpamarkdownloadsd', [CgpaMarksDownloadController::class, 'index']);
+
+    // ================= MARKS KPI DASHBOARD =================
+    Route::get('examinations/markskpi', [MarksKpiController::class, 'index'])
+        ->name('examinations.markskpi');
+    Route::get('examinations/marks-kpi', [MarksKpiController::class, 'index']);
 
     // Resource catch-all
     Route::resource('examinations', ExamResultsController::class)
