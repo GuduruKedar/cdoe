@@ -8,11 +8,13 @@ use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Modules\Admissions\Models\StudentRegistration;
 use Modules\Visa\Models\TicketDetail;
 use Modules\Visa\Models\TicketMaster;
+use Modules\Visa\Services\TicketKpiService;
 
 class VisaController extends Controller
 {
@@ -253,12 +255,11 @@ class VisaController extends Controller
     }
 
     /**
-     * Display Tickets KPI & Resolution Metrics
-     * Shows:
-     * 1. 4 Cards for Raised (0), Pending (1), In Process (2), Resolved (3)
-     * 2. Key Metrics: Total Tickets, Avg Resolution Time, Resolution Rate
-     * 3. Comprehensive Tickets Table with Raised -> Solved Time Difference
-     * 4. Interactive Row Click & Modal to view full ticket details
+     * Tickets KPI & AI Perceptions dashboard (director view).
+     * - Executive one-line summary + health score
+     * - KPI Dashboard tab: status, lifecycle timings, SLA, ageing, trend, category, staff, watchlist
+     * - AI Perceptions tab: rule-based findings with recommended actions
+     * - Period filter (?period=all|today|7|30|90) applies to cards, charts and table
      */
     public function ticketsKpi(Request $request)
     {
@@ -276,75 +277,74 @@ class VisaController extends Controller
             return redirect()->route('visa.ticketraise');
         }
 
-        // 1. The 4 Status Variables (Raised, Pending, In Process, Resolved)
-        $statsRow = TicketDetail::selectRaw('
-            COUNT(*) as total,
-            COUNT(CASE WHEN std_tkt_status = '.TicketDetail::STATUS_RAISED.' THEN 1 END) as raised,
-            COUNT(CASE WHEN std_tkt_status = '.TicketDetail::STATUS_PENDING.' THEN 1 END) as pending,
-            COUNT(CASE WHEN std_tkt_status = '.TicketDetail::STATUS_IN_PROCESS.' THEN 1 END) as in_process,
-            COUNT(CASE WHEN std_tkt_status = '.TicketDetail::STATUS_RESOLVED.' THEN 1 END) as resolved
-        ')->first();
-
-        $stats = [
-            'total' => (int) ($statsRow?->total ?? 0),
-            'raised' => (int) ($statsRow?->raised ?? 0),
-            'pending' => (int) ($statsRow?->pending ?? 0),
-            'in_process' => (int) ($statsRow?->in_process ?? 0),
-            'resolved' => (int) ($statsRow?->resolved ?? 0),
-        ];
-
-        // 2. Average Resolution Time across resolved tickets
-        $avgSecRow = TicketDetail::where('std_tkt_status', TicketDetail::STATUS_RESOLVED)
-            ->whereNotNull('tkt_raised_datetime')
-            ->whereNotNull('emp_timestamp')
-            ->selectRaw('AVG(EXTRACT(EPOCH FROM (emp_timestamp - tkt_raised_datetime))) as avg_sec')
-            ->first();
-
-        $avgSec = (int) round($avgSecRow?->avg_sec ?? 0);
-        $avgResolutionFormatted = $this->formatDurationHuman($avgSec);
-
-        // 3. Average Pending Time across pending / open tickets
-        $avgPendingRow = TicketDetail::where('std_tkt_status', TicketDetail::STATUS_PENDING)
-            ->whereNotNull('tkt_raised_datetime')
-            ->selectRaw('AVG(EXTRACT(EPOCH FROM (NOW() - tkt_raised_datetime))) as avg_sec')
-            ->first();
-        $avgPendingSec = (int) round($avgPendingRow?->avg_sec ?? 0);
-
-        if ($avgPendingSec <= 0) {
-            $avgOpenRow = TicketDetail::where('std_tkt_status', '!=', TicketDetail::STATUS_RESOLVED)
-                ->whereNotNull('tkt_raised_datetime')
-                ->selectRaw('AVG(EXTRACT(EPOCH FROM (NOW() - tkt_raised_datetime))) as avg_sec')
-                ->first();
-            $avgPendingSec = (int) round($avgOpenRow?->avg_sec ?? 0);
+        // ---- Period filter ----
+        $period = (string) $request->query('period', 'all');
+        if (! in_array($period, ['all', 'today', '7', '30', '90'], true)) {
+            $period = 'all';
         }
+        $periodStart = match ($period) {
+            'today' => now()->startOfDay(),
+            '7' => now()->subDays(7),
+            '30' => now()->subDays(30),
+            '90' => now()->subDays(90),
+            default => null,
+        };
 
-        $avgPendingFormatted = $this->formatDurationHuman($avgPendingSec);
+        // ---- Analytics dataset (one light row per ticket) ----
+        $hasStage = $this->hasStageTimestamps();
+        $toTs = fn ($v) => $v ? Carbon::parse($v)->getTimestamp() : null;
 
-        // 4. SLA Compliance Rate (resolved within 24 hours target)
-        $totalResolved = $stats['resolved'] ?? 0;
-        $withinSla = TicketDetail::where('std_tkt_status', TicketDetail::STATUS_RESOLVED)
-            ->whereNotNull('tkt_raised_datetime')
-            ->whereNotNull('emp_timestamp')
-            ->whereRaw('EXTRACT(EPOCH FROM (emp_timestamp - tkt_raised_datetime)) <= 86400')
-            ->count();
-        $slaRate = $totalResolved > 0 ? round(($withinSla / $totalResolved) * 100) : 100;
+        $rows = TicketDetail::with(['ticketMaster', 'assignedEmployee', 'handlerEmployee'])
+            ->get()
+            ->map(function ($t) use ($hasStage, $toTs) {
+                $status = (int) $t->std_tkt_status;
+                $empTs = $toTs($t->emp_timestamp);
 
-        // 5. Daily Activity & Overdue Counters
-        $resolvedToday = TicketDetail::where('std_tkt_status', TicketDetail::STATUS_RESOLVED)
-            ->whereNotNull('emp_timestamp')
-            ->whereDate('emp_timestamp', today())
-            ->count();
-        $raisedToday = TicketDetail::whereNotNull('tkt_raised_datetime')
-            ->whereDate('tkt_raised_datetime', today())
-            ->count();
-        $overdueCount = TicketDetail::where('std_tkt_status', '!=', TicketDetail::STATUS_RESOLVED)
-            ->whereNotNull('tkt_raised_datetime')
-            ->whereRaw('EXTRACT(EPOCH FROM (NOW() - tkt_raised_datetime)) > 86400')
-            ->count();
+                // Without stage columns, emp_timestamp only tells us when the CURRENT status was set.
+                $pendingAt = $hasStage ? $toTs($t->pending_at) : ($status === TicketDetail::STATUS_PENDING ? $empTs : null);
+                $inProcAt = $hasStage ? $toTs($t->in_process_at) : ($status === TicketDetail::STATUS_IN_PROCESS ? $empTs : null);
+                $resolvedAt = $status === TicketDetail::STATUS_RESOLVED
+                    ? (($hasStage ? $toTs($t->resolved_at) : null) ?? $empTs)
+                    : null;
 
-        // 6. Query tickets with relationships
+                return [
+                    'tkt_id' => (string) $t->tkt_id,
+                    'regno' => (string) $t->regno,
+                    'status' => $status,
+                    'category' => $t->ticketMaster?->tkt_main_type,
+                    'employee_code' => $t->emp_userid ?: $t->assigned_empcode,
+                    'employee_name' => $t->handlerEmployee?->full_name ?? $t->assignedEmployee?->full_name,
+                    'raised_at' => $toTs($t->tkt_raised_datetime),
+                    'pending_at' => $pendingAt,
+                    'in_process_at' => $inProcAt,
+                    'resolved_at' => $resolvedAt,
+                ];
+            })
+            ->all();
+
+        $periodRows = $periodStart
+            ? array_values(array_filter($rows, fn ($r) => $r['raised_at'] && $r['raised_at'] >= $periodStart->getTimestamp()))
+            : $rows;
+
+        $kpi = TicketKpiService::build($periodRows, $rows, now()->getTimestamp(), $hasStage);
+
+        // Keep the variables the existing view parts use
+        $stats = [
+            'total' => $kpi['counts']['total'],
+            'raised' => $kpi['counts']['raised'],
+            'pending' => $kpi['counts']['pending'],
+            'in_process' => $kpi['counts']['in_process'],
+            'resolved' => $kpi['counts']['resolved'],
+        ];
+        $avgResolutionFormatted = $kpi['timing']['resolution']['avg_fmt'];
+
+        // ---- Table ----
         $query = TicketDetail::with(['ticketMaster', 'student.program', 'assignedEmployee', 'handlerEmployee'])
             ->orderByDesc('tkt_raised_datetime');
+
+        if ($periodStart) {
+            $query->where('tkt_raised_datetime', '>=', $periodStart);
+        }
 
         $activeStatus = $request->query('status');
         if ($activeStatus !== null && $activeStatus !== '' && $activeStatus !== 'all') {
@@ -372,12 +372,30 @@ class VisaController extends Controller
             'tickets',
             'activeStatus',
             'avgResolutionFormatted',
-            'avgPendingFormatted',
-            'slaRate',
-            'resolvedToday',
-            'raisedToday',
-            'overdueCount'
+            'kpi',
+            'period'
         ));
+    }
+
+    /**
+     * True when the pending_at / in_process_at / resolved_at columns exist
+     * (added by the add_stage_timestamps migration).
+     */
+    protected function hasStageTimestamps(): bool
+    {
+        static $has = null;
+
+        if ($has === null) {
+            try {
+                $model = new TicketDetail;
+                $has = Schema::connection($model->getConnectionName())
+                    ->hasColumns($model->getTable(), ['pending_at', 'in_process_at', 'resolved_at']);
+            } catch (\Throwable $e) {
+                $has = false;
+            }
+        }
+
+        return $has;
     }
 
     /**
@@ -428,6 +446,12 @@ class VisaController extends Controller
                 'emp_ipaddress' => substr((string) $request->ip(), 0, 50),
                 'emp_timestamp' => now(),
             ]);
+
+            // Stage tracking: first time staff opened the ticket
+            if ($this->hasStageTimestamps() && empty($ticket->pending_at)) {
+                $ticket->forceFill(['pending_at' => now()])->save();
+            }
+
             $ticket->refresh();
             $statusChanged = true;
 
@@ -556,7 +580,31 @@ class VisaController extends Controller
             }
         }
 
+        // Stage tracking (kept separate from emp_timestamp, which is overwritten on every change)
+        $stageData = [];
+        if ($this->hasStageTimestamps()) {
+            $oldStatus = (int) $ticket->std_tkt_status;
+
+            if (empty($ticket->pending_at)) {
+                $stageData['pending_at'] = now();          // first staff response
+            }
+            if ($newStatus === TicketDetail::STATUS_IN_PROCESS && empty($ticket->in_process_at)) {
+                $stageData['in_process_at'] = now();
+            }
+            if ($newStatus === TicketDetail::STATUS_RESOLVED) {
+                if ($oldStatus !== TicketDetail::STATUS_RESOLVED || empty($ticket->resolved_at)) {
+                    $stageData['resolved_at'] = now();     // keep original time when only remarks are edited
+                }
+            } elseif (! empty($ticket->resolved_at)) {
+                $stageData['resolved_at'] = null;          // ticket was re-opened
+            }
+        }
+
         $ticket->update($updateData);
+
+        if (! empty($stageData)) {
+            $ticket->forceFill($stageData)->save();
+        }
 
         ActivityLogger::log('VISA', 'UPDATE_TICKET_STATUS', "DSM {$userCode} updated ticket {$ticketId} to status {$newStatus}.", [
             'ticket_id' => $ticketId,
@@ -666,37 +714,5 @@ class VisaController extends Controller
         }
 
         return redirect()->route('visa.ticketraise')->with('success', "Ticket #{$ticketId} was deleted successfully.");
-    }
-
-    /**
-     * Format duration seconds into readable human string: e.g. "24 mns", "4 days 20 mns"
-     */
-    protected function formatDurationHuman(int $seconds): string
-    {
-        if ($seconds <= 0) {
-            return '—';
-        }
-
-        if ($seconds < 60) {
-            return $seconds.'s';
-        }
-
-        $days = (int) floor($seconds / 86400);
-        $rem = $seconds % 86400;
-        $hours = (int) floor($rem / 3600);
-        $mins = (int) floor(($rem % 3600) / 60);
-
-        $parts = [];
-        if ($days > 0) {
-            $parts[] = $days.' '.($days === 1 ? 'day' : 'days');
-        }
-        if ($hours > 0) {
-            $parts[] = $hours.' '.($hours === 1 ? 'hr' : 'hrs');
-        }
-        if ($mins > 0 || empty($parts)) {
-            $parts[] = $mins.' mns';
-        }
-
-        return implode(' ', $parts);
     }
 }

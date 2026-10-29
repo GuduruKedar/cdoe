@@ -3,6 +3,59 @@
 @section('page_title', 'Tickets KPI & Performance')
 
 @section('content')
+@php
+    $period = $period ?? 'all';
+    $periodLabels = ['all' => 'All time', 'today' => 'Today', '7' => '7 days', '30' => '30 days', '90' => '90 days'];
+
+    // Build a KPI url that keeps the current period + search
+    $kpiUrl = function (array $extra = []) use ($period) {
+        $params = array_merge([
+            'period' => $period !== 'all' ? $period : null,
+            'search' => request('search'),
+        ], $extra);
+
+        return route('visa.ticketskpi', array_filter($params, fn ($v) => $v !== null && $v !== '' && $v !== 'all'));
+    };
+
+    $c      = $kpi['counts'];
+    $rates  = $kpi['rates'];
+    $tm     = $kpi['timing'];
+    $health = $kpi['health'];
+    $sla    = $kpi['sla'];
+    $insights = $kpi['insights'];
+
+    $levelMeta = [
+        'critical' => ['label' => 'Critical', 'icon' => 'bi-exclamation-octagon-fill'],
+        'warning'  => ['label' => 'Warning',  'icon' => 'bi-exclamation-triangle-fill'],
+        'info'     => ['label' => 'Insight',  'icon' => 'bi-lightbulb-fill'],
+        'good'     => ['label' => 'Good',     'icon' => 'bi-check-circle-fill'],
+    ];
+    $levelCount = array_count_values(array_column($insights, 'level'));
+    $attentionCount = ($levelCount['critical'] ?? 0) + ($levelCount['warning'] ?? 0);
+    $actions = array_values(array_filter($insights, fn ($i) => in_array($i['level'], ['critical', 'warning'], true)));
+
+    $statusClasses = [0 => 'status-raised', 1 => 'status-pending', 2 => 'status-in-process', 3 => 'status-resolved'];
+    $isActive = fn ($val) => (string) $activeStatus === (string) $val;
+
+    // Data handed to the charts / PDF report
+    $kpiJs = [
+        'funnel'     => $kpi['funnel'],
+        'aging'      => $kpi['aging'],
+        'trend'      => $kpi['trend'],
+        'hourly'     => $kpi['hourly'],
+        'categories' => $kpi['categories'],
+        'health'     => $kpi['health'],
+        'headline'   => $kpi['headline'],
+        'insights'   => $kpi['insights'],
+        'counts'     => $kpi['counts'],
+        'rates'      => $kpi['rates'],
+        'timing'     => $kpi['timing'],
+        'sla'        => $kpi['sla'],
+        'period'     => $periodLabels[$period],
+    ];
+    $hasFilter = $activeStatus !== null && $activeStatus !== '' && $activeStatus !== 'all';
+@endphp
+
 <div class="tickets-container">
 
     {{-- Flash Alerts --}}
@@ -22,317 +75,545 @@
         </div>
     @endif
 
-    {{-- ================= 1. FOUR FILTER STAT CARDS + TIME SUMMARY ================= --}}
-    <div class="stat-pills-row mb-3">
-        {{-- Raised (Code 0) --}}
-        <a href="{{ (string)$activeStatus === '0' ? route('visa.ticketskpi') : route('visa.ticketskpi', ['status' => 0]) }}" class="stat-pill-link text-decoration-none">
-            <div class="stat-pill stat-pill-raised {{ (string)$activeStatus === '0' ? 'active-filter' : '' }}">
-                <div class="stat-pill-label">
-                    <span class="status-indicator-dot dot-raised"></span>Raised
-                </div>
-                <div class="stat-pill-val" id="statValRaised">{{ $stats['raised'] ?? 0 }}</div>
-            </div>
-        </a>
-
-        {{-- Pending (Code 1) --}}
-        <a href="{{ (string)$activeStatus === '1' ? route('visa.ticketskpi') : route('visa.ticketskpi', ['status' => 1]) }}" class="stat-pill-link text-decoration-none">
-            <div class="stat-pill stat-pill-pending {{ (string)$activeStatus === '1' ? 'active-filter' : '' }}">
-                <div class="stat-pill-label">
-                    <span class="status-indicator-dot dot-pending"></span>Pending
-                </div>
-                <div class="stat-pill-val" id="statValPending">{{ $stats['pending'] ?? 0 }}</div>
-            </div>
-        </a>
-
-        {{-- In Process (Code 2) --}}
-        <a href="{{ (string)$activeStatus === '2' ? route('visa.ticketskpi') : route('visa.ticketskpi', ['status' => 2]) }}" class="stat-pill-link text-decoration-none">
-            <div class="stat-pill stat-pill-in-process {{ (string)$activeStatus === '2' ? 'active-filter' : '' }}">
-                <div class="stat-pill-label">
-                    <span class="status-indicator-dot dot-in-process"></span>In Process
-                </div>
-                <div class="stat-pill-val" id="statValInProcess">{{ $stats['in_process'] ?? 0 }}</div>
-            </div>
-        </a>
-
-        {{-- Resolved (Code 3) --}}
-        <a href="{{ (string)$activeStatus === '3' ? route('visa.ticketskpi') : route('visa.ticketskpi', ['status' => 3]) }}" class="stat-pill-link text-decoration-none">
-            <div class="stat-pill stat-pill-resolved {{ (string)$activeStatus === '3' ? 'active-filter' : '' }}">
-                <div class="stat-pill-label">
-                    <span class="status-indicator-dot dot-resolved"></span>Resolved
-                </div>
-                <div class="stat-pill-val" id="statValResolved">{{ $stats['resolved'] ?? 0 }}</div>
-            </div>
-        </a>
-
-        {{-- 5. Time Summary Box --}}
-        <div class="stat-pill stat-pill-time-summary" title="Average Ticket Handling & Resolution Times">
-            <div class="time-summary-body">
-                <div class="time-summary-item">
-                    <span class="time-summary-label">
-                        <i class="bi bi-hourglass-split time-icon" style="color:#0284c7;"></i>
-                        <span>Average Pending time</span>
-                        <span class="time-summary-sep">::</span>
-                    </span>
-                    <span class="time-summary-val val-pending" id="statAvgPending">{{ $avgPendingFormatted }}</span>
-                </div>
-                <div class="time-summary-item">
-                    <span class="time-summary-label">
-                        <i class="bi bi-check2-circle time-icon" style="color:#16a34a;"></i>
-                        <span>Average Resolve time</span>
-                        <span class="time-summary-sep">::</span>
-                    </span>
-                    <span class="time-summary-val val-resolve" id="statAvgResolve">{{ $avgResolutionFormatted }}</span>
-                </div>
-            </div>
+    {{-- ================= TOP LINE: EXECUTIVE SUMMARY ================= --}}
+    <div class="exec-line lvl-{{ $health['level'] }}">
+        <div class="exec-score" title="Desk health score (0–100)">
+            <span class="exec-score-num">{{ $health['score'] ?? '—' }}</span>
+            <span class="exec-score-of">/100</span>
         </div>
+        <p class="exec-text mb-0">
+            <strong>{{ $health['label'] }}.</strong> {{ $kpi['headline'] }}
+        </p>
+        <span class="exec-updated" title="{{ $periodLabels[$period] }}">
+            {{ $periodLabels[$period] }}, updated {{ \Carbon\Carbon::createFromTimestamp($kpi['generated_at'])->setTimezone(config('app.timezone'))->format('h:i A') }}
+        </span>
     </div>
 
-    {{-- Horizontal separator line --}}
-    <div class="dsm-divider mb-3"></div>
+    {{-- ================= TWO BUTTONS + PERIOD ================= --}}
+    <div class="view-switch-row">
+        <div class="view-switch" role="tablist" aria-label="Dashboard view">
+            <button type="button" class="view-btn is-active" data-view="kpi" role="tab" aria-selected="true" aria-controls="viewKpi">
+                <i class="bi bi-speedometer2"></i> KPI Dashboard
+            </button>
+            <button type="button" class="view-btn" data-view="ai" role="tab" aria-selected="false" aria-controls="viewAi">
+                <i class="bi bi-stars"></i> AI Perceptions
+                @if ($attentionCount > 0)
+                    <span class="view-btn-count" title="{{ $attentionCount }} findings need attention">{{ $attentionCount }}</span>
+                @endif
+            </button>
+        </div>
 
-    {{-- ================= 2. CHARTS ROW ================= --}}
-    <div class="kpi-charts-row mb-3">
+        <nav class="period-switch" aria-label="Period">
+            @foreach ($periodLabels as $key => $label)
+                <a href="{{ $kpiUrl(['period' => $key === 'all' ? null : $key, 'status' => $activeStatus]) }}"
+                   class="period-link {{ $period === (string) $key ? 'is-active' : '' }}"
+                   @if ($period === (string) $key) aria-current="true" @endif>{{ $label }}</a>
+            @endforeach
+        </nav>
+    </div>
 
-        {{-- Donut: Status Distribution --}}
-        <div class="kpi-chart-card">
-            <div class="kpi-chart-card-header">
-                <i class="bi bi-pie-chart-fill text-primary me-2"></i>
-                <span>Status Distribution</span>
+    {{-- ============================================================
+         VIEW 1: KPI DASHBOARD
+         ============================================================ --}}
+    <section id="viewKpi" class="view-pane" role="tabpanel">
+
+        {{-- 4 status filter pills --}}
+        <div class="stat-pills-row mb-3">
+            @foreach ([
+                ['code' => 0, 'key' => 'raised',     'label' => 'Raised',     'cls' => 'raised',     'id' => 'statValRaised'],
+                ['code' => 1, 'key' => 'pending',    'label' => 'Pending',    'cls' => 'pending',    'id' => 'statValPending'],
+                ['code' => 2, 'key' => 'in_process', 'label' => 'In Process', 'cls' => 'in-process', 'id' => 'statValInProcess'],
+                ['code' => 3, 'key' => 'resolved',   'label' => 'Resolved',   'cls' => 'resolved',   'id' => 'statValResolved'],
+            ] as $pill)
+                <a href="{{ $kpiUrl(['status' => $isActive($pill['code']) ? null : $pill['code']]) }}" class="stat-pill-link text-decoration-none">
+                    <div class="stat-pill stat-pill-{{ $pill['cls'] }} {{ $isActive($pill['code']) ? 'active-filter' : '' }}">
+                        <div class="stat-pill-label">
+                            <span class="status-indicator-dot dot-{{ $pill['cls'] }}"></span>{{ $pill['label'] }}
+                        </div>
+                        <div class="stat-pill-val" id="{{ $pill['id'] }}">{{ $stats[$pill['key']] ?? 0 }}</div>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+
+        <div class="dsm-divider mb-3"></div>
+
+        {{-- Headline rate tiles --}}
+        <div class="rate-tiles mb-3">
+            <div class="rate-tile">
+                <div class="rate-tile-val">{{ $c['total'] }}</div>
+                <div class="rate-tile-label">Total tickets</div>
+                <div class="rate-tile-sub">{{ $c['open'] }} open, {{ $c['resolved'] }} resolved</div>
             </div>
-            <div class="kpi-chart-body donut-wrap">
-                <canvas id="statusDonutChart" height="220"></canvas>
-                <div class="donut-legend">
-                    <div class="donut-legend-item"><span class="donut-dot" style="background:#d97706"></span>Raised <strong>{{ $stats['raised'] }}</strong></div>
-                    <div class="donut-legend-item"><span class="donut-dot" style="background:#0284c7"></span>Pending <strong>{{ $stats['pending'] }}</strong></div>
-                    <div class="donut-legend-item"><span class="donut-dot" style="background:#7c3aed"></span>In Process <strong>{{ $stats['in_process'] }}</strong></div>
-                    <div class="donut-legend-item"><span class="donut-dot" style="background:#16a34a"></span>Resolved <strong>{{ $stats['resolved'] }}</strong></div>
-                </div>
+            <div class="rate-tile">
+                <div class="rate-tile-val {{ $rates['resolution'] >= 70 ? 'txt-good' : ($rates['resolution'] >= 40 ? 'txt-warning' : 'txt-critical') }}">{{ $rates['resolution'] }}%</div>
+                <div class="rate-tile-label">Resolution rate</div>
+                <div class="rate-bar"><span style="width: {{ $rates['resolution'] }}%"></span></div>
+            </div>
+            <div class="rate-tile">
+                <div class="rate-tile-val {{ $rates['acknowledged'] >= 90 ? 'txt-good' : ($rates['acknowledged'] >= 60 ? 'txt-warning' : 'txt-critical') }}">{{ $rates['acknowledged'] }}%</div>
+                <div class="rate-tile-label">Opened by staff</div>
+                <div class="rate-tile-sub">{{ $c['raised'] }} still waiting to be opened</div>
+            </div>
+            <div class="rate-tile">
+                @if ($rates['sla_resolve'] !== null)
+                    <div class="rate-tile-val {{ $rates['sla_resolve'] >= 90 ? 'txt-good' : ($rates['sla_resolve'] >= 70 ? 'txt-warning' : 'txt-critical') }}">{{ $rates['sla_resolve'] }}%</div>
+                @else
+                    <div class="rate-tile-val txt-muted">—</div>
+                @endif
+                <div class="rate-tile-label">Resolved within {{ $sla['resolve_hours'] }}h</div>
+                <div class="rate-tile-sub">{{ $kpi['breaches']['open_over_resolve_sla'] }} open tickets past target</div>
             </div>
         </div>
 
-        {{-- Bar: Ticket Volume by Status --}}
-        <div class="kpi-chart-card">
-            <div class="kpi-chart-card-header">
-                <i class="bi bi-bar-chart-fill text-indigo me-2"></i>
-                <span>Ticket Volume by Status</span>
+        {{-- Ticket journey: average time spent in each stage --}}
+        <div class="journey-card mb-3">
+            <div class="journey-head">
+                <span class="journey-title"><i class="bi bi-signpost-split me-2"></i>Ticket journey: average time at each stage</span>
+                <span class="journey-total">
+                    Raised to resolved: <strong>{{ $tm['resolution']['avg_fmt'] }}</strong>
+                    @if ($tm['resolution']['n'] > 0)
+                        <span class="text-muted">(median {{ $tm['resolution']['median_fmt'] }}, slowest 10% over {{ $tm['resolution']['p90_fmt'] }})</span>
+                    @endif
+                </span>
             </div>
-            <div class="kpi-chart-body">
-                <canvas id="statusBarChart" height="220"></canvas>
-            </div>
-        </div>
-
-        {{-- KPI Summary Card --}}
-        <div class="kpi-chart-card">
-            <div class="kpi-chart-card-header">
-                <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
-                <span>Key Metrics</span>
-            </div>
-            <div class="kpi-chart-body kpi-metrics-grid">
+            <div class="journey-track">
                 @php
-                    $total = $stats['total'] ?? 0;
-                    $resolved = $stats['resolved'] ?? 0;
-                    $resRate = $total > 0 ? round(($resolved / $total) * 100) : 0;
-                    $openTickets = ($stats['raised'] ?? 0) + ($stats['pending'] ?? 0) + ($stats['in_process'] ?? 0);
+                    $steps = [
+                        ['label' => 'Raised',     'cls' => 'raised',     'count' => $c['total']],
+                        ['label' => 'Pending',    'cls' => 'pending',    'count' => $c['acknowledged']],
+                        ['label' => 'In Process', 'cls' => 'in-process', 'count' => $kpi['funnel']['Reached In Process']],
+                        ['label' => 'Resolved',   'cls' => 'resolved',   'count' => $c['resolved']],
+                    ];
+                    $legs = [
+                        ['stat' => $tm['first_response'],     'name' => 'time to open',        'target' => $sla['response_hours'] * 3600],
+                        ['stat' => $tm['pending_to_process'], 'name' => 'waiting to start',    'target' => null],
+                        ['stat' => $tm['process_to_resolve'], 'name' => 'working to resolve',  'target' => null],
+                    ];
                 @endphp
-                <div class="kpi-metric-item">
-                    <div class="kpi-metric-icon" style="background:#eff6ff; color:#1d4ed8"><i class="bi bi-ticket-detailed-fill"></i></div>
-                    <div>
-                        <div class="kpi-metric-val">{{ $total }}</div>
-                        <div class="kpi-metric-label">Total Tickets</div>
+                @foreach ($steps as $i => $step)
+                    <div class="journey-node node-{{ $step['cls'] }}">
+                        <span class="journey-dot"></span>
+                        <span class="journey-node-label">{{ $step['label'] }}</span>
+                        <span class="journey-node-count">{{ $step['count'] }} {{ $step['count'] === 1 ? 'ticket' : 'tickets' }}</span>
+                    </div>
+                    @if (isset($legs[$i]))
+                        @php $leg = $legs[$i]; $over = $leg['target'] && $leg['stat']['n'] > 0 && $leg['stat']['avg'] > $leg['target']; @endphp
+                        <div class="journey-leg {{ $over ? 'is-over' : '' }}">
+                            <span class="journey-leg-time">{{ $leg['stat']['avg_fmt'] }}</span>
+                            <span class="journey-line"></span>
+                            <span class="journey-leg-name">
+                                {{ $leg['name'] }}
+                                @if ($leg['stat']['n'] > 0)
+                                    <span class="text-muted">· {{ $leg['stat']['n'] }} measured</span>
+                                @elseif (! $kpi['has_stage_timestamps'])
+                                    <span class="text-muted">· needs stage tracking</span>
+                                @else
+                                    <span class="text-muted">· no data yet</span>
+                                @endif
+                            </span>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Charts row 1 --}}
+        <div class="kpi-charts-row mb-3">
+            <div class="kpi-chart-card">
+                <div class="kpi-chart-card-header">
+                    <i class="bi bi-pie-chart-fill text-primary me-2"></i><span>Status distribution</span>
+                </div>
+                <div class="kpi-chart-body donut-wrap">
+                    <canvas id="statusDonutChart" height="220"></canvas>
+                    <div class="donut-legend">
+                        <div class="donut-legend-item"><span><span class="donut-dot" style="background:#d97706"></span> Raised</span><strong>{{ $stats['raised'] }}</strong></div>
+                        <div class="donut-legend-item"><span><span class="donut-dot" style="background:#0284c7"></span> Pending</span><strong>{{ $stats['pending'] }}</strong></div>
+                        <div class="donut-legend-item"><span><span class="donut-dot" style="background:#7c3aed"></span> In Process</span><strong>{{ $stats['in_process'] }}</strong></div>
+                        <div class="donut-legend-item"><span><span class="donut-dot" style="background:#16a34a"></span> Resolved</span><strong>{{ $stats['resolved'] }}</strong></div>
                     </div>
                 </div>
-                <div class="kpi-metric-item">
-                    <div class="kpi-metric-icon" style="background:#f0fdf4; color:#16a34a"><i class="bi bi-check2-circle"></i></div>
-                    <div>
-                        <div class="kpi-metric-val" style="color:#16a34a">{{ $resRate }}%</div>
-                        <div class="kpi-metric-label">Resolution Rate</div>
-                    </div>
+            </div>
+
+            <div class="kpi-chart-card">
+                <div class="kpi-chart-card-header">
+                    <i class="bi bi-funnel-fill text-indigo me-2"></i><span>Lifecycle funnel</span>
                 </div>
-                <div class="kpi-metric-item">
-                    <div class="kpi-metric-icon" style="background:#fef9c3; color:#ca8a04"><i class="bi bi-clock-history"></i></div>
-                    <div>
-                        <div class="kpi-metric-val" style="color:#d97706">{{ $openTickets }}</div>
-                        <div class="kpi-metric-label">Open Tickets</div>
-                    </div>
+                <div class="kpi-chart-body"><div class="chart-box"><canvas id="funnelChart"></canvas></div></div>
+            </div>
+
+            <div class="kpi-chart-card">
+                <div class="kpi-chart-card-header">
+                    <i class="bi bi-hourglass-split text-warning me-2"></i><span>Open tickets by age</span>
+                    <span class="chart-note">target {{ $sla['resolve_hours'] }}h</span>
                 </div>
-                <div class="kpi-metric-item">
-                    <div class="kpi-metric-icon" style="background:#faf5ff; color:#7c3aed"><i class="bi bi-shield-check"></i></div>
-                    <div>
-                        <div class="kpi-metric-val" style="color:#7c3aed">{{ $slaRate ?? 100 }}%</div>
-                        <div class="kpi-metric-label">SLA Met (&lt;24h)</div>
-                    </div>
+                <div class="kpi-chart-body"><div class="chart-box"><canvas id="agingChart"></canvas></div></div>
+            </div>
+        </div>
+
+        {{-- Charts row 2 --}}
+        <div class="kpi-charts-row kpi-charts-row-wide mb-3">
+            <div class="kpi-chart-card">
+                <div class="kpi-chart-card-header">
+                    <i class="bi bi-graph-up text-success me-2"></i><span>Raised vs resolved, last 14 days</span>
+                    @php $w = $kpi['wow']; @endphp
+                    <span class="chart-note">
+                        This week: {{ $w['raised_this'] }} raised
+                        @if ($w['raised_change'] !== null)
+                            <span class="{{ $w['raised_change'] > 0 ? 'txt-warning' : 'txt-good' }}">({{ $w['raised_change'] > 0 ? '+' : '' }}{{ $w['raised_change'] }}% vs last week)</span>
+                        @endif
+                        and {{ $w['resolved_this'] }} resolved
+                    </span>
+                </div>
+                <div class="kpi-chart-body"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
+            </div>
+
+            <div class="kpi-chart-card">
+                <div class="kpi-chart-card-header">
+                    <i class="bi bi-clock-fill text-primary me-2"></i><span>When tickets arrive</span>
+                </div>
+                <div class="kpi-chart-body"><div class="chart-box"><canvas id="hourlyChart"></canvas></div></div>
+            </div>
+        </div>
+
+        {{-- Charts row 3 --}}
+        <div class="kpi-charts-row mb-3">
+            <div class="kpi-chart-card">
+                <div class="kpi-chart-card-header">
+                    <i class="bi bi-tags-fill text-indigo me-2"></i><span>Tickets by category</span>
+                </div>
+                <div class="kpi-chart-body"><div class="chart-box"><canvas id="categoryChart"></canvas></div></div>
+            </div>
+
+            <div class="kpi-chart-card">
+                <div class="kpi-chart-card-header">
+                    <i class="bi bi-people-fill text-primary me-2"></i><span>Staff performance</span>
+                </div>
+                <div class="kpi-chart-body p-0 justify-content-start">
+                    @if (count($kpi['staff']))
+                        <div class="table-responsive-dsm">
+                            <table class="mini-table">
+                                <thead>
+                                    <tr><th>Staff</th><th class="text-end">Handled</th><th class="text-end">Resolved</th><th class="text-end">Avg time</th></tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($kpi['staff'] as $s)
+                                        <tr>
+                                            <td>
+                                                <div class="fw-semibold text-dark text-truncate" style="max-width:150px" title="{{ $s['name'] }}">{{ $s['name'] }}</div>
+                                                <div class="text-muted smaller">{{ $s['code'] }} · {{ $s['open'] }} open</div>
+                                            </td>
+                                            <td class="text-end fw-bold">{{ $s['handled'] }}</td>
+                                            <td class="text-end">{{ $s['resolved'] }} <span class="text-muted smaller">({{ $s['rate'] }}%)</span></td>
+                                            <td class="text-end">{{ $s['avg_res'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="empty-note">No ticket has been picked up by staff in this period.</div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="kpi-chart-card">
+                <div class="kpi-chart-card-header">
+                    <i class="bi bi-eye-fill text-danger me-2"></i><span>Watchlist: oldest open tickets</span>
+                </div>
+                <div class="kpi-chart-body p-0 justify-content-start">
+                    @forelse ($kpi['oldest_open'] as $o)
+                        <button type="button" class="watch-row" onclick="openViewModal('{{ $o['tkt_id'] }}')">
+                            <span class="watch-main">
+                                <span class="tkt-code">{{ $o['tkt_id'] }}</span>
+                                <span class="watch-meta">{{ $o['regno'] }} · {{ $o['category'] }}</span>
+                            </span>
+                            <span class="watch-side">
+                                <span class="status-chip {{ $statusClasses[$o['status']] ?? '' }}">{{ $o['status_label'] }}</span>
+                                <span class="watch-age {{ $o['breached'] ? 'txt-critical' : '' }}">{{ $o['age'] }}</span>
+                            </span>
+                        </button>
+                    @empty
+                        <div class="empty-note">No open tickets. Everything is resolved.</div>
+                    @endforelse
+
+                    @if (count($kpi['repeat_students']))
+                        <div class="watch-sub">Students with repeat tickets</div>
+                        <div class="repeat-list">
+                            @foreach ($kpi['repeat_students'] as $rs)
+                                <a href="{{ $kpiUrl(['search' => $rs['regno']]) }}" class="repeat-chip" title="Show tickets for {{ $rs['regno'] }}">
+                                    {{ $rs['regno'] }} <strong>{{ $rs['count'] }}</strong>
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
 
-    </div>
+        {{-- ================= TICKETS TABLE ================= --}}
+        <div class="sample-rect-box">
+            <div class="sample-rect-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="sample-rect-title">Resolution & Response Metrics</span>
+                    @if ($hasFilter)
+                        <span class="badge bg-secondary text-uppercase fw-normal small">
+                            Filter: {{ \Modules\Visa\Models\TicketDetail::STATUS_LABELS[(int)$activeStatus] ?? 'All' }}
+                        </span>
+                        <a href="{{ $kpiUrl() }}" class="btn btn-sm btn-link text-decoration-none p-0 text-muted small">
+                            <i class="bi bi-x-circle"></i> Clear Filter
+                        </a>
+                    @endif
+                </div>
 
-    {{-- ================= 3. TICKETS PERFORMANCE TABLE CONTAINER ================= --}}
-    <div class="sample-rect-box">
-        <div class="sample-rect-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <div class="d-flex align-items-center gap-2">
-                <span class="sample-rect-title">Resolution & Response Metrics</span>
-                @if ($activeStatus !== null && $activeStatus !== '' && $activeStatus !== 'all')
-                    <span class="badge bg-secondary text-uppercase fw-normal small">
-                        Filter: {{ \Modules\Visa\Models\TicketDetail::STATUS_LABELS[(int)$activeStatus] ?? 'All' }}
-                    </span>
-                    <a href="{{ route('visa.ticketskpi') }}" class="btn btn-sm btn-link text-decoration-none p-0 text-muted small">
-                        <i class="bi bi-x-circle"></i> Clear Filter
-                    </a>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <form action="{{ route('visa.ticketskpi') }}" method="GET" class="d-flex align-items-center">
+                        @if ($hasFilter)
+                            <input type="hidden" name="status" value="{{ $activeStatus }}">
+                        @endif
+                        @if ($period !== 'all')
+                            <input type="hidden" name="period" value="{{ $period }}">
+                        @endif
+                        <div class="input-group input-group-sm dsm-search-input">
+                            <input type="text" name="search" class="form-control" placeholder="Search ticket, regno..." value="{{ request('search') }}" aria-label="Search tickets">
+                            <button class="btn btn-outline-secondary" type="submit" aria-label="Search"><i class="bi bi-search"></i></button>
+                        </div>
+                    </form>
+                    <span class="sample-rect-badge">{{ $tickets->total() }} records</span>
+
+                    <div class="dropdown" id="downloadDropdownKpi">
+                        <button class="btn-download-tbl" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Download table data">
+                            <i class="bi bi-download me-1"></i> Download
+                            <i class="bi bi-chevron-down ms-1" style="font-size:10px;"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 download-menu" style="min-width:150px;">
+                            <li>
+                                <button class="dropdown-item download-opt" onclick="exportTablePDF('kpiTicketsTable','Resolution_Response_Metrics')" type="button">
+                                    <span class="download-icon" style="background:#fee2e2;color:#dc2626;"><i class="bi bi-file-earmark-pdf-fill"></i></span>
+                                    PDF
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item download-opt" onclick="exportTableExcel('kpiTicketsTable','Resolution_Response_Metrics')" type="button">
+                                    <span class="download-icon" style="background:#dcfce7;color:#16a34a;"><i class="bi bi-file-earmark-spreadsheet-fill"></i></span>
+                                    Excel (.xlsx)
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item download-opt" onclick="exportTableCSV('kpiTicketsTable','Resolution_Response_Metrics')" type="button">
+                                    <span class="download-icon" style="background:#e0f2fe;color:#0284c7;"><i class="bi bi-filetype-csv"></i></span>
+                                    CSV
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sample-rect-body p-0">
+                @if ($tickets->isNotEmpty())
+                    <div class="table-responsive-dsm">
+                        <table class="table sample-table align-middle mb-0" id="kpiTicketsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 125px;">TICKET ID</th>
+                                    <th>STUDENT / REG NO</th>
+                                    <th>EMPLOYEE</th>
+                                    <th style="width: 110px;">RAISED</th>
+                                    <th style="width: 110px;">SOLVED</th>
+                                    <th style="width: 120px;">TIME TAKEN</th>
+                                    <th style="width: 95px;">STATUS</th>
+                                    <th style="width: 65px;" class="text-center">ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($tickets as $tkt)
+                                    @php
+                                        $openAgeSec = (! $tkt->is_resolved && $tkt->tkt_raised_datetime)
+                                            ? \Carbon\Carbon::parse($tkt->tkt_raised_datetime)->diffInSeconds(now(), true)
+                                            : 0;
+                                        $pastTarget = $openAgeSec > $sla['resolve_hours'] * 3600;
+                                    @endphp
+                                    <tr class="clickable-ticket-row" onclick="openViewModal('{{ $tkt->tkt_id }}')" title="Click to view ticket details">
+                                        <td>
+                                            <span class="tkt-code">{{ $tkt->tkt_id }}</span>
+                                            <div class="smaller text-muted text-truncate mt-1" style="max-width: 115px;" title="{{ $tkt->ticketMaster?->tkt_main_type }}">
+                                                {{ $tkt->ticketMaster?->tkt_main_type ?? 'Visa' }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-dark small text-truncate" style="max-width: 140px;">{{ $tkt->regno }}</div>
+                                            <div class="text-muted smaller text-truncate" style="max-width: 140px;" title="{{ $tkt->student?->student_name ?? $tkt->student?->name }}">
+                                                {{ $tkt->student?->student_name ?? $tkt->student?->name ?? 'Student' }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @php
+                                                $empCode = $tkt->emp_userid ?: ($tkt->assigned_empcode ?: null);
+                                                $empName = $tkt->handlerEmployee?->full_name ?? ($tkt->assignedEmployee?->full_name ?? null);
+                                            @endphp
+                                            @if ($empCode)
+                                                <div class="fw-semibold text-dark small text-truncate d-flex align-items-center gap-1" style="max-width: 135px;">
+                                                    <i class="bi bi-person-badge text-primary"></i> {{ $empCode }}
+                                                </div>
+                                                <div class="text-muted smaller text-truncate" style="max-width: 135px;" title="{{ $empName ?? 'Staff' }}">
+                                                    {{ $empName ?: 'Support Staff' }}
+                                                </div>
+                                            @else
+                                                <span class="badge bg-light text-muted border fw-normal smaller py-0 px-1">Unassigned</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-nowrap text-muted">
+                                            @if ($tkt->tkt_raised_datetime)
+                                                <div class="fw-medium text-dark smaller">{{ \Carbon\Carbon::parse($tkt->tkt_raised_datetime)->format('d M Y') }}</div>
+                                                <div class="smaller text-muted">{{ \Carbon\Carbon::parse($tkt->tkt_raised_datetime)->format('h:i A') }}</div>
+                                            @else
+                                                <span>—</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-nowrap text-muted">
+                                            @if ($tkt->is_resolved && $tkt->emp_timestamp)
+                                                <div class="fw-medium text-dark smaller">{{ \Carbon\Carbon::parse($tkt->emp_timestamp)->format('d M Y') }}</div>
+                                                <div class="smaller text-success">{{ \Carbon\Carbon::parse($tkt->emp_timestamp)->format('h:i A') }}</div>
+                                            @elseif ($tkt->is_resolved)
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle smaller py-0 px-1">Resolved</span>
+                                            @else
+                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle smaller py-0 px-1">Open</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if ($tkt->is_resolved)
+                                                <span class="duration-badge duration-badge-resolved py-0 px-2 fw-semibold" title="Solved in {{ $tkt->duration_formatted }}">
+                                                    <i class="bi bi-check2-circle me-1 text-success"></i>{{ $tkt->duration_formatted }}
+                                                </span>
+                                            @else
+                                                <span class="duration-badge {{ $pastTarget ? 'duration-badge-breach' : 'duration-badge-pending' }} py-0 px-2 fw-semibold"
+                                                      title="Open for {{ $tkt->duration_formatted }}{{ $pastTarget ? ', past the '.$sla['resolve_hours'].'h target' : '' }}">
+                                                    <i class="bi {{ $pastTarget ? 'bi-alarm' : 'bi-clock-history' }} me-1"></i>{{ $tkt->duration_formatted }}
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <span class="status-chip {{ $tkt->status_class }} py-0 px-2 smaller">
+                                                {{ $tkt->status_label }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center" onclick="event.stopPropagation();">
+                                            <button type="button" class="btn-action-view" onclick="openViewModal('{{ $tkt->tkt_id }}')" title="View ticket details">
+                                                <i class="bi bi-eye"></i> View
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center p-3 border-top flex-wrap gap-2">
+                        <span class="text-muted small">Showing {{ $tickets->firstItem() }} to {{ $tickets->lastItem() }} of {{ $tickets->total() }} tickets</span>
+                        <div>{{ $tickets->links() }}</div>
+                    </div>
+                @else
+                    <div class="p-5 text-center text-muted">
+                        <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                        <p class="mb-0">No tickets match this filter. Clear the filter or choose a wider period.</p>
+                    </div>
                 @endif
             </div>
+        </div>
+    </section>
 
-            {{-- Search, Records & Download --}}
-            <div class="d-flex align-items-center gap-2">
-                <form action="{{ route('visa.ticketskpi') }}" method="GET" class="d-flex align-items-center">
-                    @if ($activeStatus !== null && $activeStatus !== '' && $activeStatus !== 'all')
-                        <input type="hidden" name="status" value="{{ $activeStatus }}">
-                    @endif
-                    <div class="input-group input-group-sm dsm-search-input">
-                        <input type="text" name="search" class="form-control" placeholder="Search ticket, regno..." value="{{ request('search') }}">
-                        <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+    {{-- ============================================================
+         VIEW 2: AI PERCEPTIONS
+         ============================================================ --}}
+    <section id="viewAi" class="view-pane d-none" role="tabpanel">
+
+        <div class="ai-top mb-3">
+            {{-- Health score --}}
+            <div class="kpi-chart-card">
+                <div class="kpi-chart-card-header">
+                    <i class="bi bi-heart-pulse-fill text-danger me-2"></i><span>Desk health score</span>
+                </div>
+                <div class="kpi-chart-body health-body">
+                    <div class="gauge-wrap">
+                        <canvas id="healthGauge"></canvas>
+                        <div class="gauge-center">
+                            <div class="gauge-num txt-{{ $health['level'] }}">{{ $health['score'] ?? '—' }}</div>
+                            <div class="gauge-label">{{ $health['label'] }}</div>
+                        </div>
                     </div>
-                </form>
-                <span class="sample-rect-badge">{{ $tickets->total() }} records</span>
+                    <div class="health-parts">
+                        @foreach ($health['parts'] as $part)
+                            <div class="health-part">
+                                <div class="health-part-head">
+                                    <span>{{ $part['label'] }}</span>
+                                    <span><strong>{{ $part['value'] }}%</strong> <span class="text-muted">· weight {{ $part['weight'] }}</span></span>
+                                </div>
+                                <div class="rate-bar"><span style="width: {{ $part['value'] }}%"></span></div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
 
-                {{-- Download Button --}}
-                <div class="dropdown" id="downloadDropdownKpi">
-                    <button class="btn-download-tbl" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Download table data">
-                        <i class="bi bi-download me-1"></i> Download
-                        <i class="bi bi-chevron-down ms-1" style="font-size:10px;"></i>
+            {{-- Recommended actions --}}
+            <div class="kpi-chart-card">
+                <div class="kpi-chart-card-header">
+                    <i class="bi bi-list-check text-success me-2"></i><span>Recommended actions, in priority order</span>
+                    <button type="button" class="btn-download-tbl ms-auto" onclick="exportAiReportPDF()">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Download director report
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 download-menu" style="min-width:150px;">
-                        <li>
-                            <button class="dropdown-item download-opt" onclick="exportTablePDF('kpiTicketsTable','Resolution_Response_Metrics')" type="button">
-                                <span class="download-icon" style="background:#fee2e2;color:#dc2626;"><i class="bi bi-file-earmark-pdf-fill"></i></span>
-                                PDF
-                            </button>
-                        </li>
-                        <li>
-                            <button class="dropdown-item download-opt" onclick="exportTableExcel('kpiTicketsTable','Resolution_Response_Metrics')" type="button">
-                                <span class="download-icon" style="background:#dcfce7;color:#16a34a;"><i class="bi bi-file-earmark-spreadsheet-fill"></i></span>
-                                Excel (.xlsx)
-                            </button>
-                        </li>
-                        <li>
-                            <button class="dropdown-item download-opt" onclick="exportTableCSV('kpiTicketsTable','Resolution_Response_Metrics')" type="button">
-                                <span class="download-icon" style="background:#e0f2fe;color:#0284c7;"><i class="bi bi-filetype-csv"></i></span>
-                                CSV
-                            </button>
-                        </li>
-                    </ul>
+                </div>
+                <div class="kpi-chart-body justify-content-start">
+                    @if (count($actions))
+                        <ol class="action-list">
+                            @foreach ($actions as $a)
+                                <li class="lvl-{{ $a['level'] }}">
+                                    <span class="action-text">{{ $a['action'] }}</span>
+                                    <span class="action-why">{{ $a['title'] }}</span>
+                                </li>
+                            @endforeach
+                        </ol>
+                    @else
+                        <div class="empty-note">No urgent actions. The desk is running within targets.</div>
+                    @endif
                 </div>
             </div>
         </div>
 
-        <div class="sample-rect-body p-0">
-            @if ($tickets->isNotEmpty())
-                <div class="table-responsive-dsm">
-                    <table class="table sample-table align-middle mb-0" id="kpiTicketsTable">
-                        <thead>
-                            <tr>
-                                <th style="width: 125px;">TICKET ID</th>
-                                <th>STUDENT / REG NO</th>
-                                <th>EMPLOYEE</th>
-                                <th style="width: 110px;">RAISED</th>
-                                <th style="width: 110px;">SOLVED</th>
-                                <th style="width: 120px;">TIME TAKEN</th>
-                                <th style="width: 95px;">STATUS</th>
-                                <th style="width: 65px;" class="text-center">ACTION</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($tickets as $tkt)
-                                <tr class="clickable-ticket-row" onclick="openViewModal('{{ $tkt->tkt_id }}')" title="Click to view ticket details">
-                                    <td>
-                                        <span class="tkt-code">{{ $tkt->tkt_id }}</span>
-                                        <div class="smaller text-muted text-truncate mt-1" style="max-width: 115px;" title="{{ $tkt->ticketMaster?->tkt_main_type }}">
-                                            {{ $tkt->ticketMaster?->tkt_main_type ?? 'Visa' }}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="fw-bold text-dark small text-truncate" style="max-width: 140px;">{{ $tkt->regno }}</div>
-                                        <div class="text-muted smaller text-truncate" style="max-width: 140px;" title="{{ $tkt->student?->student_name ?? $tkt->student?->name }}">
-                                            {{ $tkt->student?->student_name ?? $tkt->student?->name ?? 'Student' }}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        @php
-                                            $empCode = $tkt->emp_userid ?: ($tkt->assigned_empcode ?: null);
-                                            $empName = $tkt->handlerEmployee?->full_name ?? ($tkt->assignedEmployee?->full_name ?? null);
-                                        @endphp
-                                        @if ($empCode)
-                                            <div class="fw-semibold text-dark small text-truncate d-flex align-items-center gap-1" style="max-width: 135px;">
-                                                <i class="bi bi-person-badge text-primary"></i> {{ $empCode }}
-                                            </div>
-                                            <div class="text-muted smaller text-truncate" style="max-width: 135px;" title="{{ $empName ?? 'Staff' }}">
-                                                {{ $empName ?: 'Support Staff' }}
-                                            </div>
-                                        @else
-                                            <span class="badge bg-light text-muted border fw-normal smaller py-0 px-1">Unassigned</span>
-                                        @endif
-                                    </td>
-                                    <td class="text-nowrap text-muted">
-                                        @if ($tkt->tkt_raised_datetime)
-                                            <div class="fw-medium text-dark smaller">{{ \Carbon\Carbon::parse($tkt->tkt_raised_datetime)->format('d M Y') }}</div>
-                                            <div class="smaller text-muted">{{ \Carbon\Carbon::parse($tkt->tkt_raised_datetime)->format('h:i A') }}</div>
-                                        @else
-                                            <span>—</span>
-                                        @endif
-                                    </td>
-                                    <td class="text-nowrap text-muted">
-                                        @if ($tkt->is_resolved && $tkt->emp_timestamp)
-                                            <div class="fw-medium text-dark smaller">{{ \Carbon\Carbon::parse($tkt->emp_timestamp)->format('d M Y') }}</div>
-                                            <div class="smaller text-success">{{ \Carbon\Carbon::parse($tkt->emp_timestamp)->format('h:i A') }}</div>
-                                        @elseif ($tkt->is_resolved)
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle smaller py-0 px-1">Resolved</span>
-                                        @else
-                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle smaller py-0 px-1">Pending</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if ($tkt->is_resolved)
-                                            <span class="duration-badge duration-badge-resolved py-0 px-2 fw-semibold" title="Solved in {{ $tkt->duration_formatted }}">
-                                                <i class="bi bi-check2-circle me-1 text-success"></i>{{ $tkt->duration_formatted }}
-                                            </span>
-                                        @else
-                                            <span class="duration-badge duration-badge-pending py-0 px-2 fw-semibold" title="Open for {{ $tkt->duration_formatted }}">
-                                                <i class="bi bi-clock-history me-1 text-warning"></i>{{ $tkt->duration_formatted }}
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <span class="status-chip {{ $tkt->status_class }} py-0 px-2 smaller">
-                                            {{ $tkt->status_label }}
-                                        </span>
-                                    </td>
-                                    <td class="text-center" onclick="event.stopPropagation();">
-                                        <button
-                                            type="button"
-                                            class="btn-action-view"
-                                            onclick="openViewModal('{{ $tkt->tkt_id }}')"
-                                            title="View ticket details">
-                                            <i class="bi bi-eye"></i> View
-                                        </button>
-                                    </td>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                {{-- Pagination --}}
-                <div class="d-flex justify-content-between align-items-center p-3 border-top">
-                    <span class="text-muted small">Showing {{ $tickets->firstItem() }} to {{ $tickets->lastItem() }} of {{ $tickets->total() }} tickets</span>
-                    <div>{{ $tickets->links() }}</div>
-                </div>
-            @else
-                <div class="p-5 text-center text-muted">
-                    <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
-                    <p class="mb-0">No tickets found for the selected filter.</p>
-                </div>
-            @endif
+        {{-- Perception filter --}}
+        <div class="ai-filter mb-2" role="group" aria-label="Filter findings">
+            <button type="button" class="ai-filter-btn is-active" data-level="all">All <span>{{ count($insights) }}</span></button>
+            @foreach ($levelMeta as $lvl => $meta)
+                @if (! empty($levelCount[$lvl]))
+                    <button type="button" class="ai-filter-btn lvl-{{ $lvl }}" data-level="{{ $lvl }}">{{ $meta['label'] }} <span>{{ $levelCount[$lvl] }}</span></button>
+                @endif
+            @endforeach
         </div>
-    </div>
+
+        {{-- Perception cards --}}
+        <div class="insight-grid">
+            @foreach ($insights as $ins)
+                <article class="insight-card lvl-{{ $ins['level'] }}" data-level="{{ $ins['level'] }}">
+                    <div class="insight-head">
+                        <span class="insight-icon"><i class="bi {{ $ins['icon'] }}"></i></span>
+                        <span class="insight-tag">{{ $levelMeta[$ins['level']]['label'] }}</span>
+                    </div>
+                    <h3 class="insight-title">{{ $ins['title'] }}</h3>
+                    <p class="insight-text">{{ $ins['text'] }}</p>
+                    <p class="insight-action"><i class="bi bi-arrow-return-right me-1"></i>{{ $ins['action'] }}</p>
+                </article>
+            @endforeach
+        </div>
+
+        <p class="ai-footnote">
+            Findings are generated automatically from ticket data in the selected period ({{ strtolower($periodLabels[$period]) }}).
+            Targets used: open a ticket within {{ $sla['response_hours'] }} hours, resolve within {{ $sla['resolve_hours'] }} hours.
+            @unless ($kpi['has_stage_timestamps'])
+                Stage timings are estimated until stage tracking is enabled.
+            @endunless
+        </p>
+    </section>
 
 </div>
 
@@ -432,26 +713,23 @@
         padding: 6px 8px 28px;
     }
 
-    /* 1. TOP ROW: 4 COMPACT FILTER PILLS + 1 TIME SUMMARY BOX */
+    /* 1. TOP ROW: 4 SMALL COMPACT PILLS */
     .stat-pills-row {
         display: grid;
-        grid-template-columns: repeat(4, 1fr) 1.55fr;
+        grid-template-columns: repeat(4, 1fr);
         gap: 12px;
-        align-items: stretch;
     }
     .stat-pill {
         background: var(--bg-card, #ffffff);
         border: 1.5px solid #000000;
         border-radius: 12px;
-        padding: 8px 12px;
+        padding: 8px 14px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
         cursor: pointer;
-        height: 100%;
-        min-height: 48px;
     }
     .stat-pill:hover {
         transform: translateY(-2px);
@@ -469,7 +747,6 @@
         font-weight: 700;
         color: #0f172a;
         letter-spacing: -0.2px;
-        white-space: nowrap;
     }
     .stat-pill-val {
         font-size: 18px;
@@ -500,70 +777,6 @@
     .stat-pill-pending .stat-pill-val { color: #0284c7; }
     .stat-pill-in-process .stat-pill-val { color: #7c3aed; }
     .stat-pill-resolved .stat-pill-val { color: #16a34a; }
-
-    /* 5th Box: Time Summary */
-    .stat-pill-time-summary {
-        background: #ffffff;
-        border: 1.5px solid #4f46e5 !important;
-        border-radius: 12px;
-        padding: 6px 14px;
-        display: flex;
-        align-items: center;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-        transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-        cursor: default;
-        height: 100%;
-        min-height: 48px;
-    }
-    .stat-pill-time-summary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.12);
-    }
-    .time-summary-body {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 3px;
-        width: 100%;
-    }
-    .time-summary-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        font-size: 11.5px;
-        line-height: 1.25;
-    }
-    .time-summary-label {
-        color: #334155;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        white-space: nowrap;
-        font-size: 11.5px;
-    }
-    .time-summary-label .time-icon {
-        font-size: 11.5px;
-    }
-    .time-summary-sep {
-        color: #64748b;
-        font-weight: 700;
-        margin-left: 1px;
-    }
-    .time-summary-val {
-        font-size: 11.5px;
-        font-weight: 800;
-        font-family: inherit;
-        white-space: nowrap;
-        text-align: right;
-    }
-    .time-summary-val.val-pending {
-        color: #0284c7;
-    }
-    .time-summary-val.val-resolve {
-        color: #16a34a;
-    }
 
     /* DIVIDER */
     .dsm-divider {
@@ -724,25 +937,14 @@
         border-color: #0f172a;
     }
 
-    @media (max-width: 1199px) {
-        .stat-pills-row {
-            grid-template-columns: repeat(4, 1fr) 1.55fr;
-        }
-    }
     @media (max-width: 991px) {
         .stat-pills-row {
             grid-template-columns: repeat(2, 1fr);
-        }
-        .stat-pill-time-summary {
-            grid-column: span 2;
         }
     }
     @media (max-width: 575px) {
         .stat-pills-row {
             grid-template-columns: 1fr;
-        }
-        .stat-pill-time-summary {
-            grid-column: span 1;
         }
         .dsm-search-input {
             width: 100%;
@@ -927,6 +1129,361 @@
         font-size: 13px;
         flex-shrink: 0;
     }
+
+    /* =====================================================
+       KPI + AI PERCEPTIONS ADDITIONS
+       ===================================================== */
+    .txt-good { color: #16a34a !important; }
+    .txt-warning { color: #d97706 !important; }
+    .txt-critical { color: #dc2626 !important; }
+    .txt-info { color: #0284c7 !important; }
+    .txt-muted { color: #94a3b8 !important; }
+
+    /* TOP LINE */
+    .exec-line {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: #ffffff;
+        border: 1.5px solid #000000;
+        border-left-width: 6px;
+        border-radius: 12px;
+        padding: 10px 16px;
+        margin-bottom: 12px;
+    }
+    .exec-line.lvl-good { border-left-color: #16a34a; }
+    .exec-line.lvl-info { border-left-color: #0284c7; }
+    .exec-line.lvl-warning { border-left-color: #d97706; }
+    .exec-line.lvl-critical { border-left-color: #dc2626; }
+    .exec-score { display: flex; align-items: baseline; flex-shrink: 0; }
+    .exec-score-num { font-size: 28px; font-weight: 800; line-height: 1; color: #0f172a; font-variant-numeric: tabular-nums; }
+    .lvl-good .exec-score-num { color: #16a34a; }
+    .lvl-info .exec-score-num { color: #0284c7; }
+    .lvl-warning .exec-score-num { color: #d97706; }
+    .lvl-critical .exec-score-num { color: #dc2626; }
+    .exec-score-of { font-size: 12px; font-weight: 700; color: #64748b; margin-left: 2px; }
+    .exec-text { flex: 1; font-size: 13.5px; color: #0f172a; line-height: 1.45; }
+    .exec-updated { font-size: 11.5px; color: #64748b; white-space: nowrap; }
+
+    /* TWO BUTTONS + PERIOD */
+    .view-switch-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .view-switch { display: flex; gap: 8px; }
+    .view-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: #ffffff;
+        color: #0f172a;
+        border: 1.5px solid #000000;
+        border-radius: 10px;
+        padding: 8px 18px;
+        font-size: 13.5px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+    .view-btn:hover { background: #f1f5f9; }
+    .view-btn.is-active { background: #0f172a; color: #ffffff; }
+    .view-btn:focus-visible, .period-link:focus-visible, .ai-filter-btn:focus-visible, .watch-row:focus-visible {
+        outline: 2px solid #2563eb;
+        outline-offset: 2px;
+    }
+    .view-btn-count {
+        background: #dc2626;
+        color: #ffffff;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .period-switch {
+        display: flex;
+        border: 1.5px solid #000000;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #ffffff;
+    }
+    .period-link {
+        font-size: 12px;
+        font-weight: 700;
+        color: #475569;
+        padding: 7px 12px;
+        text-decoration: none;
+        border-left: 1px solid #e2e8f0;
+    }
+    .period-link:first-child { border-left: none; }
+    .period-link:hover { background: #f1f5f9; color: #0f172a; }
+    .period-link.is-active { background: #0f172a; color: #ffffff; }
+
+    /* RATE TILES */
+    .rate-tiles {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+    .rate-tile {
+        background: #ffffff;
+        border: 1.5px solid #000000;
+        border-radius: 12px;
+        padding: 12px 14px;
+    }
+    .rate-tile-val { font-size: 26px; font-weight: 800; color: #0f172a; line-height: 1.05; font-variant-numeric: tabular-nums; }
+    .rate-tile-label { font-size: 12.5px; font-weight: 700; color: #334155; margin-top: 2px; }
+    .rate-tile-sub { font-size: 11.5px; color: #64748b; margin-top: 6px; }
+    .rate-bar { height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin-top: 8px; }
+    .rate-bar span { display: block; height: 100%; background: #0f172a; border-radius: 999px; }
+
+    /* JOURNEY */
+    .journey-card {
+        background: #ffffff;
+        border: 1.5px solid #000000;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .journey-head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
+        background: #f8fafc;
+        border-bottom: 1.5px solid #000000;
+        padding: 9px 14px;
+    }
+    .journey-title { font-size: 12.5px; font-weight: 800; color: #0f172a; }
+    .journey-total { font-size: 12.5px; color: #0f172a; }
+    .journey-track {
+        display: flex;
+        align-items: flex-start;
+        padding: 18px 18px 14px;
+        overflow-x: auto;
+    }
+    .journey-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 92px;
+        flex-shrink: 0;
+        text-align: center;
+    }
+    .journey-dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 3px solid currentColor;
+        background: #ffffff;
+        margin-bottom: 6px;
+    }
+    .node-raised { color: #d97706; }
+    .node-pending { color: #0284c7; }
+    .node-in-process { color: #7c3aed; }
+    .node-resolved { color: #16a34a; }
+    .node-resolved .journey-dot { background: currentColor; }
+    .journey-node-label { font-size: 12.5px; font-weight: 800; color: #0f172a; }
+    .journey-node-count { font-size: 11px; color: #64748b; }
+    .journey-leg {
+        flex: 1;
+        min-width: 140px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: -6px;
+    }
+    .journey-leg-time { font-size: 18px; font-weight: 800; color: #0f172a; font-variant-numeric: tabular-nums; }
+    .journey-leg.is-over .journey-leg-time { color: #dc2626; }
+    .journey-line {
+        width: 100%;
+        height: 0;
+        border-top: 2px dashed #94a3b8;
+        margin: 2px 0 4px;
+    }
+    .journey-leg.is-over .journey-line { border-top-color: #dc2626; }
+    .journey-leg-name { font-size: 11px; color: #334155; text-align: center; }
+
+    /* CHART CARDS (extends the original) */
+    .kpi-chart-card-header .chart-note {
+        margin-left: auto;
+        font-size: 11px;
+        font-weight: 600;
+        color: #64748b;
+    }
+    .kpi-charts-row-wide { grid-template-columns: 2fr 1fr; }
+    .chart-box { position: relative; height: 220px; width: 100%; }
+
+    .mini-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+    .mini-table th {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        padding: 8px 12px;
+        border-bottom: 1px solid #e2e8f0;
+        background: #ffffff;
+    }
+    .mini-table td { padding: 7px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .mini-table tr:last-child td { border-bottom: none; }
+
+    .watch-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        background: #ffffff;
+        border: none;
+        border-bottom: 1px solid #f1f5f9;
+        padding: 8px 12px;
+        text-align: left;
+    }
+    .watch-row:hover { background: #f8fafc; }
+    .watch-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .watch-meta { font-size: 11px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+    .watch-side { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+    .watch-age { font-size: 12px; font-weight: 800; color: #0f172a; }
+    .watch-sub { font-size: 11px; font-weight: 700; color: #64748b; padding: 10px 12px 4px; }
+    .repeat-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 12px; }
+    .repeat-chip {
+        font-size: 11.5px;
+        color: #0f172a;
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        padding: 2px 8px;
+        text-decoration: none;
+    }
+    .repeat-chip:hover { background: #e2e8f0; }
+    .empty-note { padding: 18px 14px; font-size: 12.5px; color: #64748b; }
+    .duration-badge-breach { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+    /* AI PERCEPTIONS */
+    .ai-top { display: grid; grid-template-columns: 1fr 1.3fr; gap: 12px; }
+    .health-body { flex-direction: row; align-items: center; gap: 18px; }
+    .gauge-wrap { position: relative; width: 190px; height: 110px; flex-shrink: 0; }
+    .gauge-center { position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; }
+    .gauge-num { font-size: 32px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+    .gauge-label { font-size: 12px; font-weight: 700; color: #334155; }
+    .health-parts { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+    .health-part-head { display: flex; justify-content: space-between; font-size: 12px; color: #334155; }
+    .health-part .rate-bar { margin-top: 4px; }
+
+    .action-list { margin: 0; padding-left: 0; list-style: none; counter-reset: act; }
+    .action-list li {
+        counter-increment: act;
+        position: relative;
+        padding: 8px 0 8px 36px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        flex-direction: column;
+    }
+    .action-list li:last-child { border-bottom: none; }
+    .action-list li::before {
+        content: counter(act);
+        position: absolute;
+        left: 0;
+        top: 8px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        background: #d97706;
+    }
+    .action-list li.lvl-critical::before { background: #dc2626; }
+    .action-text { font-size: 13px; font-weight: 700; color: #0f172a; }
+    .action-why { font-size: 11.5px; color: #64748b; }
+
+    .ai-filter { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ai-filter-btn {
+        background: #ffffff;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #334155;
+        cursor: pointer;
+    }
+    .ai-filter-btn span { color: #64748b; margin-left: 3px; }
+    .ai-filter-btn.is-active { background: #0f172a; border-color: #0f172a; color: #ffffff; }
+    .ai-filter-btn.is-active span { color: #cbd5e1; }
+
+    .insight-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    .insight-card {
+        --lvl: #0284c7;
+        --lvl-bg: #f0f9ff;
+        background: #ffffff;
+        border: 1.5px solid #000000;
+        border-left: 6px solid var(--lvl);
+        border-radius: 12px;
+        padding: 12px 16px;
+    }
+    .lvl-critical { --lvl: #dc2626; --lvl-bg: #fef2f2; }
+    .lvl-warning { --lvl: #d97706; --lvl-bg: #fffbeb; }
+    .lvl-info { --lvl: #0284c7; --lvl-bg: #f0f9ff; }
+    .lvl-good { --lvl: #16a34a; --lvl-bg: #f0fdf4; }
+    .insight-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .insight-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--lvl-bg);
+        color: var(--lvl);
+        font-size: 14px;
+    }
+    .insight-tag { font-size: 11.5px; font-weight: 800; color: var(--lvl); }
+    .insight-title { font-size: 14.5px; font-weight: 800; color: #0f172a; margin: 0 0 4px; line-height: 1.3; }
+    .insight-text { font-size: 12.5px; color: #334155; margin: 0 0 8px; line-height: 1.5; }
+    .insight-action {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #0f172a;
+        background: var(--lvl-bg);
+        border-radius: 8px;
+        padding: 6px 10px;
+        margin: 0;
+    }
+    .ai-footnote { font-size: 11.5px; color: #64748b; margin: 14px 2px 0; max-width: 80ch; }
+
+    @media (max-width: 991px) {
+        .rate-tiles { grid-template-columns: repeat(2, 1fr); }
+        .kpi-charts-row-wide { grid-template-columns: 1fr; }
+        .ai-top { grid-template-columns: 1fr; }
+        .insight-grid { grid-template-columns: 1fr; }
+        .exec-line { flex-wrap: wrap; }
+    }
+    @media (max-width: 575px) {
+        .rate-tiles { grid-template-columns: 1fr 1fr; }
+        .health-body { flex-direction: column; }
+        .view-switch { width: 100%; }
+        .view-btn { flex: 1; justify-content: center; padding: 8px 10px; }
+        .period-switch { width: 100%; overflow-x: auto; }
+        .period-link { flex: 1; text-align: center; white-space: nowrap; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .stat-pill, .kpi-metric-item, .view-btn { transition: none; }
+    }
 </style>
 
 {{-- Chart.js CDN --}}
@@ -995,17 +1552,33 @@
         doc.save(`${fileName}_${new Date().toISOString().slice(0,10)}.pdf`);
     }
 
-    // ---- CHART DATA FROM SERVER ----
+    // ---- DATA FROM SERVER ----
     const kpiStats = {
         raised:     {{ $stats['raised'] ?? 0 }},
         pending:    {{ $stats['pending'] ?? 0 }},
         inProcess:  {{ $stats['in_process'] ?? 0 }},
         resolved:   {{ $stats['resolved'] ?? 0 }},
     };
+    const KPI = @json($kpiJs);
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ANIM = reduceMotion ? false : { duration: 600 };
 
-    document.addEventListener('DOMContentLoaded', function () {
+    if (window.Chart) {
+        Chart.defaults.font.size = 11;
+        Chart.defaults.color = '#475569';
+    }
 
-        // 1. Donut Chart — Status Distribution
+    const baseOpts = (extra = {}) => Object.assign({
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: ANIM,
+        plugins: { legend: { display: false } },
+    }, extra);
+
+    function initKpiCharts() {
+        if (!window.Chart) return;
+
+        // Status donut
         const donutCtx = document.getElementById('statusDonutChart');
         if (donutCtx) {
             new Chart(donutCtx, {
@@ -1015,7 +1588,7 @@
                     datasets: [{
                         data: [kpiStats.raised, kpiStats.pending, kpiStats.inProcess, kpiStats.resolved],
                         backgroundColor: ['#d97706', '#0284c7', '#7c3aed', '#16a34a'],
-                        borderColor: ['#fff','#fff','#fff','#fff'],
+                        borderColor: '#fff',
                         borderWidth: 3,
                         hoverOffset: 6,
                     }]
@@ -1024,68 +1597,275 @@
                     cutout: '68%',
                     responsive: true,
                     maintainAspectRatio: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => ` ${ctx.label}: ${ctx.parsed}`
-                            }
-                        }
-                    },
-                    animation: { animateRotate: true, duration: 700 }
+                    animation: ANIM,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}` } } },
                 }
             });
         }
 
-        // 2. Bar Chart — Ticket Volume by Status
-        const barCtx = document.getElementById('statusBarChart');
-        if (barCtx) {
-            new Chart(barCtx, {
+        // Lifecycle funnel
+        const funnelCtx = document.getElementById('funnelChart');
+        if (funnelCtx) {
+            const labels = Object.keys(KPI.funnel);
+            const values = Object.values(KPI.funnel);
+            const top = values[0] || 1;
+            new Chart(funnelCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Raised', 'Pending', 'In Process', 'Resolved'],
+                    labels,
                     datasets: [{
-                        label: 'Tickets',
-                        data: [kpiStats.raised, kpiStats.pending, kpiStats.inProcess, kpiStats.resolved],
-                        backgroundColor: [
-                            'rgba(217,119,6,0.18)',
-                            'rgba(2,132,199,0.18)',
-                            'rgba(124,58,237,0.18)',
-                            'rgba(22,163,74,0.18)',
-                        ],
-                        borderColor: ['#d97706','#0284c7','#7c3aed','#16a34a'],
-                        borderWidth: 2,
-                        borderRadius: 7,
-                        borderSkipped: false,
+                        data: values,
+                        backgroundColor: ['rgba(217,119,6,0.85)', 'rgba(2,132,199,0.85)', 'rgba(124,58,237,0.85)', 'rgba(22,163,74,0.85)'],
+                        borderRadius: 6,
+                        barPercentage: 0.75,
+                        maxBarThickness: 34,
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                options: baseOpts({
+                    indexAxis: 'y',
                     plugins: {
                         legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x} tickets (${Math.round(ctx.parsed.x / top * 100)}% of raised)` } }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        y: { grid: { display: false }, ticks: { font: { weight: '600' } } }
+                    }
+                })
+            });
+        }
+
+        // Open-ticket ageing
+        const agingCtx = document.getElementById('agingChart');
+        if (agingCtx) {
+            new Chart(agingCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(KPI.aging),
+                    datasets: [{
+                        data: Object.values(KPI.aging),
+                        backgroundColor: ['#16a34a', '#65a30d', '#d97706', '#ea580c', '#dc2626'],
+                        borderRadius: 6,
+                        maxBarThickness: 46,
+                    }]
+                },
+                options: baseOpts({
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} open ticket${ctx.parsed.y !== 1 ? 's' : ''}` } } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                })
+            });
+        }
+
+        // 14-day trend
+        const trendCtx = document.getElementById('trendChart');
+        if (trendCtx) {
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: KPI.trend.labels,
+                    datasets: [
+                        { label: 'Raised', data: KPI.trend.raised, borderColor: '#d97706', backgroundColor: 'rgba(217,119,6,0.12)', fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2 },
+                        { label: 'Resolved', data: KPI.trend.resolved, borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.10)', fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2 },
+                    ]
+                },
+                options: baseOpts({
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { display: true, position: 'top', align: 'end', labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true } } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                })
+            });
+        }
+
+        // Arrival by hour
+        const hourlyCtx = document.getElementById('hourlyChart');
+        if (hourlyCtx) {
+            const hourLabel = h => `${(h % 12) || 12}${h < 12 ? 'a' : 'p'}`;
+            const max = Math.max(...KPI.hourly);
+            new Chart(hourlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: KPI.hourly.map((_, h) => hourLabel(h)),
+                    datasets: [{
+                        data: KPI.hourly,
+                        backgroundColor: KPI.hourly.map(v => v === max && v > 0 ? '#0284c7' : 'rgba(2,132,199,0.25)'),
+                        borderRadius: 3,
+                    }]
+                },
+                options: baseOpts({
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { title: items => { const h = items[0].dataIndex; return `${hourLabel(h)}–${hourLabel((h + 1) % 24)}`; }, label: ctx => ` ${ctx.parsed.y} tickets` } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } }
+                    }
+                })
+            });
+        }
+
+        // Category breakdown (stacked)
+        const catCtx = document.getElementById('categoryChart');
+        if (catCtx) {
+            const cats = KPI.categories;
+            const short = s => s.length > 22 ? s.slice(0, 21) + '…' : s;
+            new Chart(catCtx, {
+                type: 'bar',
+                data: {
+                    labels: cats.map(c => short(c.name)),
+                    datasets: [
+                        { label: 'Resolved', data: cats.map(c => c.resolved), backgroundColor: '#16a34a', borderRadius: 4, maxBarThickness: 26 },
+                        { label: 'Open', data: cats.map(c => c.open), backgroundColor: '#d97706', borderRadius: 4, maxBarThickness: 26 },
+                    ]
+                },
+                options: baseOpts({
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: true, position: 'top', align: 'end', labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true } },
                         tooltip: {
                             callbacks: {
-                                label: ctx => ` ${ctx.parsed.y} ticket${ctx.parsed.y !== 1 ? 's' : ''}`
+                                title: items => cats[items[0].dataIndex].name,
+                                footer: items => `Avg resolution: ${cats[items[0].dataIndex].avg_res}`
                             }
                         }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1, font: { size: 11 } },
-                            grid: { color: 'rgba(0,0,0,0.05)' }
-                        },
-                        x: {
-                            ticks: { font: { size: 11 } },
-                            grid: { display: false }
-                        }
-                    },
-                    animation: { duration: 700 }
+                        x: { stacked: true, beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        y: { stacked: true, grid: { display: false } }
+                    }
+                })
+            });
+        }
+    }
+
+    let aiChartsReady = false;
+    function initAiCharts() {
+        if (aiChartsReady || !window.Chart) return;
+        aiChartsReady = true;
+        const gaugeCtx = document.getElementById('healthGauge');
+        if (gaugeCtx && KPI.health.score !== null) {
+            const colors = { good: '#16a34a', info: '#0284c7', warning: '#d97706', critical: '#dc2626' };
+            new Chart(gaugeCtx, {
+                type: 'doughnut',
+                data: { datasets: [{ data: [KPI.health.score, 100 - KPI.health.score], backgroundColor: [colors[KPI.health.level], '#e2e8f0'], borderWidth: 0 }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    rotation: -90,
+                    circumference: 180,
+                    cutout: '74%',
+                    animation: ANIM,
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
                 }
             });
         }
+    }
+
+    // ---- TWO-BUTTON VIEW SWITCH ----
+    function showView(view) {
+        document.querySelectorAll('.view-btn').forEach(b => {
+            const on = b.dataset.view === view;
+            b.classList.toggle('is-active', on);
+            b.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        document.getElementById('viewKpi').classList.toggle('d-none', view !== 'kpi');
+        document.getElementById('viewAi').classList.toggle('d-none', view !== 'ai');
+        try { sessionStorage.setItem('ticketsKpiView', view); } catch (e) {}
+        if (view === 'ai') initAiCharts();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.view-btn').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+
+        // Perception severity filter
+        document.querySelectorAll('.ai-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.ai-filter-btn').forEach(x => x.classList.toggle('is-active', x === btn));
+                const lvl = btn.dataset.level;
+                document.querySelectorAll('.insight-card').forEach(card => {
+                    card.classList.toggle('d-none', lvl !== 'all' && card.dataset.level !== lvl);
+                });
+            });
+        });
+
+        initKpiCharts();
+
+        let saved = 'kpi';
+        try { saved = sessionStorage.getItem('ticketsKpiView') || 'kpi'; } catch (e) {}
+        if (location.hash === '#ai') saved = 'ai';
+        showView(saved);
     });
+
+    // ---- DIRECTOR REPORT (PDF) ----
+    function exportAiReportPDF() {
+        if (!window.jspdf) return;
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+        const W = doc.internal.pageSize.getWidth();
+        const clean = s => String(s ?? '').replace(/[–—]/g, '-').replace(/→/g, '->').replace(/·/g, '-');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.text('Tickets KPI - Director Report', 40, 48);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+        doc.text(`Period: ${KPI.period}    Generated: ${new Date().toLocaleString()}`, 40, 64);
+        doc.setTextColor(0);
+
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Health score: ${KPI.health.score ?? '-'} / 100 (${KPI.health.label})`, 40, 90);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.text(doc.splitTextToSize(clean(KPI.headline), W - 80), 40, 106);
+
+        const t = KPI.timing, c = KPI.counts, r = KPI.rates;
+        doc.autoTable({
+            startY: 136,
+            head: [['Metric', 'Value']],
+            body: [
+                ['Total tickets', c.total],
+                ['Open / Resolved', `${c.open} / ${c.resolved}`],
+                ['Resolution rate', `${r.resolution}%`],
+                ['Opened by staff', `${r.acknowledged}%`],
+                [`Resolved within ${KPI.sla.resolve_hours}h`, r.sla_resolve === null ? '-' : `${r.sla_resolve}%`],
+                ['Avg time to open (Raised -> Pending)', t.first_response.avg_fmt],
+                ['Avg Pending -> In Process', t.pending_to_process.avg_fmt],
+                ['Avg In Process -> Resolved', t.process_to_resolve.avg_fmt],
+                ['Avg resolution (Raised -> Resolved)', `${t.resolution.avg_fmt} (median ${t.resolution.median_fmt})`],
+            ].map(row => row.map(clean)),
+            styles: { fontSize: 9, cellPadding: 5 },
+            headStyles: { fillColor: [15, 23, 42], textColor: 255 },
+            columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } },
+            margin: { left: 40, right: 40 },
+        });
+
+        const levelName = { critical: 'Critical', warning: 'Warning', info: 'Insight', good: 'Good' };
+        const levelColor = { critical: [220, 38, 38], warning: [217, 119, 6], info: [2, 132, 199], good: [22, 163, 74] };
+        doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 20,
+            head: [['Level', 'Finding', 'Recommended action']],
+            body: KPI.insights.map(i => [levelName[i.level], `${clean(i.title)}\n${clean(i.text)}`, clean(i.action)]),
+            styles: { fontSize: 8.5, cellPadding: 5, valign: 'top' },
+            headStyles: { fillColor: [15, 23, 42], textColor: 255 },
+            columnStyles: { 0: { cellWidth: 58, fontStyle: 'bold' }, 2: { cellWidth: 170 } },
+            didParseCell: data => {
+                if (data.section === 'body' && data.column.index === 0) {
+                    data.cell.styles.textColor = levelColor[KPI.insights[data.row.index].level];
+                }
+            },
+            margin: { left: 40, right: 40 },
+        });
+
+        doc.save(`Tickets_KPI_Director_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+    }
 
     function openViewModal(ticketId) {
         const modalEl = document.getElementById('viewTicketModal');
