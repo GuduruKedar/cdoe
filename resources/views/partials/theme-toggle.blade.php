@@ -51,7 +51,6 @@
 
     {{-- Dark / Light Mode Animated Sliding Switch --}}
     <button type="button"
-            id="themeToggleBtn"
             class="theme-switch-track"
             onclick="toggleThemeMode()"
             data-theme-toggle

@@ -283,20 +283,33 @@
             opacity: .7;
         }
 
-        /* ============ USER BOX (BOTTOM PINNED) ============ */
-        .sidebar .user-box {
-            background: var(--sidebar-user-box);
-            border: 1px solid var(--sidebar-border);
-            backdrop-filter: blur(8px);
-            padding: 12px 14px;
-            border-radius: 12px;
+        /* ============ SIDEBAR THEME WIDGET (BOTTOM PINNED) ============ */
+        .sidebar-theme-section {
             margin-top: auto;
-            margin-bottom: 4px;
+            padding: 14px 4px 6px;
+            border-top: 1px solid var(--sidebar-border);
         }
-        .sidebar .user-box .uname { font-weight: 700; font-size: 13.5px; color: var(--sidebar-user-name); line-height: 1.2; }
-        .sidebar .user-box .uemail {
-            font-size: 11.5px; color: var(--sidebar-user-email);
-            word-break: break-all; margin-top: 2px; line-height: 1.2;
+        .sidebar-theme-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 0 4px 8px;
+        }
+        .sidebar .theme-widget-container {
+            width: 100%;
+            justify-content: space-between;
+            padding: 6px 12px;
+            background: var(--bg-hover-row);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            backdrop-filter: none;
+        }
+        html.dark .sidebar .theme-widget-container {
+            background: rgba(30, 41, 59, 0.6);
+            border-color: rgba(255, 255, 255, 0.08);
         }
 
         /* ============ MAIN CONTENT ============ */

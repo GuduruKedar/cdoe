@@ -19,4 +19,10 @@
         @endforeach
     </ul>
 
+    {{-- Bottom pinned Appearance & Theme Widget --}}
+    <div class="sidebar-theme-section">
+        <div class="sidebar-theme-title">Appearance & Theme</div>
+        @include('partials.theme-toggle')
+    </div>
+
 </aside>
