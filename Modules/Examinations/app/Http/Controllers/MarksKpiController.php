@@ -2,6 +2,7 @@
 
 namespace Modules\Examinations\Http\Controllers;
 
+use App\Common\Services\MenuService;
 use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -20,6 +21,10 @@ class MarksKpiController extends Controller
     public function index(Request $request)
     {
         $user = $this->requireLogin();
+        $menus = MenuService::getMenusForUser($user);
+        if ($menus === null && ! ($request->ajax() || $request->wantsJson())) {
+            return view('errors.no-role', compact('user'));
+        }
 
         $filters = $request->validate([
             'regno' => 'nullable|string|max:30',
@@ -49,7 +54,7 @@ class MarksKpiController extends Controller
             }
         }
 
-        return view('examinations::markskpi', compact('user', 'kpi', 'filters', 'options', 'error'));
+        return view('examinations::markskpi', compact('user', 'menus', 'kpi', 'filters', 'options', 'error'));
     }
 
     /** @return array{0: array, 1: bool} rows as arrays, and whether the row limit was hit */
