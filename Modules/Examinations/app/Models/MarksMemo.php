@@ -33,6 +33,11 @@ class MarksMemo extends Model
         return $query->where('regno', $regno);
     }
 
+    public function scopeByBatch($query, string $batch)
+    {
+        return $query->where('batch', $batch);
+    }
+
     public function scopeByMmno($query, string $mmno)
     {
         return $query->where('mmno', $mmno);

@@ -6,6 +6,7 @@ use App\Common\Services\MenuService;
 use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\Admissions\Models\StudentRegistration;
 use Modules\Examinations\Models\MarksMemo;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -25,6 +26,7 @@ class CgpaMarksDownloadController extends Controller
             return view('errors.no-role', compact('user'));
         }
 
+        $batch = $request->input('batch');
         $examMon = $request->input('exam_mon');
         $resultsMon = $request->input('results_mon');
         $year = $request->input('year');
@@ -38,6 +40,20 @@ class CgpaMarksDownloadController extends Controller
         }
 
         // Distinct filter options from database via Eloquent
+        $batches = MarksMemo::whereNotNull('batch')
+            ->where('batch', '!=', '')
+            ->distinct()
+            ->orderBy('batch')
+            ->pluck('batch');
+
+        if ($batches->isEmpty()) {
+            $batches = StudentRegistration::whereNotNull('adm_batch_code')
+                ->where('adm_batch_code', '!=', '')
+                ->distinct()
+                ->orderBy('adm_batch_code')
+                ->pluck('adm_batch_code');
+        }
+
         $examMonths = MarksMemo::whereNotNull('exam_mon_yyyy')
             ->distinct()
             ->orderBy('exam_mon_yyyy')
@@ -75,12 +91,14 @@ class CgpaMarksDownloadController extends Controller
         $mcTable = (new MarksMemo)->getTable();
         $srTable = (new StudentRegistration)->getTable();
 
-        // Build query joined with student name
+        // Build query joined with student name and batch
         $query = MarksMemo::from("{$mcTable} as mc")
             ->leftJoin("{$srTable} as sr", 'mc.appno', '=', 'sr.application_no')
             ->select(
                 'mc.appno',
                 'mc.regno',
+                'sr.student_name',
+                DB::raw('COALESCE(mc.batch, sr.adm_batch_code) as batch'),
                 'mc.exam_mon_yyyy',
                 'mc.mmno',
                 'mc.subcode',
@@ -98,10 +116,15 @@ class CgpaMarksDownloadController extends Controller
                 'mc.division_name',
                 'mc.results_mon_yyyy',
                 'mc.s_year',
-                'mc.s_sem',
-                'sr.student_name'
+                'mc.s_sem'
             );
 
+        if ($batch && $batch !== 'all') {
+            $query->where(function ($w) use ($batch) {
+                $w->where('mc.batch', $batch)
+                    ->orWhere('sr.adm_batch_code', $batch);
+            });
+        }
         if ($examMon && $examMon !== 'all') {
             $query->where('mc.exam_mon_yyyy', $examMon);
         }
@@ -126,6 +149,8 @@ class CgpaMarksDownloadController extends Controller
                     ->orWhere('mc.subcode', 'ILIKE', "%{$q}%")
                     ->orWhere('mc.mmno', 'ILIKE', "%{$q}%")
                     ->orWhere('sr.student_name', 'ILIKE', "%{$q}%")
+                    ->orWhere('mc.batch', 'ILIKE', "%{$q}%")
+                    ->orWhere('sr.adm_batch_code', 'ILIKE', "%{$q}%")
                     ->orWhere('mc.appno', is_numeric($q) ? (int) $q : -1);
             });
         }
@@ -137,12 +162,14 @@ class CgpaMarksDownloadController extends Controller
             'user',
             'menus',
             'records',
+            'batches',
             'examMonths',
             'resultMonths',
             'years',
             'sems',
             'grades',
             'divisions',
+            'batch',
             'examMon',
             'resultsMon',
             'year',
@@ -162,6 +189,7 @@ class CgpaMarksDownloadController extends Controller
     {
         $this->requireLogin();
 
+        $batch = $request->input('batch');
         $examMon = $request->input('exam_mon');
         $resultsMon = $request->input('results_mon');
         $year = $request->input('year');
@@ -179,6 +207,7 @@ class CgpaMarksDownloadController extends Controller
                 'mc.appno',
                 'mc.regno',
                 'sr.student_name',
+                DB::raw('COALESCE(mc.batch, sr.adm_batch_code) as batch'),
                 'mc.mmno',
                 'mc.subcode',
                 'mc.exam_mon_yyyy',
@@ -197,6 +226,12 @@ class CgpaMarksDownloadController extends Controller
                 'mc.division_name'
             );
 
+        if ($batch && $batch !== 'all') {
+            $query->where(function ($w) use ($batch) {
+                $w->where('mc.batch', $batch)
+                    ->orWhere('sr.adm_batch_code', $batch);
+            });
+        }
         if ($examMon && $examMon !== 'all') {
             $query->where('mc.exam_mon_yyyy', $examMon);
         }
@@ -221,6 +256,8 @@ class CgpaMarksDownloadController extends Controller
                     ->orWhere('mc.subcode', 'ILIKE', "%{$q}%")
                     ->orWhere('mc.mmno', 'ILIKE', "%{$q}%")
                     ->orWhere('sr.student_name', 'ILIKE', "%{$q}%")
+                    ->orWhere('mc.batch', 'ILIKE', "%{$q}%")
+                    ->orWhere('sr.adm_batch_code', 'ILIKE', "%{$q}%")
                     ->orWhere('mc.appno', is_numeric($q) ? (int) $q : -1);
             });
         }
@@ -235,7 +272,7 @@ class CgpaMarksDownloadController extends Controller
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
 
             fputcsv($handle, [
-                'S.No', 'Application No', 'Register No', 'Student Name', 'Marks Memo No', 'Subject Code',
+                'S.No', 'Application No', 'Register No', 'Student Name', 'Batch', 'Marks Memo No', 'Subject Code',
                 'Exam Month-Year', 'Results Month-Year', 'Year', 'Semester', 'Memo Type',
                 'FA Earned', 'SA Earned', 'Total Conducted', 'Total Earned', 'Grade Points',
                 'Letter Grade', 'SGPA %', 'CGPA %', 'Division',
@@ -249,6 +286,7 @@ class CgpaMarksDownloadController extends Controller
                         $r->appno,
                         $r->regno,
                         $r->student_name,
+                        $r->batch,
                         $r->mmno,
                         $r->subcode,
                         $r->exam_mon_yyyy,

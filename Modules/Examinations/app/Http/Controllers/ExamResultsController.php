@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Modules\Admissions\Models\StudentRegistration;
 use Modules\Examinations\Models\MarksMemo;
@@ -49,6 +50,7 @@ class ExamResultsController extends Controller
         }
 
         $q = trim((string) $request->input('q', ''));
+        $batch = $request->input('batch');
         $sem = $request->input('sem');
         $type = $request->input('type');
         $division = $request->input('division');
@@ -67,6 +69,7 @@ class ExamResultsController extends Controller
                 'm.mmno',
                 'm.regno',
                 's.student_name',
+                DB::raw('COALESCE(m.batch, s.adm_batch_code) as batch'),
                 'm.division_name',
                 'm.mm_type',
                 'm.exam_mon_yyyy',
@@ -78,7 +81,7 @@ class ExamResultsController extends Controller
             )
             ->distinct();
 
-        // Multi-token semantic search across reg no, student name, memo no, division, exam type, session
+        // Multi-token semantic search across reg no, student name, memo no, division, exam type, session, and batch
         if ($q !== '') {
             $tokens = preg_split('/\s+/', $q, -1, PREG_SPLIT_NO_EMPTY);
             foreach ($tokens as $token) {
@@ -89,12 +92,20 @@ class ExamResultsController extends Controller
                         ->orWhere('m.mmno', 'ilike', $term)
                         ->orWhere('m.division_name', 'ilike', $term)
                         ->orWhere('m.mm_type', 'ilike', $term)
-                        ->orWhere('m.exam_mon_yyyy', 'ilike', $term);
+                        ->orWhere('m.exam_mon_yyyy', 'ilike', $term)
+                        ->orWhere('m.batch', 'ilike', $term)
+                        ->orWhere('s.adm_batch_code', 'ilike', $term);
                 });
             }
         }
 
         // Direct filters
+        if (! empty($batch) && $batch !== 'all') {
+            $query->where(function ($sub) use ($batch) {
+                $sub->where('m.batch', $batch)
+                    ->orWhere('s.adm_batch_code', $batch);
+            });
+        }
         if (! empty($sem) && $sem !== 'all') {
             $query->where('m.s_sem', $sem);
         }
@@ -149,6 +160,20 @@ class ExamResultsController extends Controller
             ]);
         }
 
+        $batches = MarksMemo::whereNotNull('batch')
+            ->where('batch', '!=', '')
+            ->distinct()
+            ->orderBy('batch')
+            ->pluck('batch');
+
+        if ($batches->isEmpty()) {
+            $batches = StudentRegistration::whereNotNull('adm_batch_code')
+                ->where('adm_batch_code', '!=', '')
+                ->distinct()
+                ->orderBy('adm_batch_code')
+                ->pluck('adm_batch_code');
+        }
+
         $semesters = MarksMemo::whereNotNull('s_sem')->distinct()->orderBy('s_sem')->pluck('s_sem');
         $types = MarksMemo::whereNotNull('mm_type')->distinct()->orderBy('mm_type')->pluck('mm_type');
         $divisions = MarksMemo::whereNotNull('division_name')->distinct()->orderBy('division_name')->pluck('division_name');
@@ -160,11 +185,13 @@ class ExamResultsController extends Controller
             'menus',
             'marksMemoList',
             'q',
+            'batch',
             'sem',
             'type',
             'division',
             'examMonth',
             'perPage',
+            'batches',
             'semesters',
             'types',
             'divisions',
@@ -187,13 +214,31 @@ class ExamResultsController extends Controller
         if ($menus === null) {
             return view('errors.no-role', compact('user'));
         }
-        $marksMemoList = MarksMemo::select(['mmno', 'regno', 'division_name', 'mm_type', 'exam_mon_yyyy',
-            's_year', 's_sem', 'sgpa_perc', 'cgpa_perc', 'appno'])
-            ->distinct('mmno')
-            ->orderBy('mmno')
-            ->orderBy('s_year')
-            ->orderBy('s_sem')
-            ->orderBy('exam_mon_yyyy')
+
+        $mTable = (new MarksMemo)->getTable();
+        $sTable = (new StudentRegistration)->getTable();
+
+        $marksMemoList = MarksMemo::from("{$mTable} as m")
+            ->leftJoin("{$sTable} as s", 'm.regno', '=', 's.register_no')
+            ->select([
+                'm.mmno',
+                'm.regno',
+                's.student_name',
+                DB::raw('COALESCE(m.batch, s.adm_batch_code) as batch'),
+                'm.division_name',
+                'm.mm_type',
+                'm.exam_mon_yyyy',
+                'm.s_year',
+                'm.s_sem',
+                'm.sgpa_perc',
+                'm.cgpa_perc',
+                'm.appno',
+            ])
+            ->distinct('m.mmno')
+            ->orderBy('m.mmno')
+            ->orderBy('m.s_year')
+            ->orderBy('m.s_sem')
+            ->orderBy('m.exam_mon_yyyy')
             ->get();
 
         return view('examinations::markslist', compact('marksMemoList', 'user', 'menus'));
@@ -277,14 +322,31 @@ class ExamResultsController extends Controller
         $sessionCode = Session::get('user.usercode') ?: ($user->usercode ?? null);
         $reg_no = $request->query('regno') ?: $sessionCode;
 
-        $marksMemoList = MarksMemo::byRegno($reg_no)
-            ->select(['mmno', 'regno', 'division_name', 'mm_type', 'exam_mon_yyyy',
-                's_year', 's_sem', 'sgpa_perc', 'cgpa_perc', 'appno'])
-            ->distinct('mmno')
-            ->orderBy('mmno')
-            ->orderBy('s_year')
-            ->orderBy('s_sem')
-            ->orderBy('exam_mon_yyyy')
+        $mTable = (new MarksMemo)->getTable();
+        $sTable = (new StudentRegistration)->getTable();
+
+        $marksMemoList = MarksMemo::from("{$mTable} as m")
+            ->leftJoin("{$sTable} as s", 'm.regno', '=', 's.register_no')
+            ->where('m.regno', $reg_no)
+            ->select([
+                'm.mmno',
+                'm.regno',
+                's.student_name',
+                DB::raw('COALESCE(m.batch, s.adm_batch_code) as batch'),
+                'm.division_name',
+                'm.mm_type',
+                'm.exam_mon_yyyy',
+                'm.s_year',
+                'm.s_sem',
+                'm.sgpa_perc',
+                'm.cgpa_perc',
+                'm.appno',
+            ])
+            ->distinct('m.mmno')
+            ->orderBy('m.mmno')
+            ->orderBy('m.s_year')
+            ->orderBy('m.s_sem')
+            ->orderBy('m.exam_mon_yyyy')
             ->get();
 
         $gradeStats = MarksMemo::getGradeStatsForStudent($reg_no);

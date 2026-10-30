@@ -10,7 +10,7 @@
         <div class="ss-toolbar-card mb-3">
             <div class="row g-2 align-items-center">
                 {{-- Live Search Input --}}
-                <div class="col-lg-5 col-md-12">
+                <div class="col-xl-3 col-lg-3 col-md-12">
                     <div class="ss-search-input-wrap">
                         <span class="ss-search-icon">
                             <i class="bi bi-search"></i>
@@ -18,7 +18,7 @@
                         <input type="text"
                                id="liveSearchInput"
                                class="ss-search-input"
-                               placeholder="Search by reg no, student name, memo no, division... (Press / to search)"
+                               placeholder="Search by reg no, student, memo, division, batch... (Press / to search)"
                                value="{{ $q ?? '' }}"
                                autocomplete="off"
                                spellcheck="false">
@@ -36,8 +36,22 @@
                     </div>
                 </div>
 
+                {{-- Filter: Batch --}}
+                <div class="col-xl-2 col-lg-2 col-md-3 col-sm-6">
+                    <div class="ss-select-wrap">
+                        <select id="filterBatch" class="form-select ss-select">
+                            <option value="all">All Batches</option>
+                            @foreach ($batches as $b)
+                                <option value="{{ $b }}" {{ (string)($batch ?? '') === (string)$b ? 'selected' : '' }}>
+                                    {{ str_replace('_', ' ', $b) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
                 {{-- Filter: Semester --}}
-                <div class="col-lg-2 col-sm-6">
+                <div class="col-xl-2 col-lg-2 col-md-3 col-sm-6">
                     <div class="ss-select-wrap">
                         <select id="filterSem" class="form-select ss-select">
                             <option value="all">All Semesters</option>
@@ -51,7 +65,7 @@
                 </div>
 
                 {{-- Filter: Exam Type --}}
-                <div class="col-lg-2 col-sm-6">
+                <div class="col-xl-2 col-lg-2 col-md-3 col-sm-6">
                     <div class="ss-select-wrap">
                         <select id="filterType" class="form-select ss-select">
                             <option value="all">All Exam Types</option>
@@ -65,7 +79,7 @@
                 </div>
 
                 {{-- Filter: Division --}}
-                <div class="col-lg-2 col-sm-6">
+                <div class="col-xl-2 col-lg-2 col-md-3 col-sm-6">
                     <div class="ss-select-wrap">
                         <select id="filterDivision" class="form-select ss-select">
                             <option value="all">All Divisions</option>
@@ -79,7 +93,7 @@
                 </div>
 
                 {{-- Reset Button --}}
-                <div class="col-lg-1 col-12 text-end">
+                <div class="col-xl-1 col-lg-1 col-12 text-end">
                     <button type="button"
                             class="ss-reset-btn w-100"
                             id="resetFiltersBtn"
@@ -115,14 +129,15 @@
                 <table class="table ss-table align-middle mb-0">
                     <thead>
                     <tr>
-                        <th style="width: 14%;">Reg. No</th>
-                        <th style="width: 25%;">Student Name</th>
+                        <th style="width: 12%;">Reg. No</th>
+                        <th style="width: 20%;">Student Name</th>
+                        <th style="width: 13%;">Batch</th>
                         <th style="width: 10%;">Year &amp; Sem</th>
-                        <th style="width: 11%;">Type</th>
-                        <th style="width: 15%;">Division</th>
-                        <th style="width: 12%;">Exam Session</th>
-                        <th style="width: 10%;">SGPA / CGPA</th>
-                        <th style="width: 8%; text-align: center;">Action</th>
+                        <th style="width: 9%;">Type</th>
+                        <th style="width: 13%;">Division</th>
+                        <th style="width: 11%;">Exam Session</th>
+                        <th style="width: 7%;">SGPA / CGPA</th>
+                        <th style="width: 5%; text-align: center;">Action</th>
                     </tr>
                     </thead>
                     <tbody id="marksTableBody">
@@ -383,6 +398,25 @@
             border: 1px solid var(--border-subtle);
         }
 
+        .ss-badge-batch-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            background: var(--bg-hover-row);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        html.dark .ss-badge-batch-tag {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+        }
+
         /* View button */
         .ss-view-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 14px; border-radius: 7px; background: var(--theme-gradient); color: #fff !important; border: none; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; box-shadow: 0 4px 12px var(--theme-glow); }
         .ss-view-btn:hover { filter: brightness(1.1); transform: translateY(-1px); color: #fff !important; }
@@ -416,6 +450,7 @@
             const searchInput = document.getElementById('liveSearchInput');
             const clearBtn = document.getElementById('clearSearchBtn');
             const spinner = document.getElementById('searchSpinner');
+            const filterBatch = document.getElementById('filterBatch');
             const filterSem = document.getElementById('filterSem');
             const filterType = document.getElementById('filterType');
             const filterDivision = document.getElementById('filterDivision');
@@ -432,6 +467,7 @@
 
             function updateFilterBadge() {
                 const isFiltered = (searchInput.value.trim() !== '') ||
+                    (filterBatch && filterBatch.value !== 'all') ||
                     (filterSem.value !== 'all') ||
                     (filterType.value !== 'all') ||
                     (filterDivision.value !== 'all');
@@ -443,6 +479,7 @@
 
             function performSearch(page = 1) {
                 const q = searchInput.value.trim();
+                const batch = filterBatch ? filterBatch.value : 'all';
                 const sem = filterSem.value;
                 const type = filterType.value;
                 const division = filterDivision.value;
@@ -459,6 +496,7 @@
 
                 const params = new URLSearchParams();
                 if (q) params.set('q', q);
+                if (batch && batch !== 'all') params.set('batch', batch);
                 if (sem && sem !== 'all') params.set('sem', sem);
                 if (type && type !== 'all') params.set('type', type);
                 if (division && division !== 'all') params.set('division', division);
@@ -511,7 +549,7 @@
             });
 
             // Filters
-            [filterSem, filterType, filterDivision].forEach(function (select) {
+            [filterBatch, filterSem, filterType, filterDivision].forEach(function (select) {
                 if (select) {
                     select.addEventListener('change', function () {
                         performSearch(1);
@@ -529,6 +567,7 @@
             // Reset
             resetBtn.addEventListener('click', function () {
                 searchInput.value = '';
+                if (filterBatch) filterBatch.value = 'all';
                 filterSem.value = 'all';
                 filterType.value = 'all';
                 filterDivision.value = 'all';

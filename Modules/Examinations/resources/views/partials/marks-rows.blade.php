@@ -17,6 +17,11 @@
             </div>
         </td>
         <td>
+            <span class="ss-badge-batch-tag">
+                <i class="bi bi-mortarboard me-1"></i>{{ str_replace('_', ' ', $memo->batch ?? '—') }}
+            </span>
+        </td>
+        <td>
             <span class="ss-badge-regu">
                 Y{{ $memo->s_year ?? 1 }} • S{{ $memo->s_sem ?? 1 }}
             </span>
@@ -73,7 +78,7 @@
     </tr>
 @empty
     <tr>
-        <td colspan="8" class="ss-empty">
+        <td colspan="9" class="ss-empty">
             <div class="ss-empty-icon">📄</div>
             <strong>No student marks records found</strong>
             <p>Try searching with a different register number, student name, memo number, or clearing active filters.</p>

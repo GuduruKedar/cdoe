@@ -10,6 +10,21 @@
         <form method="GET" action="{{ route('examinations.cgpamarks') }}" id="filterForm">
             <div class="row g-2 align-items-end">
 
+                {{-- Batch --}}
+                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                    <label class="filter-label">
+                        <i class="bi bi-mortarboard me-1"></i> Batch
+                    </label>
+                    <select name="batch" class="form-select filter-select-blue">
+                        <option value="all">All Batches ▼</option>
+                        @foreach($batches as $b)
+                            <option value="{{ $b }}" {{ ($batch ?? '') === $b ? 'selected' : '' }}>
+                                {{ str_replace('_', ' ', $b) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 {{-- Exam Month/Year --}}
                 <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
                     <label class="filter-label">
@@ -144,6 +159,7 @@
                     <span class="text-muted fw-normal">No filters applied (showing all records)</span>
                 @else
                     <span class="text-primary fw-bold">
+                        {{ $batch && $batch !== 'all' ? 'Batch: ' . str_replace('_', ' ', $batch) . ' | ' : '' }}
                         {{ $examMon && $examMon !== 'all' ? 'Exam: ' . $examMon . ' | ' : '' }}
                         {{ $resultsMon && $resultsMon !== 'all' ? 'Results: ' . $resultsMon . ' | ' : '' }}
                         {{ $year && $year !== 'all' ? 'Year: ' . $year . ' | ' : '' }}
@@ -172,6 +188,7 @@
                         <th style="min-width: 80px;">App No</th>
                         <th style="min-width: 105px;">Reg No</th>
                         <th style="min-width: 170px;">Student Name</th>
+                        <th style="min-width: 120px;">Batch</th>
                         <th style="min-width: 95px;">Memo No</th>
                         <th style="min-width: 95px;">Sub Code</th>
                         <th style="min-width: 110px;">Exam Mon-YYYY</th>
@@ -199,6 +216,11 @@
                                     {{ $r->student_name ?: '—' }}
                                 </div>
                             </td>
+                            <td>
+                                <span class="badge bg-light text-dark border font-monospace">
+                                    {{ str_replace('_', ' ', $r->batch ?: '—') }}
+                                </span>
+                            </td>
                             <td><span class="badge bg-secondary-subtle text-secondary font-monospace">{{ $r->mmno }}</span></td>
                             <td><span class="badge bg-primary-subtle text-primary font-monospace">{{ $r->subcode }}</span></td>
                             <td class="small">{{ str_replace('_', ' ', $r->exam_mon_yyyy) }}</td>
@@ -220,7 +242,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="18" class="text-center py-5 text-muted">
+                            <td colspan="19" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox display-6 d-block mb-2 text-muted"></i>
                                 No marks CGPA records found matching the applied filters.
                             </td>

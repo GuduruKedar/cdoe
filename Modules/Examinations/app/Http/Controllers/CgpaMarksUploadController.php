@@ -88,6 +88,7 @@ class CgpaMarksUploadController extends Controller
             fputcsv($handle, [
                 'appno',
                 'regno',
+                'batch',
                 'exam_mon_yyyy',
                 'results_mon_yyyy',
                 's_year',
@@ -112,6 +113,7 @@ class CgpaMarksUploadController extends Controller
             fputcsv($handle, [
                 '20260120600',
                 '261CK01001',
+                'JANUARY_2026',
                 'DEC-2025',
                 'FEB-2026',
                 '1',
@@ -135,6 +137,7 @@ class CgpaMarksUploadController extends Controller
             fputcsv($handle, [
                 '20260120601',
                 '261CK01002',
+                'JANUARY_2026',
                 'DEC-2025',
                 'FEB-2026',
                 '1',
@@ -236,10 +239,17 @@ class CgpaMarksUploadController extends Controller
 
             $examMon = ! empty($data['exam_mon_yyyy']) ? $data['exam_mon_yyyy'] : ($request->input('exam_mon_yyyy') ?: 'UNKNOWN');
             $mmno = ! empty($data['mmno']) ? $data['mmno'] : "MM-{$regno}-{$subcode}";
+            $batch = ! empty($data['batch']) ? $data['batch'] : null;
+            if (empty($batch)) {
+                $batch = StudentRegistration::where('register_no', $regno)
+                    ->orWhere('application_no', (int) ($data['appno'] ?? 0))
+                    ->value('adm_batch_code');
+            }
 
             $record = [
                 'appno' => $data['appno'] ?? null,
                 'regno' => $regno,
+                'batch' => $batch,
                 'exam_mon_yyyy' => $examMon,
                 'results_mon_yyyy' => $data['results_mon_yyyy'] ?? null,
                 's_year' => ! empty($data['s_year']) ? (int) $data['s_year'] : null,
