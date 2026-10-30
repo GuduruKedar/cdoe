@@ -160,8 +160,8 @@
             position: absolute;
             right: 0;
             top: calc(100% + 8px);
-            width: 290px;
-            max-width: 320px;
+            width: 310px;
+            max-width: 340px;
             max-height: calc(100vh - 80px);
             display: flex;
             flex-direction: column;
@@ -230,7 +230,7 @@
         }
 
         .role-options-list {
-            max-height: 200px;
+            max-height: min(480px, calc(100vh - 210px));
             overflow-y: auto;
             overflow-x: hidden;
             display: flex;
