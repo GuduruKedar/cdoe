@@ -28,3 +28,4 @@ Thumbs.db
 /scratch
 /.playwright-mcp/
 *.zip
+*.backup

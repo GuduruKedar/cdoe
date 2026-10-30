@@ -159,9 +159,23 @@
                                         <div class="query-preview" title="{{ $tkt->std_tkt_query }}">
                                             {{ $tkt->std_tkt_query ?: '—' }}
                                         </div>
+                                        @if ($tkt->std_tkt_file_path)
+                                            <div class="mt-1">
+                                                <a href="{{ route('visa.ticket.download_student', $tkt->tkt_id) }}" class="badge bg-light text-primary border border-primary-subtle text-decoration-none py-1 px-2" title="Download student attachment">
+                                                    <i class="bi bi-paperclip me-1"></i>{{ $tkt->std_tkt_file_name ?: 'Student Attachment' }}
+                                                </a>
+                                            </div>
+                                        @endif
                                         @if ($tkt->emp_tkt_comment)
                                             <div class="resolution-preview mt-1 smaller text-success text-truncate" title="Resolution: {{ $tkt->emp_tkt_comment }}">
                                                 <i class="bi bi-check2-circle me-1"></i>{{ $tkt->emp_tkt_comment }}
+                                            </div>
+                                        @endif
+                                        @if ($tkt->emp_tkt_file_path)
+                                            <div class="mt-1">
+                                                <a href="{{ route('visa.ticket.download', $tkt->tkt_id) }}" class="badge bg-success-subtle text-success border border-success-subtle text-decoration-none py-1 px-2" title="Download resolution attachment">
+                                                    <i class="bi bi-paperclip me-1"></i>{{ $tkt->emp_tkt_file_name ?: 'Resolution File' }}
+                                                </a>
                                             </div>
                                         @endif
                                     </td>
@@ -257,6 +271,13 @@
                         <div class="mt-2 pt-2 border-top">
                             <span class="text-muted smaller d-block fw-semibold">STUDENT QUERY / PROBLEM:</span>
                             <div class="p-2 mt-1 rounded bg-white border small text-dark" id="modalQueryText" style="white-space: pre-wrap;">—</div>
+                            {{-- Student Uploaded Attachment --}}
+                            <div id="modalStudentAttachmentWrap" class="mt-2 pt-2 border-top d-none">
+                                <span class="text-muted smaller fw-semibold me-2"><i class="bi bi-paperclip"></i> Student Attached File:</span>
+                                <a href="#" id="modalStudentAttachmentLink" target="_blank" class="badge bg-white text-primary border border-primary-subtle text-decoration-none py-1 px-2 fw-semibold">
+                                    <i class="bi bi-download me-1"></i> <span id="modalStudentAttachmentName">Download File</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -824,6 +845,7 @@
         document.getElementById('emp_tkt_file').classList.remove('is-invalid');
         document.getElementById('modalAutoUpdateNotice').classList.add('d-none');
         document.getElementById('modalResolvedHeaderBadge').classList.add('d-none');
+        document.getElementById('modalStudentAttachmentWrap').classList.add('d-none');
         document.getElementById('statusUpdateSection').classList.remove('d-none');
         document.getElementById('resolvedViewSection').classList.add('d-none');
 
@@ -853,6 +875,18 @@
                 document.getElementById('modalCategory').textContent = currentTicket.category || 'N/A';
                 document.getElementById('modalSubType').textContent = currentTicket.sub_type ? `• ${currentTicket.sub_type}` : '';
                 document.getElementById('modalQueryText').textContent = currentTicket.query || 'No description provided.';
+
+                // Student Attachment (if student uploaded a file)
+                const stdFileWrap = document.getElementById('modalStudentAttachmentWrap');
+                if (stdFileWrap) {
+                    if (currentTicket.has_std_file && currentTicket.std_file_url) {
+                        stdFileWrap.classList.remove('d-none');
+                        document.getElementById('modalStudentAttachmentName').textContent = currentTicket.std_tkt_file_name || 'Download Attachment';
+                        document.getElementById('modalStudentAttachmentLink').href = currentTicket.std_file_url;
+                    } else {
+                        stdFileWrap.classList.add('d-none');
+                    }
+                }
 
                 const statusBadge = document.getElementById('modalStatusBadge');
                 statusBadge.className = `status-chip ${currentTicket.status_class}`;

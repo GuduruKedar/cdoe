@@ -134,11 +134,14 @@ class VisaController extends Controller
             'tkt_main_type' => 'required|string',
             'tkt_head_id' => ['required', 'string', Rule::exists(TicketMaster::class, 'tkt_head_id')],
             'std_tkt_query' => 'required|string|max:500',
+            'std_tkt_file' => 'nullable|file|max:10240|mimes:pdf,jpg,jpeg,png,doc,docx,zip,txt,xls,xlsx,csv',
         ], [
             'tkt_main_type.required' => 'Please select a main query category.',
             'tkt_head_id.required' => 'Please select a specific query sub-type.',
             'std_tkt_query.required' => 'Please enter the reason or problem details.',
             'std_tkt_query.max' => 'The problem description may not exceed 500 characters.',
+            'std_tkt_file.max' => 'Attachment file size must not exceed 10MB.',
+            'std_tkt_file.mimes' => 'Attachment must be a PDF, image, Word document, or ZIP.',
         ]);
 
         $student = StudentRegistration::where('register_no', $userCode)->first();
@@ -155,6 +158,15 @@ class VisaController extends Controller
             $ticketId = 'TKT'.$dateStr.str_pad((string) $todayCount, 4, '0', STR_PAD_LEFT);
         }
 
+        // Handle optional student file upload (kept strictly separate from staff files in DB and storage)
+        $stdFilePath = null;
+        $stdFileName = null;
+        if ($request->hasFile('std_tkt_file')) {
+            $file = $request->file('std_tkt_file');
+            $stdFileName = $file->getClientOriginalName();
+            $stdFilePath = $file->store('tickets/student_attachments', 'public');
+        }
+
         $ticket = TicketDetail::create([
             'tkt_id' => $ticketId,
             'tkt_head_id' => $request->tkt_head_id,
@@ -163,6 +175,8 @@ class VisaController extends Controller
             'tkt_raised_datetime' => now(),
             'std_tkt_query' => trim($request->std_tkt_query),
             'std_tkt_status' => TicketDetail::STATUS_RAISED, // Database code 0 = Raised
+            'std_tkt_file_path' => $stdFilePath,
+            'std_tkt_file_name' => $stdFileName,
             'std_userid' => substr((string) $userCode, 0, 20),
             'std_ipaddress' => substr((string) $request->ip(), 0, 50),
             'std_timestamp' => now(),
@@ -494,6 +508,10 @@ class VisaController extends Controller
                 'category' => $ticket->ticketMaster?->tkt_main_type ?? 'N/A',
                 'sub_type' => $ticket->ticketMaster?->tkt_sub_type ?? 'N/A',
                 'query' => $ticket->std_tkt_query,
+                'std_tkt_file_name' => $ticket->std_tkt_file_name,
+                'std_tkt_file_path' => $ticket->std_tkt_file_path,
+                'has_std_file' => ! empty($ticket->std_tkt_file_path),
+                'std_file_url' => ! empty($ticket->std_tkt_file_path) ? route('visa.ticket.download_student', $ticket->tkt_id) : null,
                 'raised_date' => $ticket->tkt_raised_datetime ? Carbon::parse($ticket->tkt_raised_datetime)->format('d M Y, h:i A') : '—',
                 'std_tkt_status' => (int) $ticket->std_tkt_status,
                 'status_label' => $ticket->status_label,
@@ -653,7 +671,7 @@ class VisaController extends Controller
     }
 
     /**
-     * Secure download of ticket resolution file
+     * Secure download of ticket resolution file (uploaded by staff)
      */
     public function downloadTicketFile(string $ticketId)
     {
@@ -675,6 +693,32 @@ class VisaController extends Controller
         return Storage::disk('public')->download(
             $ticket->emp_tkt_file_path,
             $ticket->emp_tkt_file_name ?: basename($ticket->emp_tkt_file_path)
+        );
+    }
+
+    /**
+     * Secure download of student ticket attachment (uploaded by student)
+     */
+    public function downloadStudentFile(string $ticketId)
+    {
+        $user = $this->requireLogin();
+        $userCode = $user->usercode ?? session('user.usercode');
+        $roleId = (int) (session('user.role_id') ?: ($user->role_id ?? 0));
+
+        $ticket = TicketDetail::where('tkt_id', $ticketId)->firstOrFail();
+
+        // Student can only download their own ticket files
+        if ($roleId === 5 && strcasecmp(trim((string) $ticket->regno), trim((string) $userCode)) !== 0) {
+            abort(403, 'Unauthorized access to this attachment.');
+        }
+
+        if (! $ticket->std_tkt_file_path || ! Storage::disk('public')->exists($ticket->std_tkt_file_path)) {
+            abort(404, 'File not found or has been removed.');
+        }
+
+        return Storage::disk('public')->download(
+            $ticket->std_tkt_file_path,
+            $ticket->std_tkt_file_name ?: basename($ticket->std_tkt_file_path)
         );
     }
 
@@ -701,9 +745,14 @@ class VisaController extends Controller
             return redirect()->back()->with('error', 'Unauthorized: You can only delete your own tickets.');
         }
 
-        // Clean up any uploaded resolution file
+        // Clean up staff uploaded resolution file
         if ($ticket->emp_tkt_file_path && Storage::disk('public')->exists($ticket->emp_tkt_file_path)) {
             Storage::disk('public')->delete($ticket->emp_tkt_file_path);
+        }
+
+        // Clean up student uploaded attachment file
+        if ($ticket->std_tkt_file_path && Storage::disk('public')->exists($ticket->std_tkt_file_path)) {
+            Storage::disk('public')->delete($ticket->std_tkt_file_path);
         }
 
         $ticket->delete();

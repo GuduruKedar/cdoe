@@ -95,7 +95,7 @@
                 <span class="self-service-tag">Student self-service</span>
             </div>
 
-            <form action="{{ route('visa.ticketraise.store') }}" method="POST" id="ticketRaiseForm" novalidate>
+            <form action="{{ route('visa.ticketraise.store') }}" method="POST" id="ticketRaiseForm" enctype="multipart/form-data" novalidate>
                 @csrf
 
                 {{-- REQUEST TYPE: Two clean dropdowns --}}
@@ -141,6 +141,35 @@
                         <i class="bi bi-exclamation-circle me-1"></i>Please enter the problem details. This field is required.
                     </div>
                     @error('std_tkt_query')
+                        <div class="text-danger smaller mt-1" style="font-size: 11.5px; font-weight: 600;">
+                            <i class="bi bi-exclamation-circle me-1"></i>{{ $message }}
+                        </div>
+                    @enderror
+                </div>
+
+                {{-- ATTACHMENT: Optional Supporting Document / Screenshot (Not Mandatory / not *) --}}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="field-label mb-0" for="std_tkt_file">
+                            ATTACHMENT <span class="text-muted fw-normal" style="font-size: 11px;">(Optional — PDF, JPG, PNG, DOC, ZIP up to 10MB)</span>
+                        </label>
+                        <span class="text-muted smaller" style="font-size: 11px;">Optional</span>
+                    </div>
+                    <div class="input-group">
+                        <input
+                            type="file"
+                            class="form-control clean-file-input @error('std_tkt_file') is-invalid @enderror"
+                            id="std_tkt_file"
+                            name="std_tkt_file"
+                            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.zip,.txt,.xls,.xlsx,.csv">
+                        <button class="btn btn-outline-secondary btn-sm d-none" type="button" id="clearFileBtn" title="Clear attached file">
+                            <i class="bi bi-x"></i> Clear
+                        </button>
+                    </div>
+                    <div class="text-muted smaller mt-1" style="font-size: 11px;">
+                        <i class="bi bi-info-circle me-1"></i>You can optionally upload a supporting document or screenshot to help us resolve your issue faster.
+                    </div>
+                    @error('std_tkt_file')
                         <div class="text-danger smaller mt-1" style="font-size: 11.5px; font-weight: 600;">
                             <i class="bi bi-exclamation-circle me-1"></i>{{ $message }}
                         </div>
@@ -206,6 +235,13 @@
                                         <div class="query-preview" title="{{ $tkt->std_tkt_query }}">
                                             {{ $tkt->std_tkt_query ?: '—' }}
                                         </div>
+                                        @if ($tkt->std_tkt_file_path)
+                                            <div class="mt-1">
+                                                <a href="{{ route('visa.ticket.download_student', $tkt->tkt_id) }}" class="badge bg-light text-primary border border-primary-subtle text-decoration-none py-1 px-2" title="Download your attached document">
+                                                    <i class="bi bi-paperclip me-1"></i>{{ $tkt->std_tkt_file_name ?: 'My Attachment' }}
+                                                </a>
+                                            </div>
+                                        @endif
                                         @if ($tkt->emp_tkt_comment)
                                             <div class="mt-1 smaller text-success fw-medium text-truncate" style="max-width: 260px;" title="Resolution: {{ $tkt->emp_tkt_comment }}">
                                                 <i class="bi bi-check2-circle me-1"></i>{{ $tkt->emp_tkt_comment }}
@@ -313,6 +349,14 @@
                         <div class="mt-2 pt-2 border-top">
                             <span class="text-muted smaller d-block fw-semibold text-uppercase mb-1">Your Problem Description / Query:</span>
                             <div class="p-2 rounded bg-white border small text-dark" id="stdModalQuery" style="white-space: pre-wrap; font-size: 12.5px;"></div>
+                            
+                            {{-- Attached File by Student --}}
+                            <div id="stdModalStudentAttachmentWrap" class="mt-2 pt-2 border-top d-none">
+                                <span class="text-muted smaller fw-semibold me-2"><i class="bi bi-paperclip"></i> Your Attached File:</span>
+                                <a href="#" id="stdModalStudentDownloadBtn" class="badge bg-white text-primary border border-primary-subtle text-decoration-none py-1 px-2 fw-semibold" download>
+                                    <i class="bi bi-download me-1"></i><span id="stdModalStudentFileName">Attachment</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -902,6 +946,23 @@
                 if (queryError) queryError.classList.add('d-none');
             }
         });
+
+        // Clear file input button
+        const fileInput = document.getElementById('std_tkt_file');
+        const clearFileBtn = document.getElementById('clearFileBtn');
+        if (fileInput && clearFileBtn) {
+            fileInput.addEventListener('change', function () {
+                if (this.files && this.files.length > 0) {
+                    clearFileBtn.classList.remove('d-none');
+                } else {
+                    clearFileBtn.classList.add('d-none');
+                }
+            });
+            clearFileBtn.addEventListener('click', function () {
+                fileInput.value = '';
+                clearFileBtn.classList.add('d-none');
+            });
+        }
     });
 
     // Global Modal Opener for Student
@@ -918,10 +979,12 @@
         const resSection = document.getElementById('stdModalResolutionSection');
         const pendingNotice = document.getElementById('stdModalPendingNotice');
         const attachWrap = document.getElementById('stdModalAttachmentWrap');
+        const stdAttachWrap = document.getElementById('stdModalStudentAttachmentWrap');
 
         loadingEl.classList.remove('d-none');
         contentEl.classList.add('d-none');
         errorEl.classList.add('d-none');
+        if (stdAttachWrap) stdAttachWrap.classList.add('d-none');
 
         document.getElementById('stdModalTktId').textContent = ticketId;
 
@@ -953,6 +1016,17 @@
             document.getElementById('stdModalSubType').textContent = t.sub_type ? `• ${t.sub_type}` : '';
             document.getElementById('stdModalRaisedDate').textContent = t.raised_date || '—';
             document.getElementById('stdModalQuery').textContent = t.query || '—';
+
+            // Student's own attached file
+            if (stdAttachWrap) {
+                if (t.has_std_file && t.std_file_url) {
+                    stdAttachWrap.classList.remove('d-none');
+                    document.getElementById('stdModalStudentFileName').textContent = t.std_tkt_file_name || 'Download Attachment';
+                    document.getElementById('stdModalStudentDownloadBtn').href = t.std_file_url;
+                } else {
+                    stdAttachWrap.classList.add('d-none');
+                }
+            }
 
             const chip = document.getElementById('stdModalStatusChip');
             chip.className = `status-chip ${t.status_class || ''}`;

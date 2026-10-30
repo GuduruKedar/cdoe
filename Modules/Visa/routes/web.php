@@ -47,9 +47,11 @@ Route::middleware(['web'])->group(function () {
     Route::post('visa/ticket-status/{ticketId}', [VisaController::class, 'updateTicketStatus'])
         ->name('visa.ticket.update_status');
 
-    // Secure file download
+    // Secure file downloads
     Route::get('visa/ticket-file/{ticketId}', [VisaController::class, 'downloadTicketFile'])
         ->name('visa.ticket.download');
+    Route::get('visa/ticket-student-file/{ticketId}', [VisaController::class, 'downloadStudentFile'])
+        ->name('visa.ticket.download_student');
 
     // Delete Ticket
     Route::match(['post', 'delete'], 'visa/ticket-delete/{ticketId}', [VisaController::class, 'deleteTicket'])

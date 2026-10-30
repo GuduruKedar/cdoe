@@ -678,6 +678,15 @@
                         <span class="badge bg-light text-dark border smaller" id="modalCategoryBadge"></span>
                     </div>
                     <div class="p-3 bg-white border rounded small text-dark" id="modalQueryText" style="min-height: 70px; white-space: pre-wrap;"></div>
+                    {{-- Student Attached File --}}
+                    <div id="modalStudentAttachmentWrap" class="mt-2 pt-2 border-top d-none d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <span class="smaller text-muted fw-semibold">
+                            <i class="bi bi-paperclip me-1"></i>Student Attached File:
+                        </span>
+                        <a href="#" id="modalStudentAttachmentLink" target="_blank" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 px-3 py-1 fw-semibold">
+                            <i class="bi bi-download"></i> <span id="modalStudentAttachmentName">Download File</span>
+                        </a>
+                    </div>
                 </div>
 
                 {{-- Resolution Remarks (If Handled) --}}
@@ -1896,6 +1905,8 @@
         document.getElementById('modalStatusBadge').className = 'status-chip';
         document.getElementById('modalResolutionSection').classList.add('d-none');
         document.getElementById('modalAttachmentWrap').classList.add('d-none');
+        const initialStdAttach = document.getElementById('modalStudentAttachmentWrap');
+        if (initialStdAttach) initialStdAttach.classList.add('d-none');
 
         modal.show();
 
@@ -1920,6 +1931,18 @@
                 document.getElementById('modalTimeDifference').textContent = t.duration_formatted || '—';
                 document.getElementById('modalQueryText').textContent = t.query || 'No description provided.';
                 document.getElementById('modalCategoryBadge').textContent = t.category + (t.sub_type ? ` • ${t.sub_type}` : '');
+
+                // Student Attached File
+                const stdAttach = document.getElementById('modalStudentAttachmentWrap');
+                if (stdAttach) {
+                    if (t.has_std_file && t.std_file_url) {
+                        document.getElementById('modalStudentAttachmentLink').href = t.std_file_url;
+                        document.getElementById('modalStudentAttachmentName').textContent = t.std_tkt_file_name || 'Download Attachment';
+                        stdAttach.classList.remove('d-none');
+                    } else {
+                        stdAttach.classList.add('d-none');
+                    }
+                }
                 
                 const badge = document.getElementById('modalStatusBadge');
                 badge.textContent = t.status_label;
