@@ -177,9 +177,9 @@
                                         {{-- Info "i" Action Button --}}
                                         <button
                                             type="button"
-                                            class="btn-action-i"
+                                            class="btn-action-i {{ (int)$tkt->std_tkt_status === 3 ? 'btn-action-resolved' : '' }}"
                                             onclick="openReviewModal('{{ $tkt->tkt_id }}')"
-                                            title="View details & update status">
+                                            title="{{ (int)$tkt->std_tkt_status === 3 ? 'View ticket details & solution' : 'Review ticket & update status' }}">
                                             <i class="bi bi-info-lg"></i>
                                         </button>
                                     </td>
@@ -214,6 +214,9 @@
                     <h5 class="modal-title fs-6 fw-bold text-dark mb-0" id="reviewModalLabel">Ticket Review: <span id="modalTktId" class="text-primary font-monospace"></span></h5>
                     <span id="modalAutoUpdateNotice" class="badge bg-warning-subtle text-warning border border-warning-subtle d-none">
                         <i class="bi bi-eye me-1"></i>Auto-updated to Pending
+                    </span>
+                    <span id="modalResolvedHeaderBadge" class="badge bg-success-subtle text-success border border-success-subtle d-none">
+                        <i class="bi bi-check-circle-fill me-1"></i>Resolved & Closed
                     </span>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -258,94 +261,141 @@
                     </div>
                 </div>
 
-                {{-- Status Update Form --}}
-                <form id="dsmStatusForm" enctype="multipart/form-data">
-                    @csrf
-                    <input type="hidden" id="formTicketId" name="ticket_id">
+                {{-- Status Update Form (Active ONLY when Pending or In Process) --}}
+                <div id="statusUpdateSection">
+                    <form id="dsmStatusForm" enctype="multipart/form-data">
+                        @csrf
+                        <input type="hidden" id="formTicketId" name="ticket_id">
 
-                    <div class="mb-3">
-                        <label class="field-label mb-2 fw-bold text-dark">UPDATE STATUS</label>
-                        <div class="status-radio-group">
-                            {{-- Option 1: Pending (No extra inputs asked) --}}
-                            <label class="status-radio-card" id="cardStatus1">
-                                <input type="radio" name="status" value="1" id="radioStatus1">
-                                <span class="status-indicator-dot dot-pending"></span>
-                                <div class="status-radio-text">
-                                    <div class="status-radio-title">Pending</div>
-                                    <div class="status-radio-desc">Awaiting review / queued</div>
-                                </div>
-                            </label>
-
-                            {{-- Option 2: In Process (No extra inputs asked) --}}
-                            <label class="status-radio-card" id="cardStatus2">
-                                <input type="radio" name="status" value="2" id="radioStatus2">
-                                <span class="status-indicator-dot dot-in-process"></span>
-                                <div class="status-radio-text">
-                                    <div class="status-radio-title">In Process</div>
-                                    <div class="status-radio-desc">Work actively in progress</div>
-                                </div>
-                            </label>
-
-                            {{-- Option 3: Resolved (Requires text, optional file) --}}
-                            <label class="status-radio-card" id="cardStatus3">
-                                <input type="radio" name="status" value="3" id="radioStatus3">
-                                <span class="status-indicator-dot dot-resolved"></span>
-                                <div class="status-radio-text">
-                                    <div class="status-radio-title">Resolved</div>
-                                    <div class="status-radio-desc">Case solved & closed</div>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    {{-- Conditional Inputs for Status 3 (Resolved) --}}
-                    <div id="resolvedInputsWrap" class="border rounded p-3 mb-3 bg-light-subtle d-none">
-                        <div class="d-flex align-items-center gap-1 text-success fw-semibold small mb-2">
-                            <i class="bi bi-check-circle-fill"></i> Resolution Details
-                        </div>
-
-                        {{-- Text input (REQUIRED for status 3) --}}
                         <div class="mb-3">
-                            <label for="emp_tkt_comment" class="form-label small fw-semibold text-dark">
-                                Resolution Remarks / Comment <span class="text-danger">*</span>
-                            </label>
-                            <textarea
-                                class="form-control form-control-sm"
-                                id="emp_tkt_comment"
-                                name="emp_tkt_comment"
-                                rows="3"
-                                placeholder="Explain how the ticket was addressed or resolved (Required for resolution)..."></textarea>
-                            <div class="invalid-feedback" id="commentError"></div>
+                            <label class="field-label mb-2 fw-bold text-dark">UPDATE STATUS</label>
+                            <div class="status-radio-group">
+                                {{-- Option 1: Pending (No extra inputs asked) --}}
+                                <label class="status-radio-card" id="cardStatus1">
+                                    <input type="radio" name="status" value="1" id="radioStatus1">
+                                    <span class="status-indicator-dot dot-pending"></span>
+                                    <div class="status-radio-text">
+                                        <div class="status-radio-title">Pending</div>
+                                        <div class="status-radio-desc">Awaiting review / queued</div>
+                                    </div>
+                                </label>
+
+                                {{-- Option 2: In Process (No extra inputs asked) --}}
+                                <label class="status-radio-card" id="cardStatus2">
+                                    <input type="radio" name="status" value="2" id="radioStatus2">
+                                    <span class="status-indicator-dot dot-in-process"></span>
+                                    <div class="status-radio-text">
+                                        <div class="status-radio-title">In Process</div>
+                                        <div class="status-radio-desc">Work actively in progress</div>
+                                    </div>
+                                </label>
+
+                                {{-- Option 3: Resolved (Requires text, optional file) --}}
+                                <label class="status-radio-card" id="cardStatus3">
+                                    <input type="radio" name="status" value="3" id="radioStatus3">
+                                    <span class="status-indicator-dot dot-resolved"></span>
+                                    <div class="status-radio-text">
+                                        <div class="status-radio-title">Resolved</div>
+                                        <div class="status-radio-desc">Case solved & closed</div>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
 
-                        {{-- File input (OPTIONAL for status 3) --}}
-                        <div class="mb-2">
-                            <label for="emp_tkt_file" class="form-label small fw-semibold text-dark">
-                                Supporting Document / File <span class="text-muted fw-normal">(Optional field only - PDF, Image, Word, max 10MB)</span>
-                            </label>
-                            <input
-                                type="file"
-                                class="form-control form-control-sm"
-                                id="emp_tkt_file"
-                                name="emp_tkt_file"
-                                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.zip">
-                            <div class="invalid-feedback" id="fileError"></div>
-                            <div id="existingFileHint" class="mt-1 smaller text-muted d-none">
-                                Currently attached: <a href="#" id="existingFileLink" target="_blank" class="fw-semibold text-primary"></a>
+                        {{-- Conditional Inputs for Status 3 (Resolved) --}}
+                        <div id="resolvedInputsWrap" class="border rounded p-3 mb-3 bg-light-subtle d-none">
+                            <div class="d-flex align-items-center gap-1 text-success fw-semibold small mb-2">
+                                <i class="bi bi-check-circle-fill"></i> Resolution Details
+                            </div>
+
+                            {{-- Text input (REQUIRED for status 3) --}}
+                            <div class="mb-3">
+                                <label for="emp_tkt_comment" class="form-label small fw-semibold text-dark">
+                                    Resolution Remarks / Comment <span class="text-danger">*</span>
+                                </label>
+                                <textarea
+                                    class="form-control form-control-sm"
+                                    id="emp_tkt_comment"
+                                    name="emp_tkt_comment"
+                                    rows="3"
+                                    placeholder="Explain how the ticket was addressed or resolved (Required for resolution)..."></textarea>
+                                <div class="invalid-feedback" id="commentError"></div>
+                            </div>
+
+                            {{-- File input (OPTIONAL for status 3) --}}
+                            <div class="mb-2">
+                                <label for="emp_tkt_file" class="form-label small fw-semibold text-dark">
+                                    Supporting Document / File <span class="text-muted fw-normal">(Optional field only - PDF, Image, Word, max 10MB)</span>
+                                </label>
+                                <input
+                                    type="file"
+                                    class="form-control form-control-sm"
+                                    id="emp_tkt_file"
+                                    name="emp_tkt_file"
+                                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.zip">
+                                <div class="invalid-feedback" id="fileError"></div>
+                                <div id="existingFileHint" class="mt-1 smaller text-muted d-none">
+                                    Currently attached: <a href="#" id="existingFileLink" target="_blank" class="fw-semibold text-primary"></a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="formErrorMessage" class="alert alert-danger py-2 px-3 small d-none" role="alert"></div>
+
+                        <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-sm btn-primary px-4 fw-semibold" id="saveStatusBtn">
+                                <span class="spinner-border spinner-border-sm me-1 d-none" id="saveSpinner"></span>
+                                Save Status Update
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                {{-- Resolved Solution View (Active ONLY when ticket is Resolved) --}}
+                <div id="resolvedViewSection" class="d-none">
+                    <div class="p-3 rounded-2 border bg-success-subtle mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                <span class="fw-bold text-success text-uppercase small">Staff Resolution & Solution</span>
+                            </div>
+                            <span class="badge bg-success text-white small px-2 py-1">
+                                <i class="bi bi-lock-fill me-1"></i>Resolved & Locked
+                            </span>
+                        </div>
+
+                        <div class="p-3 bg-white rounded border small text-dark mb-2" id="resolvedSolutionDisplay" style="white-space: pre-wrap; min-height: 60px;">—</div>
+
+                        <div class="row g-2 text-muted smaller">
+                            <div class="col-sm-6">
+                                <i class="bi bi-clock-history me-1"></i>Resolved At: <span class="text-dark fw-semibold" id="resolvedDateDisplay">—</span>
+                            </div>
+                            <div class="col-sm-6" id="resolvedStaffWrap">
+                                <i class="bi bi-person-badge me-1"></i>Handled By: <span class="text-dark fw-semibold" id="resolvedStaffDisplay">—</span>
+                            </div>
+                        </div>
+
+                        {{-- Attached Solution Document --}}
+                        <div id="resolvedFileAttachmentWrap" class="mt-2 pt-2 border-top border-success-subtle d-none">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <span class="smaller text-muted fw-semibold">
+                                    <i class="bi bi-paperclip me-1"></i>Attached Solution File:
+                                </span>
+                                <a href="#" id="resolvedFileDownloadLink" target="_blank" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-download me-1"></i> <span id="resolvedFileNameDisplay">Download Document</span>
+                                </a>
                             </div>
                         </div>
                     </div>
 
-                    <div id="formErrorMessage" class="alert alert-danger py-2 px-3 small d-none" role="alert"></div>
-
-                    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-sm btn-primary px-4 fw-semibold" id="saveStatusBtn">
-                            <span class="spinner-border spinner-border-sm me-1 d-none" id="saveSpinner"></span>
-                            Save Status Update
-                        </button>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <span class="smaller text-muted fst-italic">
+                            <i class="bi bi-shield-lock me-1"></i>This ticket has been resolved and closed. Status updates cannot be reversed.
+                        </span>
+                        <button type="button" class="btn btn-sm btn-secondary px-4 fw-semibold" data-bs-dismiss="modal">Close</button>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
@@ -590,6 +640,16 @@
         transform: translateY(-1px);
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
     }
+    .btn-action-i.btn-action-resolved {
+        border-color: #16a34a;
+        color: #16a34a;
+        background: #f0fdf4;
+    }
+    .btn-action-i.btn-action-resolved:hover {
+        background: #16a34a;
+        color: #ffffff;
+        border-color: #16a34a;
+    }
 
     /* STATUS RADIO GROUP FOR MODAL */
     .status-radio-group {
@@ -763,6 +823,9 @@
         document.getElementById('emp_tkt_comment').classList.remove('is-invalid');
         document.getElementById('emp_tkt_file').classList.remove('is-invalid');
         document.getElementById('modalAutoUpdateNotice').classList.add('d-none');
+        document.getElementById('modalResolvedHeaderBadge').classList.add('d-none');
+        document.getElementById('statusUpdateSection').classList.remove('d-none');
+        document.getElementById('resolvedViewSection').classList.add('d-none');
 
         // Show modal
         const modalEl = document.getElementById('reviewModal');
@@ -795,38 +858,58 @@
                 statusBadge.className = `status-chip ${currentTicket.status_class}`;
                 statusBadge.textContent = currentTicket.status_label;
 
-                // If status was automatically updated from 0 to 1 upon viewing:
-                if (data.status_changed) {
-                    document.getElementById('modalAutoUpdateNotice').classList.remove('d-none');
+                const isResolved = (parseInt(currentTicket.std_tkt_status) === 3);
 
-                    // Update table row badge in real-time
-                    const rowBadge = document.getElementById(`statusBadge-${currentTicket.tkt_id}`);
-                    if (rowBadge) {
-                        rowBadge.className = `status-chip ${currentTicket.status_class}`;
-                        rowBadge.textContent = currentTicket.status_label;
-                    }
+                if (isResolved) {
+                    // TICKET IS RESOLVED: Lock status updates and show read-only solution
+                    document.getElementById('statusUpdateSection').classList.add('d-none');
+                    document.getElementById('resolvedViewSection').classList.remove('d-none');
+                    document.getElementById('modalResolvedHeaderBadge').classList.remove('d-none');
 
-                    // Update top counters if returned
-                    if (data.stats) {
-                        updateCounterPills(data.stats);
-                    }
-                }
+                    // Populate solution details
+                    document.getElementById('resolvedSolutionDisplay').textContent = currentTicket.emp_tkt_comment || 'No resolution comment recorded.';
+                    document.getElementById('resolvedDateDisplay').textContent = currentTicket.emp_timestamp || currentTicket.raised_date || '—';
+                    document.getElementById('resolvedStaffDisplay').textContent = currentTicket.handler_emp_name || currentTicket.assigned_emp_name || 'Staff';
 
-                // Pre-select current status in the radio buttons
-                const currentStatusCode = Math.max(1, currentTicket.std_tkt_status); // 1, 2, or 3
-                selectStatusRadio(currentStatusCode);
-
-                // Populate existing comment/file if already resolved
-                if (currentTicket.std_tkt_status === 3) {
-                    document.getElementById('emp_tkt_comment').value = currentTicket.emp_tkt_comment || '';
+                    // Solution attachment
+                    const fileWrap = document.getElementById('resolvedFileAttachmentWrap');
+                    const fileLink = document.getElementById('resolvedFileDownloadLink');
+                    const fileName = document.getElementById('resolvedFileNameDisplay');
                     if (currentTicket.has_file && currentTicket.file_url) {
-                        const hint = document.getElementById('existingFileHint');
-                        const link = document.getElementById('existingFileLink');
-                        hint.classList.remove('d-none');
-                        link.href = currentTicket.file_url;
-                        link.textContent = currentTicket.emp_tkt_file_name || 'Download file';
+                        fileWrap.classList.remove('d-none');
+                        fileLink.href = currentTicket.file_url;
+                        fileName.textContent = currentTicket.emp_tkt_file_name || 'Download Document';
+                    } else {
+                        fileWrap.classList.add('d-none');
                     }
                 } else {
+                    // TICKET IS PENDING OR IN PROCESS: Normal update workflow
+                    document.getElementById('statusUpdateSection').classList.remove('d-none');
+                    document.getElementById('resolvedViewSection').classList.add('d-none');
+                    document.getElementById('modalResolvedHeaderBadge').classList.add('d-none');
+
+                    // If status was automatically updated from 0 to 1 upon viewing:
+                    if (data.status_changed) {
+                        document.getElementById('modalAutoUpdateNotice').classList.remove('d-none');
+
+                        // Update table row badge in real-time
+                        const rowBadge = document.getElementById(`statusBadge-${currentTicket.tkt_id}`);
+                        if (rowBadge) {
+                            rowBadge.className = `status-chip ${currentTicket.status_class}`;
+                            rowBadge.textContent = currentTicket.status_label;
+                        }
+
+                        // Update top counters if returned
+                        if (data.stats) {
+                            updateCounterPills(data.stats);
+                        }
+                    }
+
+                    // Pre-select current status in the radio buttons (1 for Pending, 2 for In Process)
+                    const currentStatusCode = Math.max(1, parseInt(currentTicket.std_tkt_status));
+                    selectStatusRadio(currentStatusCode);
+
+                    document.getElementById('emp_tkt_comment').value = '';
                     document.getElementById('existingFileHint').classList.add('d-none');
                 }
             }
@@ -942,6 +1025,18 @@
                 if (rowBadge) {
                     rowBadge.className = `status-chip ${data.status_class}`;
                     rowBadge.textContent = data.status_label;
+                }
+
+                // If resolved, update action button style & title
+                if (parseInt(data.status) === 3) {
+                    const rowEl = document.getElementById(`ticketRow-${ticketId}`);
+                    if (rowEl) {
+                        const btn = rowEl.querySelector('.btn-action-i');
+                        if (btn) {
+                            btn.classList.add('btn-action-resolved');
+                            btn.title = 'View ticket details & solution';
+                        }
+                    }
                 }
 
                 // Update counter pills

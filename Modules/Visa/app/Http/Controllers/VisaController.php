@@ -534,6 +534,14 @@ class VisaController extends Controller
 
         $ticket = TicketDetail::where('tkt_id', $ticketId)->firstOrFail();
 
+        // Once a ticket is resolved, its status cannot be changed back
+        if ((int) $ticket->std_tkt_status === TicketDetail::STATUS_RESOLVED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This ticket has already been resolved and closed. Status updates cannot be reversed.',
+            ], 422);
+        }
+
         $rules = [
             'status' => 'required|integer|in:1,2,3',
             'emp_tkt_comment' => 'nullable|string|max:2000',

@@ -32,7 +32,7 @@ return new class extends Migration
         );
 
         // Assign to all administrative, academic, and examination roles
-        $roles = [1, 2, 3, 4, 5, 6, 9, 10, 11, 12];
+        $roles = DB::table('master.roles')->whereIn('role_id', [1, 2, 3, 4, 5, 6, 9, 10, 11, 12])->pluck('role_id');
         foreach ($roles as $roleId) {
             DB::table('master.menu_access_roles')->updateOrInsert(
                 ['menu_id' => $menuId, 'role_id' => $roleId],
@@ -58,4 +58,3 @@ return new class extends Migration
         DB::table('master.menus')->where('menu_id', 137)->delete();
     }
 };
-

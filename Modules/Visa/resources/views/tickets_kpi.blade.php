@@ -681,25 +681,33 @@
                 </div>
 
                 {{-- Resolution Remarks (If Handled) --}}
-                <div id="modalResolutionSection" class="p-3 rounded border bg-success-subtle mb-2 d-none">
-                    <div class="fw-bold text-success smaller text-uppercase mb-1 d-flex align-items-center gap-1">
-                        <i class="bi bi-check-circle-fill"></i> Staff Resolution Remarks
+                <div id="modalResolutionSection" class="p-3 rounded-2 border bg-success-subtle mb-2 d-none">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="fw-bold text-success smaller text-uppercase d-flex align-items-center gap-1">
+                            <i class="bi bi-check-circle-fill"></i> Staff Resolution Remarks & Solution
+                        </div>
+                        <span class="badge bg-success text-white smaller px-2 py-1">
+                            <i class="bi bi-shield-check me-1"></i>Official Solution
+                        </span>
                     </div>
-                    <div class="small text-dark mb-2" id="modalResolutionComment"></div>
-                    <div id="modalAttachmentWrap" class="d-none pt-2 border-top border-success-subtle">
-                        <span class="smaller text-muted me-2">Attached File:</span>
-                        <a href="#" id="modalAttachmentLink" target="_blank" class="btn btn-xs btn-outline-success btn-sm">
-                            <i class="bi bi-download me-1"></i> <span id="modalAttachmentName">Download File</span>
+
+                    {{-- Dedicated White Solution Card for Crystal Clear Reading --}}
+                    <div class="p-3 bg-white border rounded text-dark small" id="modalResolutionComment" style="min-height: 55px; white-space: pre-wrap; line-height: 1.55; border-left: 3.5px solid #16a34a !important;"></div>
+
+                    {{-- Attached File Download --}}
+                    <div id="modalAttachmentWrap" class="d-none mt-2 pt-2 border-top border-success-subtle d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <span class="smaller text-muted fw-semibold">
+                            <i class="bi bi-paperclip me-1"></i>Attached Solution Document:
+                        </span>
+                        <a href="#" id="modalAttachmentLink" target="_blank" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 px-3 py-1 fw-semibold">
+                            <i class="bi bi-download"></i> <span id="modalAttachmentName">Download File</span>
                         </a>
                     </div>
                 </div>
             </div>
 
-            <div class="modal-footer py-2 px-3 bg-light border-top d-flex justify-content-between">
-                <a href="{{ route('visa.ticketslist') }}" class="btn btn-sm btn-link text-decoration-none small text-secondary">
-                    <i class="bi bi-pencil-square me-1"></i> Open Tickets Management
-                </a>
-                <button type="button" class="btn btn-sm btn-secondary px-3" data-bs-dismiss="modal">Close</button>
+            <div class="modal-footer py-2 px-3 bg-light border-top d-flex justify-content-end">
+                <button type="button" class="btn btn-sm btn-secondary px-4 fw-semibold" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
