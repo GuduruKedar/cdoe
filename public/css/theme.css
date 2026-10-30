@@ -909,6 +909,19 @@ html.dark .user-pill-btn:hover {
     box-shadow: none;
     backdrop-filter: none;
 }
+.theme-mode-label-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    user-select: none;
+}
+.theme-mode-label-wrap i {
+    font-size: 14px;
+    color: var(--text-muted);
+}
 .role-menu-divider {
     height: 1px;
     background: var(--border-subtle);

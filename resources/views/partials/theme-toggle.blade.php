@@ -1,53 +1,64 @@
-<div class="theme-widget-container" role="region" aria-label="Theme Controls">
-    {{-- Color Palette Preset Dots --}}
-    <div class="color-presets-group" role="group" aria-label="Color Themes">
-        <button type="button"
-                class="color-swatch-btn color-swatch-crimson"
-                data-color="crimson"
-                onclick="setColorTheme('crimson')"
-                title="Vignan Crimson (Default)"
-                aria-label="Vignan Crimson Theme">
-            <svg class="swatch-check" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-            </svg>
-        </button>
+@php
+    $hidePalette = $hidePalette ?? false;
+@endphp
 
-        <button type="button"
-                class="color-swatch-btn color-swatch-blue"
-                data-color="blue"
-                onclick="setColorTheme('blue')"
-                title="Royal Blue Theme"
-                aria-label="Royal Blue Theme">
-            <svg class="swatch-check" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-            </svg>
-        </button>
+<div class="theme-widget-container {{ $hidePalette ? 'no-palette' : '' }}" role="region" aria-label="Theme Controls">
+    @if (! $hidePalette)
+        {{-- Color Palette Preset Dots --}}
+        <div class="color-presets-group" role="group" aria-label="Color Themes">
+            <button type="button"
+                    class="color-swatch-btn color-swatch-crimson"
+                    data-color="crimson"
+                    onclick="setColorTheme('crimson')"
+                    title="Vignan Crimson (Default)"
+                    aria-label="Vignan Crimson Theme">
+                <svg class="swatch-check" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+            </button>
 
-        <button type="button"
-                class="color-swatch-btn color-swatch-green"
-                data-color="green"
-                onclick="setColorTheme('green')"
-                title="Emerald Green Theme"
-                aria-label="Emerald Green Theme">
-            <svg class="swatch-check" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-            </svg>
-        </button>
+            <button type="button"
+                    class="color-swatch-btn color-swatch-blue"
+                    data-color="blue"
+                    onclick="setColorTheme('blue')"
+                    title="Royal Blue Theme"
+                    aria-label="Royal Blue Theme">
+                <svg class="swatch-check" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+            </button>
 
-        <button type="button"
-                class="color-swatch-btn color-swatch-violet"
-                data-color="violet"
-                onclick="setColorTheme('violet')"
-                title="Purple Violet Theme"
-                aria-label="Purple Violet Theme">
-            <svg class="swatch-check" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-            </svg>
-        </button>
-    </div>
+            <button type="button"
+                    class="color-swatch-btn color-swatch-green"
+                    data-color="green"
+                    onclick="setColorTheme('green')"
+                    title="Emerald Green Theme"
+                    aria-label="Emerald Green Theme">
+                <svg class="swatch-check" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+            </button>
 
-    {{-- Separator --}}
-    <div class="theme-widget-sep"></div>
+            <button type="button"
+                    class="color-swatch-btn color-swatch-violet"
+                    data-color="violet"
+                    onclick="setColorTheme('violet')"
+                    title="Purple Violet Theme"
+                    aria-label="Purple Violet Theme">
+                <svg class="swatch-check" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+            </button>
+        </div>
+
+        {{-- Separator --}}
+        <div class="theme-widget-sep"></div>
+    @else
+        <div class="theme-mode-label-wrap">
+            <i class="bi bi-moon-stars"></i>
+            <span>Theme Mode</span>
+        </div>
+    @endif
 
     {{-- Dark / Light Mode Animated Sliding Switch --}}
     <button type="button"

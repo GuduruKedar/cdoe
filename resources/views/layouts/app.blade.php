@@ -200,6 +200,19 @@
             padding: 4px 2px 6px;
             flex-shrink: 0;
         }
+        .theme-mode-label-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            user-select: none;
+        }
+        .theme-mode-label-wrap i {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
         .role-menu-title {
             font-size: 11px;
             color: var(--text-muted);
@@ -633,10 +646,10 @@
                     </div>
                 </div>
 
-                {{-- Consolidated Theme Palette & Mode Switcher --}}
+                {{-- Consolidated Theme Mode Switcher (Color palette removed from profile dropdown) --}}
                 <div class="role-menu-section">
                     <div class="role-menu-title">Appearance & Theme</div>
-                    @include('partials.theme-toggle')
+                    @include('partials.theme-toggle', ['hidePalette' => true])
                 </div>
 
                 <div class="role-menu-divider"></div>
