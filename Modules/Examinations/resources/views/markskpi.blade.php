@@ -14,14 +14,16 @@
         --line-2: var(--border-card, #edf0f6);
         --accent: var(--theme-primary, #991b1b);
         --accent-soft: var(--theme-primary-light, rgba(153, 27, 27, 0.1));
-        --good: #0E7C66;
-        --good-soft: #E3F3EF;
-        --watch: #B7791F;
-        --watch-soft: #FBF1DF;
-        --risk: #B42318;
-        --risk-soft: #FBE7E5;
-        --sans: inherit;
-        --serif: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+        --good: #10b981;
+        --good-soft: #ecfdf5;
+        --watch: #f59e0b;
+        --watch-soft: #fffbeb;
+        --risk: #ef4444;
+        --risk-soft: #fef2f2;
+        --info: #3b82f6;
+        --info-soft: #eff6ff;
+        --purple: #8b5cf6;
+        --purple-soft: #f5f3ff;
     }
     html.dark {
         --ink: #f1f5f9;
@@ -30,10 +32,12 @@
         --surface: #1e293b;
         --line: #334155;
         --line-2: rgba(255, 255, 255, 0.08);
-        --good-soft: rgba(14, 124, 102, 0.25);
-        --watch-soft: rgba(183, 121, 31, 0.25);
-        --risk-soft: rgba(180, 35, 24, 0.25);
-        --accent-soft: rgba(220, 38, 38, 0.2);
+        --good-soft: rgba(16, 185, 129, 0.2);
+        --watch-soft: rgba(245, 158, 11, 0.2);
+        --risk-soft: rgba(239, 68, 68, 0.2);
+        --info-soft: rgba(59, 130, 246, 0.2);
+        --purple-soft: rgba(139, 92, 246, 0.2);
+        --accent-soft: rgba(220, 38, 38, 0.25);
     }
 
     .kpi-container {
@@ -46,62 +50,224 @@
     .kpi-container a { color: var(--accent); }
     .kpi-container :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-    /* Scope summary banner */
-    .kpi-scope-bar {
+    /* ================= 1. EXECUTIVE SUMMARY LINE ================= */
+    .exec-line {
+        display: flex;
+        align-items: center;
+        gap: 14px;
         background: var(--surface);
         border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 10px 14px;
-        margin-bottom: 14px;
+        border-left: 5px solid var(--accent);
+        border-radius: 12px;
+        padding: 12px 18px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .exec-line:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+    .exec-score {
+        display: flex;
+        align-items: baseline;
+        flex-shrink: 0;
+        background: var(--accent-soft);
+        padding: 6px 12px;
+        border-radius: 8px;
+    }
+    .exec-score-num {
+        font-size: 26px;
+        font-weight: 800;
+        line-height: 1;
+        color: var(--accent);
+    }
+    .exec-score-of {
+        font-size: 13px;
+        color: var(--ink-2);
+        margin-left: 3px;
+        font-weight: 600;
+    }
+    .exec-text {
+        font-size: 13.5px;
+        color: var(--ink);
+        line-height: 1.5;
+        flex: 1;
+    }
+    .exec-badge {
+        font-size: 11.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        background: var(--line-2);
+        color: var(--ink-2);
+        white-space: nowrap;
+    }
+
+    /* ================= 2. 4 SAAS ANIMATED STAT CARDS ================= */
+    .stat-pills-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+    .stat-pill {
+        background: var(--surface);
+        border: 1.5px solid var(--line);
+        border-radius: 12px;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        animation: cardAppear 0.4s ease-out backwards;
+    }
+    .stat-pill:nth-child(1) { animation-delay: 0.05s; }
+    .stat-pill:nth-child(2) { animation-delay: 0.1s; }
+    .stat-pill:nth-child(3) { animation-delay: 0.15s; }
+    .stat-pill:nth-child(4) { animation-delay: 0.2s; }
+
+    @keyframes cardAppear {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stat-pill:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.04);
+    }
+    .stat-pill.is-active-card {
+        border-color: var(--accent) !important;
+        box-shadow: 0 0 0 2px var(--accent-soft), 0 8px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    .stat-pill-cgpa { border-left: 4.5px solid #3b82f6 !important; }
+    .stat-pill-pass { border-left: 4.5px solid #10b981 !important; }
+    .stat-pill-risk { border-left: 4.5px solid #f59e0b !important; }
+    .stat-pill-total { border-left: 4.5px solid #8b5cf6 !important; }
+
+    .stat-pill-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        margin-bottom: 8px;
     }
-    .kpi-scope-bar p { margin: 0; color: var(--ink-2); font-size: 13.5px; }
+    .stat-pill-label {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 12.5px;
+        font-weight: 700;
+        letter-spacing: -0.2px;
+        color: var(--ink-2);
+        text-transform: uppercase;
+    }
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+    .dot-cgpa { background: #3b82f6; box-shadow: 0 0 6px rgba(59, 130, 246, 0.5); }
+    .dot-pass { background: #10b981; box-shadow: 0 0 6px rgba(16, 185, 129, 0.5); }
+    .dot-risk { background: #f59e0b; }
+    .dot-total { background: #8b5cf6; box-shadow: 0 0 6px rgba(139, 92, 246, 0.5); }
 
-    /* Filters */
+    @keyframes pulseWarning {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+        50% { transform: scale(1.3); box-shadow: 0 0 0 5px rgba(245, 158, 11, 0); }
+    }
+    .dot-pulsing {
+        animation: pulseWarning 1.8s infinite ease-in-out;
+    }
+
+    .stat-pill-val-wrap {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+        margin: 2px 0 6px;
+    }
+    .stat-pill-val {
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.5px;
+    }
+    .stat-pill-cgpa .stat-pill-val { color: #2563eb; }
+    .stat-pill-pass .stat-pill-val { color: #059669; }
+    .stat-pill-risk .stat-pill-val { color: #d97706; }
+    .stat-pill-total .stat-pill-val { color: #7c3aed; }
+    html.dark .stat-pill-cgpa .stat-pill-val { color: #60a5fa; }
+    html.dark .stat-pill-pass .stat-pill-val { color: #34d399; }
+    html.dark .stat-pill-risk .stat-pill-val { color: #fbbf24; }
+    html.dark .stat-pill-total .stat-pill-val { color: #a78bfa; }
+
+    .stat-pill-unit {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink-3);
+    }
+    .stat-pill-sub {
+        font-size: 12px;
+        color: var(--ink-3);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+    }
+    .stat-pill-trend {
+        font-weight: 600;
+        font-size: 11.5px;
+    }
+
+    /* ================= 3. COMPACT FILTERS CARD ================= */
     .filters {
         background: var(--surface);
         border: 1px solid var(--line);
         border-radius: 12px;
-        padding: 14px 16px;
+        padding: 12px 16px;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 10px;
         align-items: end;
         margin-bottom: 16px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
     }
-    .filters label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; }
+    .filters label { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 3px; }
     .filters input, .filters select {
         width: 100%;
-        padding: 7px 10px;
+        padding: 6px 9px;
         border: 1px solid var(--line);
-        border-radius: 8px;
+        border-radius: 6px;
         font: inherit;
-        font-size: 13.5px;
+        font-size: 13px;
         color: var(--ink);
         background: var(--surface);
+        transition: border-color 0.15s ease;
     }
     .filters input:focus, .filters select:focus {
         border-color: var(--accent);
         outline: none;
     }
-    .filters .actions { display: flex; gap: 8px; }
+    .filters .actions { display: flex; gap: 6px; }
     .btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        padding: 8px 14px;
-        border-radius: 8px;
+        gap: 5px;
+        padding: 6px 12px;
+        border-radius: 6px;
         border: 1px solid var(--line);
         background: var(--surface);
         color: var(--ink);
         font: inherit;
-        font-size: 13.5px;
+        font-size: 13px;
         font-weight: 500;
         cursor: pointer;
         text-decoration: none;
@@ -110,103 +276,272 @@
     }
     .btn:hover { border-color: var(--ink-2); background: var(--line-2); }
     .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .btn.primary:hover { opacity: 0.92; }
+    .btn.primary:hover { opacity: 0.92; transform: translateY(-1px); }
 
-    /* view toggle */
-    .bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .toggle { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
-    .toggle button { border: 0; background: transparent; padding: 7px 16px; border-radius: 7px; font: inherit; font-weight: 600; font-size: 13px; color: var(--ink-2); cursor: pointer; }
-    .toggle button[aria-pressed="true"] { background: var(--accent); color: #fff; }
-    .bar .right { display: flex; gap: 8px; flex-wrap: wrap; }
-    .notice { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid; font-size: 13.5px; }
-    .notice.warn { background: var(--watch-soft); border-color: rgba(183, 121, 31, 0.4); color: var(--watch); }
-    .notice.err { background: var(--risk-soft); border-color: rgba(180, 35, 24, 0.4); color: var(--risk); }
+    /* ================= 4. VIEW TOGGLE BAR ================= */
+    .view-switch-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .view-switch {
+        display: inline-flex;
+        background: var(--surface);
+        border: 1.5px solid var(--line);
+        border-radius: 10px;
+        padding: 3px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .view-btn {
+        border: 0;
+        background: transparent;
+        padding: 8px 18px;
+        border-radius: 8px;
+        font: inherit;
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--ink-2);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.18s ease;
+    }
+    .view-btn:hover { color: var(--ink); }
+    .view-btn.is-active {
+        background: var(--accent);
+        color: #fff !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    }
+    .view-btn-count {
+        background: rgba(0, 0, 0, 0.08);
+        padding: 1px 7px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .view-btn.is-active .view-btn-count {
+        background: rgba(255, 255, 255, 0.25);
+        color: #fff;
+    }
+    .view-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
 
-    /* hero: transcript strip */
-    .hero { display: grid; grid-template-columns: 280px 1fr; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03); }
-    .hero .score { padding: 18px 20px; border-right: 1px solid var(--line); display: flex; flex-direction: column; justify-content: space-between; }
-    .hero .who { font-size: 13px; color: var(--ink-2); }
-    .hero .who strong { display: block; font-size: 20px; color: var(--ink); font-weight: 700; }
-    .gauge { position: relative; height: 140px; margin-top: 6px; }
-    .gauge .num { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; }
-    .gauge .num b { font-size: 40px; font-weight: 700; line-height: 1; color: var(--ink); }
-    .gauge .num span { display: block; font-size: 12.5px; color: var(--ink-2); }
-    .strip { display: flex; overflow-x: auto; }
-    .sem { flex: 1 0 160px; padding: 16px 16px 14px; border-right: 1px solid var(--line-2); display: flex; flex-direction: column; gap: 6px; }
-    .sem:last-child { border-right: 0; }
-    .sem .lbl { font-size: 12.5px; color: var(--ink-2); display: flex; justify-content: space-between; gap: 6px; }
-    .sem .val { font-size: 28px; font-weight: 700; line-height: 1; color: var(--ink); }
-    .sem .delta { font-size: 12.5px; font-weight: 600; }
-    .sem .stored { font-size: 12px; color: var(--ink-3); }
-    .sem .stored.off { color: var(--risk); }
-    .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; }
-    .chip { min-width: 26px; padding: 2px 5px; border-radius: 4px; font-size: 11px; font-weight: 700; text-align: center; color: #fff; }
-    .meter { height: 6px; background: var(--line-2); border-radius: 3px; overflow: hidden; }
-    .meter i { display: block; height: 100%; background: var(--good); }
+    /* ================= 5. OVERVIEW DASHBOARD (DECREASED TO 4 SAAS CHARTS) ================= */
+    .overview-charts-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+    .saas-chart-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .saas-chart-card:hover {
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+    }
+    .saas-chart-header {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line-2);
+        background: var(--surface);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    .saas-chart-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--ink);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+    }
+    .saas-chart-note {
+        font-size: 12px;
+        color: var(--ink-3);
+    }
+    .saas-chart-body {
+        padding: 14px 16px;
+        position: relative;
+        height: 290px;
+        flex: 1;
+    }
 
-    /* KPI tiles */
-    .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-bottom: 22px; }
-    .tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; border-left: 4px solid var(--line); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03); }
-    .tile.good { border-left-color: var(--good); } .tile.watch { border-left-color: var(--watch); } .tile.risk { border-left-color: var(--risk); } .tile.info { border-left-color: var(--accent); }
-    .tile .k { font-size: 12.5px; color: var(--ink-2); }
-    .tile .v { font-size: 24px; font-weight: 700; margin: 2px 0 4px; line-height: 1.15; color: var(--ink); }
-    .tile .s { font-size: 12px; color: var(--ink-3); }
-    .tile .meter { margin: 6px 0 4px; }
-    .up { color: var(--good); } .down { color: var(--risk); } .flat { color: var(--ink-3); }
+    /* Transcript Strip (Semester Progress) */
+    .sem-strip-wrap {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow-x: auto;
+        display: flex;
+        margin-bottom: 18px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+    .sem-card {
+        flex: 1 0 160px;
+        padding: 14px 16px;
+        border-right: 1px solid var(--line-2);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .sem-card:last-child { border-right: 0; }
+    .sem-card-lbl {
+        font-size: 12px;
+        color: var(--ink-2);
+        display: flex;
+        justify-content: space-between;
+        font-weight: 600;
+    }
+    .sem-card-val {
+        font-size: 26px;
+        font-weight: 800;
+        line-height: 1;
+        color: var(--ink);
+    }
+    .sem-card-delta { font-size: 12px; font-weight: 700; }
+    .sem-card-sub { font-size: 11.5px; color: var(--ink-3); }
 
-    /* sections + cards */
-    .section { margin: 24px 0 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-    .section h2 { font-size: 18px; font-weight: 700; margin: 0; color: var(--ink); }
-    .section p { margin: 0; color: var(--ink-2); font-size: 13.5px; }
-    .grid { display: grid; gap: 14px; }
-    .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .g21 { grid-template-columns: 2fr 1fr; }
-    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03); }
-    .card h3 { font-size: 14.5px; font-weight: 700; margin: 0 0 2px; color: var(--ink); }
-    .card .sub { font-size: 12.5px; color: var(--ink-3); margin: 0 0 10px; }
-    .chart { position: relative; height: 280px; }
-    .chart.tall { height: 350px; }
-    .chart.short { height: 220px; }
-    .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-    .seg button { border: 0; background: var(--surface); padding: 5px 11px; font: inherit; font-size: 12.5px; color: var(--ink-2); cursor: pointer; border-right: 1px solid var(--line); }
-    .seg button:last-child { border-right: 0; }
-    .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; font-weight: 600; }
-    .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+    /* Deep Dive Callout Banner */
+    .deep-dive-callout {
+        background: var(--surface);
+        border: 1.5px dashed var(--line);
+        border-radius: 12px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+    }
+    .deep-dive-callout-text h4 { font-size: 14.5px; font-weight: 700; margin: 0 0 2px; color: var(--ink); }
+    .deep-dive-callout-text p { font-size: 13px; color: var(--ink-2); margin: 0; }
 
-    /* tables */
-    .tbl-wrap { overflow-x: auto; max-height: 460px; overflow-y: auto; border: 1px solid var(--line-2); border-radius: 8px; }
+    /* ================= 6. DETAILED VIEW (DEEP DIVE SUB-TABS) ================= */
+    .detailed-nav {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 8px;
+    }
+    .detailed-nav-btn {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        padding: 6px 14px;
+        border-radius: 8px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink-2);
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .detailed-nav-btn:hover { background: var(--line-2); color: var(--ink); }
+    .detailed-nav-btn.is-active {
+        background: var(--ink);
+        border-color: var(--ink);
+        color: #fff;
+    }
+    html.dark .detailed-nav-btn.is-active {
+        background: var(--accent);
+        border-color: var(--accent);
+    }
+
+    .detailed-section {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px 18px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        margin-bottom: 16px;
+    }
+
+    /* Tables */
+    .tbl-wrap {
+        overflow-x: auto;
+        max-height: 480px;
+        overflow-y: auto;
+        border: 1px solid var(--line-2);
+        border-radius: 8px;
+    }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
-    th { position: sticky; top: 0; background: var(--surface); font-weight: 600; color: var(--ink-2); cursor: pointer; user-select: none; z-index: 1; }
+    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+    th {
+        position: sticky;
+        top: 0;
+        background: var(--surface);
+        font-weight: 700;
+        color: var(--ink-2);
+        cursor: pointer;
+        user-select: none;
+        z-index: 1;
+    }
     html.dark th { background: #1e293b; }
     th[data-sort]::after { content: ""; margin-left: 4px; }
-    th.asc::after { content: "B2"; font-size: 9px; } th.desc::after { content: "BC"; font-size: 9px; }
+    th.asc::after { content: " ▲"; font-size: 9px; } th.desc::after { content: " ▼"; font-size: 9px; }
     td.num, th.num { text-align: right; }
     tr:hover td { background: var(--line-2); }
-    .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11.5px; font-weight: 600; }
-    .badge.good { background: var(--good-soft); color: var(--good); } .badge.watch { background: var(--watch-soft); color: var(--watch); }
-    .badge.risk { background: var(--risk-soft); color: var(--risk); } .badge.info { background: var(--accent-soft); color: var(--accent); }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 11.5px; font-weight: 700; }
+    .badge.good { background: var(--good-soft); color: var(--good); }
+    .badge.watch { background: var(--watch-soft); color: var(--watch); }
+    .badge.risk { background: var(--risk-soft); color: var(--risk); }
+    .badge.info { background: var(--info-soft); color: var(--info); }
     .badge.muted { background: var(--line-2); color: var(--ink-2); }
-    .tbl-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
-    .tbl-tools input, .tbl-tools select { padding: 6px 9px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 13px; background: var(--surface); color: var(--ink); }
+    .tbl-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+    .tbl-tools input, .tbl-tools select {
+        padding: 6px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        font: inherit;
+        font-size: 13px;
+        background: var(--surface);
+        color: var(--ink);
+    }
     .muted { color: var(--ink-3); font-size: 12.5px; }
 
-    /* AI analytics */
-    .ai-head { background: var(--surface); border: 1px solid var(--line); border-left: 5px solid var(--accent); border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03); }
+    /* ================= 7. AI ANALYTICS PANEL ================= */
+    .ai-head {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-left: 5px solid var(--accent);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
     .ai-head h2 { font-size: 20px; margin: 0; font-weight: 700; color: var(--ink); }
     .ai-head p { margin: 4px 0 0; color: var(--ink-2); font-size: 13.5px; max-width: 70ch; }
     .ai-head .badge { background: var(--accent-soft); color: var(--accent); }
     .insight { display: grid; grid-template-columns: 4px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line-2); }
     .insight:last-child { border-bottom: 0; }
     .insight .rail { border-radius: 2px; }
-    .insight .t { font-weight: 600; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; color: var(--ink); }
+    .insight .t { font-weight: 700; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; color: var(--ink); }
     .insight .x { color: var(--ink-2); margin-top: 2px; max-width: 85ch; font-size: 13px; }
-    .actions-list { margin: 0; padding-left: 20px; }
-    .actions-list li { margin: 6px 0; max-width: 80ch; color: var(--ink); }
     .check { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; background: var(--surface); }
-    .check summary { padding: 10px 12px; cursor: pointer; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: var(--ink); }
-    .check summary .t { font-weight: 600; }
+    .check summary { padding: 10px 12px; cursor: pointer; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: var(--ink); font-weight: 600; }
     .check .body { padding: 0 12px 12px; color: var(--ink-2); font-size: 13px; }
     .check code { display: block; font-size: 12px; background: var(--line-2); border-radius: 4px; padding: 3px 8px; margin-top: 4px; white-space: pre-wrap; color: var(--ink); }
     .ask { display: flex; gap: 8px; margin: 6px 0 8px; }
@@ -217,26 +552,26 @@
     .empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 40px 24px; text-align: center; }
     .empty h2 { margin: 0 0 6px; font-weight: 700; color: var(--ink); }
     .empty p { color: var(--ink-2); margin: 0 0 14px; }
+    .notice { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid; font-size: 13.5px; }
+    .notice.warn { background: var(--watch-soft); border-color: rgba(245, 158, 11, 0.4); color: var(--watch); }
+    .notice.err { background: var(--risk-soft); border-color: rgba(239, 68, 68, 0.4); color: var(--risk); }
+    .up { color: var(--good); } .down { color: var(--risk); } .flat { color: var(--ink-3); }
     [hidden] { display: none !important; }
 
-    @media (max-width: 1100px) { .g3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .g21 { grid-template-columns: 1fr; } }
-    @media (max-width: 760px) { .g2, .g3 { grid-template-columns: 1fr; } .hero { grid-template-columns: 1fr; } .hero .score { border-right: 0; border-bottom: 1px solid var(--line); } .kpi-container { padding: 4px 2px; } }
-    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
-    @media print {
-        .filters, .bar, .ask, .sugg { display: none !important; }
-        #panel-kpi, #panel-ai { display: block !important; }
-        .card, .tile, .hero { break-inside: avoid; }
-        body { background: #fff; }
-        .tbl-wrap { max-height: none; }
+    @media (max-width: 1024px) {
+        .stat-pills-row { grid-template-columns: repeat(2, 1fr); }
+        .overview-charts-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+        .stat-pills-row { grid-template-columns: 1fr; }
+        .exec-line { flex-direction: column; align-items: flex-start; }
     }
 </style>
 
 <div class="kpi-container">
-    <div class="kpi-scope-bar">
-        <p id="scopeLine"><i class="bi bi-bar-chart-line-fill text-danger me-1"></i> Results, grades, SGPA/CGPA and data checks from examinations.marks_cgpa</p>
-        <span class="badge bg-secondary-subtle text-secondary border">Examinations Module</span>
-    </div>
-<form class="filters" method="GET" action="{{ url()->current() }}">
+
+    {{-- ===================== FILTERS ===================== --}}
+    <form class="filters" method="GET" action="{{ url()->current() }}">
         <div>
             <label for="f-regno">Register number</label>
             <input id="f-regno" name="regno" value="{{ $filters['regno'] ?? '' }}" placeholder="e.g. 261BHANU99" autocomplete="off">
@@ -305,13 +640,13 @@
             </select>
         </div>
         <div class="actions">
-            <button class="btn primary" type="submit">Show results</button>
+            <button class="btn primary" type="submit"><i class="bi bi-search"></i> Filter</button>
             <a class="btn" href="{{ url()->current() }}">Clear</a>
         </div>
     </form>
 
     @if ($error)
-        <div class="notice err">{{ $error }}</div>
+        <div class="notice err"><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ $error }}</div>
     @endif
 
     @if (!$kpi || !empty($kpi['empty']))
@@ -322,187 +657,315 @@
             @else
                 <h2>Choose what to analyse</h2>
                 <p>Enter a register number for one student's report, or pick a program, regulation or exam for a cohort view.</p>
-                <a class="btn" href="{{ url()->current() }}?all=1">Analyse all results</a>
+                <a class="btn primary" href="{{ url()->current() }}?all=1"><i class="bi bi-bar-chart-line-fill me-1"></i> Analyse all results</a>
             @endif
         </div>
     @else
 
         @if (!empty($kpi['meta']['truncated']))
-            <div class="notice warn">Only the first {{ number_format($kpi['meta']['row_limit']) }} result rows were analysed. Narrow the filters for complete figures.</div>
+            <div class="notice warn"><i class="bi bi-info-circle-fill me-1"></i> Only the first {{ number_format($kpi['meta']['row_limit']) }} result rows were analysed. Narrow filters for complete figures.</div>
         @endif
 
-        {{-- ===================== The two view buttons ===================== --}}
-        <div class="bar">
-            <div class="toggle" role="group" aria-label="View">
-                <button type="button" id="btn-kpi" aria-pressed="true">KPI dashboard</button>
-                <button type="button" id="btn-ai" aria-pressed="false">AI analytics</button>
+        {{-- ================= 1. EXECUTIVE HEADLINE LINE ================= --}}
+        <div class="exec-line">
+            <div class="exec-score" title="Overall average CGPA">
+                <span class="exec-score-num" id="execCgpaVal">{{ number_format($kpi['summary']['cgpa'] ?? 0, 2) }}</span>
+                <span class="exec-score-of">/ 10</span>
             </div>
-            <div class="right">
-                <button type="button" class="btn" id="btn-csv">Export records (CSV)</button>
-                <button type="button" class="btn" id="btn-subcsv">Export subjects (CSV)</button>
-                <button type="button" class="btn" onclick="window.print()">Print</button>
+            <div class="exec-text mb-0">
+                <strong id="execHeadlineTitle">Overall Cohort Performance.</strong>
+                <span id="scopeLine">Results, grades, SGPA/CGPA and data checks from examinations.marks_cgpa</span>
+            </div>
+            <span class="exec-badge" id="execScopeBadge">Cohort Analytics</span>
+        </div>
+
+        {{-- ================= 2. 4 SAAS ANIMATED STAT CARDS ================= --}}
+        <div class="stat-pills-row">
+            {{-- Card 1: CGPA --}}
+            <div class="stat-pill stat-pill-cgpa" id="cardCgpa" title="Click to focus Grade Distribution">
+                <div class="stat-pill-header">
+                    <div class="stat-pill-label"><span class="status-dot dot-cgpa"></span><span id="card1Label">Cohort CGPA</span></div>
+                    <i class="bi bi-mortarboard-fill text-primary"></i>
+                </div>
+                <div class="stat-pill-val-wrap">
+                    <span class="stat-pill-val" id="card1Val">{{ number_format($kpi['summary']['cgpa'] ?? 0, 2) }}</span>
+                    <span class="stat-pill-unit">/ 10</span>
+                </div>
+                <div class="stat-pill-sub">
+                    <span id="card1Sub">Median {{ number_format($kpi['summary']['cgpa_median'] ?? 0, 2) }}</span>
+                    <span class="stat-pill-trend text-primary">Score</span>
+                </div>
+            </div>
+
+            {{-- Card 2: Pass Rate --}}
+            <div class="stat-pill stat-pill-pass" id="cardPass" title="Click to open Detailed View">
+                <div class="stat-pill-header">
+                    <div class="stat-pill-label"><span class="status-dot dot-pass"></span><span>Pass Rate</span></div>
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                </div>
+                <div class="stat-pill-val-wrap">
+                    <span class="stat-pill-val" id="card2Val">{{ $kpi['summary']['pass_pct'] ?? 0 }}%</span>
+                </div>
+                <div class="stat-pill-sub">
+                    <span id="card2Sub">{{ $kpi['summary']['all_clear_pct'] ?? 0 }}% cleared all</span>
+                    <span class="stat-pill-trend text-success">Clearance</span>
+                </div>
+            </div>
+
+            {{-- Card 3: At Risk & Backlogs --}}
+            <div class="stat-pill stat-pill-risk" id="cardRisk" title="Click to view At-Risk Roster in Detailed View">
+                <div class="stat-pill-header">
+                    <div class="stat-pill-label"><span class="status-dot dot-risk dot-pulsing"></span><span>At-Risk / Backlogs</span></div>
+                    <i class="bi bi-exclamation-octagon-fill text-warning"></i>
+                </div>
+                <div class="stat-pill-val-wrap">
+                    <span class="stat-pill-val" id="card3Val">{{ $kpi['summary']['at_risk_students'] ?? 0 }}</span>
+                    <span class="stat-pill-unit">students</span>
+                </div>
+                <div class="stat-pill-sub">
+                    <span id="card3Sub">{{ $kpi['summary']['backlogs'] ?? 0 }} pending subject(s)</span>
+                    <span class="stat-pill-trend text-warning">Needs Support</span>
+                </div>
+            </div>
+
+            {{-- Card 4: Total Evaluated --}}
+            <div class="stat-pill stat-pill-total" id="cardTotal" title="Click to view All Students in Detailed View">
+                <div class="stat-pill-header">
+                    <div class="stat-pill-label"><span class="status-dot dot-total"></span><span>Total Evaluated</span></div>
+                    <i class="bi bi-people-fill text-info"></i>
+                </div>
+                <div class="stat-pill-val-wrap">
+                    <span class="stat-pill-val" id="card4Val">{{ number_format($kpi['summary']['students'] ?? 0) }}</span>
+                    <span class="stat-pill-unit">students</span>
+                </div>
+                <div class="stat-pill-sub">
+                    <span id="card4Sub">{{ number_format($kpi['summary']['records'] ?? 0) }} results • {{ $kpi['summary']['sessions'] ?? 0 }} exams</span>
+                    <span class="stat-pill-trend text-info">Cohort</span>
+                </div>
             </div>
         </div>
 
-        {{-- ===================== KPI PANEL ===================== --}}
-        <main id="panel-kpi">
+        {{-- ================= 3. VIEW TOGGLE BAR ================= --}}
+        <div class="view-switch-row">
+            <div class="view-switch" role="tablist">
+                <button type="button" class="view-btn is-active" id="btn-overview" role="tab" aria-selected="true">
+                    <i class="bi bi-speedometer2"></i> SaaS Dashboard
+                </button>
+                <button type="button" class="view-btn" id="btn-detailed" role="tab" aria-selected="false">
+                    <i class="bi bi-table"></i> Detailed View
+                    <span class="view-btn-count">{{ number_format($kpi['summary']['students'] ?? 0) }}</span>
+                </button>
+                <button type="button" class="view-btn" id="btn-ai" role="tab" aria-selected="false">
+                    <i class="bi bi-stars"></i> AI Perceptions
+                    @if (!empty($kpi['summary']['quality_issues']))
+                        <span class="view-btn-count" style="background:#ef4444;color:#fff">{{ $kpi['summary']['quality_issues'] }}</span>
+                    @endif
+                </button>
+            </div>
+            <div class="view-actions">
+                <button type="button" class="btn" id="btn-csv"><i class="bi bi-download"></i> Records CSV</button>
+                <button type="button" class="btn" id="btn-subcsv"><i class="bi bi-file-earmark-spreadsheet"></i> Subjects CSV</button>
+                <button type="button" class="btn" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+            </div>
+        </div>
 
-            <section class="hero" aria-label="Overall score and semesters">
-                <div class="score">
-                    <div class="who" id="heroWho"></div>
-                    <div class="gauge">
-                        <canvas id="cGauge" aria-label="CGPA gauge"></canvas>
-                        <div class="num"><b id="heroCgpa">-</b><span id="heroCgpaSub">CGPA out of 10</span></div>
+        {{-- ================= 4. VIEW 1: SAAS OVERVIEW (4 KEY CHARTS) ================= --}}
+        <main id="panel-overview">
+            {{-- Semester progress strip --}}
+            <div class="sem-strip-wrap" id="semStrip"></div>
+
+            {{-- 4 Core SaaS Chart Cards Grid --}}
+            <div class="overview-charts-grid">
+                {{-- Chart 1: Grade Quality Distribution --}}
+                <div class="saas-chart-card" id="anchorGrades">
+                    <div class="saas-chart-header">
+                        <h3 class="saas-chart-title"><i class="bi bi-bar-chart-fill text-primary"></i> Grade Distribution & Performance</h3>
+                        <span class="saas-chart-note">Letter grades count & share</span>
                     </div>
+                    <div class="saas-chart-body"><canvas id="cGrades"></canvas></div>
                 </div>
-                <div class="strip" id="semStrip"></div>
-            </section>
 
-            <div class="tiles" id="tiles"></div>
-
-            <div class="section"><h2>Grades and marks</h2><p>Counted attempt per subject (<span id="policyLbl"></span> attempt)</p></div>
-            <div class="grid g3">
-                <div class="card"><h3>Grade distribution</h3><p class="sub">Number of subject results per letter grade</p><div class="chart"><canvas id="cGrades"></canvas></div></div>
-                <div class="card"><h3>Grade share</h3><p class="sub">Share of results by grade</p><div class="chart"><canvas id="cGradeShare"></canvas></div></div>
-                <div class="card"><h3>Marks distribution</h3><p class="sub">Results by percentage band</p><div class="chart"><canvas id="cHist"></canvas></div></div>
-            </div>
-
-            <div class="section"><h2>Semesters and exams</h2><p>How performance moves over time</p></div>
-            <div class="grid g21">
-                <div class="card"><h3>SGPA and CGPA by semester</h3><p class="sub">Recomputed SGPA, stored SGPA (sgpa_perc) and running CGPA, with average marks</p><div class="chart tall"><canvas id="cSem"></canvas></div></div>
-                <div class="card"><h3>Division</h3><p class="sub">Latest division recorded per semester</p><div class="chart tall"><canvas id="cDivision"></canvas></div></div>
-            </div>
-            <div class="grid g2" style="margin-top:14px">
-                <div class="card"><h3>Exam sessions</h3><p class="sub">Regular and reappear results per exam month, with average marks and pass rate</p><div class="chart"><canvas id="cSessions"></canvas></div></div>
-                <div class="card"><h3>Credits by semester</h3><p class="sub">Earned versus pending credits <span id="creditNote"></span></p><div class="chart"><canvas id="cCredits"></canvas></div></div>
-            </div>
-            <div class="card" style="margin-top:14px">
-                <div class="card-head"><div><h3>Semester summary</h3><p class="sub">Click a column to sort</p></div></div>
-                <div class="tbl-wrap"><table id="tSem"></table></div>
-            </div>
-
-            <div class="section"><h2>Subjects</h2><p>Strengths, weaknesses and spread per subject code</p></div>
-            <div class="grid g2">
-                <div class="card"><h3>Average marks by subject</h3><p class="sub">Sorted high to low, coloured by pass rate</p><div class="chart tall"><canvas id="cSubjects"></canvas></div></div>
-                <div class="card"><h3>Range of marks per subject</h3><p class="sub">Lowest to highest, with the average marked</p><div class="chart tall"><canvas id="cRange"></canvas></div></div>
-            </div>
-            <div class="grid g2" style="margin-top:14px">
-                <div class="card"><h3>Subject profile</h3><p class="sub">Average, internal and external % per subject</p><div class="chart tall"><canvas id="cRadar"></canvas></div></div>
-                <div class="card"><h3>Grade points by subject</h3><p class="sub">Average grade points against credits</p><div class="chart tall"><canvas id="cGp"></canvas></div></div>
-            </div>
-            <div class="card" style="margin-top:14px">
-                <div class="card-head"><div><h3>Subject analysis</h3><p class="sub">Gap = internal % minus external %. Gaps of <span id="gapLbl"></span>+ points are highlighted.</p></div></div>
-                <div class="tbl-wrap"><table id="tSub"></table></div>
-            </div>
-
-            <div class="section"><h2>Internal and external assessment</h2><p>Formative (FA) against summative (SA) marks</p></div>
-            <div class="grid g2">
-                <div class="card"><h3>FA % versus SA % by subject</h3><p class="sub">Each component as a percentage of its maximum</p><div class="chart"><canvas id="cFaSa"></canvas></div></div>
-                <div class="card"><h3>Does internal predict external?</h3><p class="sub" id="scatterSub">Each dot is one subject result</p><div class="chart"><canvas id="cScatter"></canvas></div></div>
-            </div>
-
-            <div class="section"><h2>Reappear and improvement</h2><p id="reapLine"></p></div>
-            <div class="grid g21">
-                <div class="card"><h3>Before and after reappear</h3><p class="sub">Marks % in the earlier attempt and the reappear attempt</p><div class="chart"><canvas id="cReappear"></canvas></div></div>
-                <div class="card"><h3>Reappear outcome</h3><p class="sub">What each reappear attempt achieved</p><div class="chart"><canvas id="cReapOutcome"></canvas></div></div>
-            </div>
-            <div class="card" style="margin-top:14px">
-                <div class="tbl-wrap"><table id="tReap"></table></div>
-            </div>
-
-            <div id="cohortOnly">
-                <div class="section"><h2>Groups</h2><p>Compare programs, gender and regulation</p></div>
-                <div class="grid g2">
-                    <div class="card">
-                        <div class="card-head">
-                            <div><h3>Group comparison</h3><p class="sub">Average CGPA and pass rate</p></div>
-                            <div class="seg" id="segGroup">
-                                <button type="button" data-g="program" aria-pressed="true">Program</button>
-                                <button type="button" data-g="gender" aria-pressed="false">Gender</button>
-                                <button type="button" data-g="regulation" aria-pressed="false">Regulation</button>
-                            </div>
-                        </div>
-                        <div class="chart"><canvas id="cGroups"></canvas></div>
+                {{-- Chart 2: Semester SGPA & CGPA Growth --}}
+                <div class="saas-chart-card">
+                    <div class="saas-chart-header">
+                        <h3 class="saas-chart-title"><i class="bi bi-graph-up text-success"></i> Semester SGPA & CGPA Growth</h3>
+                        <span class="saas-chart-note">Progress trajectory over semesters</span>
                     </div>
-                    <div class="card"><h3>CGPA distribution</h3><p class="sub">Students per CGPA band</p><div class="chart"><canvas id="cCgpaDist"></canvas></div></div>
+                    <div class="saas-chart-body"><canvas id="cSem"></canvas></div>
                 </div>
 
-                <div class="section"><h2>Students</h2><p>Click a register number to open that student's report</p></div>
-                <div class="card">
-                    <div class="tbl-tools">
-                        <div class="seg" id="segStudents">
-                            <button type="button" data-v="top" aria-pressed="true">Top 10</button>
-                            <button type="button" data-v="bottom" aria-pressed="false">Bottom 10</button>
-                            <button type="button" data-v="risk" aria-pressed="false">At risk</button>
-                            <button type="button" data-v="all" aria-pressed="false">All</button>
-                        </div>
-                        <input type="search" id="stuSearch" placeholder="Search register number" aria-label="Search students">
+                {{-- Chart 3: Subject Performance Spectrum --}}
+                <div class="saas-chart-card">
+                    <div class="saas-chart-header">
+                        <h3 class="saas-chart-title"><i class="bi bi-award-fill text-warning"></i> Subject Marks & Difficulty Spectrum</h3>
+                        <span class="saas-chart-note">Average marks sorted high to low</span>
                     </div>
-                    <div class="tbl-wrap"><table id="tStu"></table></div>
+                    <div class="saas-chart-body"><canvas id="cSubjects"></canvas></div>
+                </div>
+
+                {{-- Chart 4: Internal FA vs External SA Balance --}}
+                <div class="saas-chart-card">
+                    <div class="saas-chart-header">
+                        <h3 class="saas-chart-title"><i class="bi bi-pie-chart-fill text-info"></i> Internal (FA) vs External (SA) Balance</h3>
+                        <span class="saas-chart-note">Component % & evaluation gap</span>
+                    </div>
+                    <div class="saas-chart-body"><canvas id="cFaSa"></canvas></div>
                 </div>
             </div>
 
-            <div class="section"><h2>Result records</h2><p>Every row loaded; "Counted" marks the attempt used for SGPA/CGPA</p></div>
-            <div class="card">
-                <div class="tbl-tools">
-                    <input type="search" id="recSearch" placeholder="Search register no, subject, exam or grade" aria-label="Search records" style="min-width:280px">
-                    <select id="recType" aria-label="Attempt type"><option value="">All attempts</option><option value="counted">Counted only</option><option value="reappear">Reappear only</option><option value="fail">Not cleared</option></select>
-                    <span class="muted" id="recCount"></span>
+            {{-- Deep Dive Banner --}}
+            <div class="deep-dive-callout">
+                <div class="deep-dive-callout-text">
+                    <h4><i class="bi bi-database-fill-check text-primary me-2"></i>Need Student-by-Student Marks, Backlog Lists or Raw Rows?</h4>
+                    <p>Access the detailed student roster, subject matrix, exam reappear tracking, and complete record exports.</p>
                 </div>
-                <div class="tbl-wrap"><table id="tRec"></table></div>
+                <button type="button" class="btn primary" id="btnGoDetailed">
+                    <i class="bi bi-arrow-right-circle-fill me-1"></i> Switch to Detailed View
+                </button>
             </div>
         </main>
 
-        {{-- ===================== AI ANALYTICS PANEL ===================== --}}
+        {{-- ================= 5. VIEW 2: DETAILED VIEW (DEEP DIVE SUB-TABS) ================= --}}
+        <section id="panel-detailed" hidden>
+            <div class="detailed-nav">
+                <button type="button" class="detailed-nav-btn is-active" data-sec="secStudents"><i class="bi bi-people me-1"></i> Students Roster</button>
+                <button type="button" class="detailed-nav-btn" data-sec="secSubjects"><i class="bi bi-journal-text me-1"></i> Subject Analysis Matrix</button>
+                <button type="button" class="detailed-nav-btn" data-sec="secSemesters"><i class="bi bi-calendar3 me-1"></i> Semester & Exam Summary</button>
+                <button type="button" class="detailed-nav-btn" data-sec="secReappear"><i class="bi bi-arrow-repeat me-1"></i> Reappear Tracking</button>
+                <button type="button" class="detailed-nav-btn" data-sec="secRecords"><i class="bi bi-card-list me-1"></i> Result Records</button>
+            </div>
+
+            {{-- Section A: Students Roster --}}
+            <div class="detailed-section" id="secStudents">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h3 class="h6 fw-bold mb-1"><i class="bi bi-people-fill text-primary me-2"></i>Student Performance Roster</h3>
+                        <p class="small text-muted mb-0">Click any register number to open that student's comprehensive performance report.</p>
+                    </div>
+                    <div class="tbl-tools mb-0">
+                        <div class="btn-group btn-group-sm" id="segStudents">
+                            <button type="button" class="btn btn-outline-secondary" data-v="top">Top 10</button>
+                            <button type="button" class="btn btn-outline-secondary" data-v="bottom">Bottom 10</button>
+                            <button type="button" class="btn btn-outline-secondary" data-v="risk">At Risk</button>
+                            <button type="button" class="btn btn-outline-secondary active" data-v="all">All Students</button>
+                        </div>
+                        <input type="search" id="stuSearch" placeholder="Search register number..." aria-label="Search students">
+                    </div>
+                </div>
+                <div class="tbl-wrap"><table id="tStu"></table></div>
+            </div>
+
+            {{-- Section B: Subject Analysis Matrix --}}
+            <div class="detailed-section d-none" id="secSubjects">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h3 class="h6 fw-bold mb-1"><i class="bi bi-journal-check text-warning me-2"></i>Subject Performance Analysis</h3>
+                        <p class="small text-muted mb-0">Gap = internal % minus external %. Gaps exceeding <span id="gapLbl"></span> points are flagged.</p>
+                    </div>
+                </div>
+                <div class="tbl-wrap"><table id="tSub"></table></div>
+            </div>
+
+            {{-- Section C: Semester & Exam Breakdown --}}
+            <div class="detailed-section d-none" id="secSemesters">
+                <div class="mb-3">
+                    <h3 class="h6 fw-bold mb-1"><i class="bi bi-calendar-event text-success me-2"></i>Semester Summary Breakdown</h3>
+                    <p class="small text-muted mb-0">Click column headers to sort by SGPA, pass rate, or average marks.</p>
+                </div>
+                <div class="tbl-wrap mb-4"><table id="tSem"></table></div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded bg-white dark:bg-slate-800">
+                            <h4 class="small fw-bold mb-2">Exam Sessions Breakdown</h4>
+                            <div style="height:220px"><canvas id="cSessions"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded bg-white dark:bg-slate-800">
+                            <h4 class="small fw-bold mb-2">Earned vs Registered Credits</h4>
+                            <div style="height:220px"><canvas id="cCredits"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Section D: Reappear Outcomes --}}
+            <div class="detailed-section d-none" id="secReappear">
+                <div class="mb-3">
+                    <h3 class="h6 fw-bold mb-1"><i class="bi bi-arrow-repeat text-danger me-2"></i>Reappear & Improvement Outcome Analysis</h3>
+                    <p class="small text-muted mb-0" id="reapLine">Evaluates attempt effectiveness and score changes across reappear sessions.</p>
+                </div>
+                <div class="tbl-wrap mb-3"><table id="tReap"></table></div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded bg-white dark:bg-slate-800">
+                            <h4 class="small fw-bold mb-2">Before vs After Reappear Marks %</h4>
+                            <div style="height:220px"><canvas id="cReappear"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded bg-white dark:bg-slate-800">
+                            <h4 class="small fw-bold mb-2">Reappear Attempt Outcomes</h4>
+                            <div style="height:220px"><canvas id="cReapOutcome"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Section E: Complete Result Records --}}
+            <div class="detailed-section d-none" id="secRecords">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h3 class="h6 fw-bold mb-1"><i class="bi bi-card-checklist text-info me-2"></i>Raw Result Records</h3>
+                        <p class="small text-muted mb-0">Loaded examination marks rows. Counted flag determines SGPA/CGPA calculation.</p>
+                    </div>
+                    <div class="tbl-tools mb-0">
+                        <input type="search" id="recSearch" placeholder="Search regno, subject or exam..." style="min-width:240px">
+                        <select id="recType"><option value="">All attempts</option><option value="counted">Counted only</option><option value="reappear">Reappear only</option><option value="fail">Not cleared</option></select>
+                        <span class="muted" id="recCount"></span>
+                    </div>
+                </div>
+                <div class="tbl-wrap"><table id="tRec"></table></div>
+            </div>
+        </section>
+
+        {{-- ================= 6. VIEW 3: AI ANALYTICS & AUDIT ================= --}}
         <section id="panel-ai" hidden>
             <div class="ai-head">
                 <div>
-                    <h2>AI analytics</h2>
-                    <p>Insights, projections and data checks generated from these results with statistical rules on your server. No external AI service is used and no data leaves the system.</p>
+                    <h2><i class="bi bi-stars text-warning me-2"></i>AI Perceptions & Statistical Insights</h2>
+                    <p>Automated statistical findings, data integrity checks, and projections generated on your server with rules.</p>
                 </div>
-                <span class="badge">Rule-based statistics</span>
+                <span class="badge">Server-side Analytics</span>
             </div>
 
-            <div class="grid g21">
-                <div class="card">
-                    <h3>Key insights</h3>
-                    <p class="sub">Green is a strength, amber needs watching, red needs action</p>
-                    <div id="insights"></div>
-                </div>
-                <div>
-                    <div class="card">
-                        <h3>Recommended actions</h3>
-                        <p class="sub">Derived from the insights and checks</p>
-                        <ol class="actions-list" id="actions"></ol>
+            <div class="row g-3 mb-4">
+                <div class="col-lg-7">
+                    <div class="detailed-section mb-3">
+                        <h3 class="h6 fw-bold mb-2"><i class="bi bi-lightbulb-fill text-warning me-2"></i>Key Insights</h3>
+                        <div id="insights"></div>
                     </div>
-                    <div class="card" style="margin-top:14px">
-                        <h3>SGPA projection</h3>
-                        <p class="sub" id="fcSub"></p>
-                        <div class="chart short"><canvas id="cForecast"></canvas></div>
+                    <div class="detailed-section">
+                        <h3 class="h6 fw-bold mb-2"><i class="bi bi-shield-check text-success me-2"></i>Data Integrity Checks</h3>
+                        <div id="checks"></div>
                     </div>
                 </div>
-            </div>
 
-            <div class="card" style="margin-top:14px">
-                <h3>Ask about these results</h3>
-                <p class="sub">Type a question in plain words. Answers come only from the data loaded on this page.</p>
-                <div class="ask">
-                    <input id="askInput" placeholder="e.g. Which subject is the weakest?" aria-label="Question">
-                    <button class="btn primary" type="button" id="askBtn">Ask</button>
+                <div class="col-lg-5">
+                    <div class="detailed-section">
+                        <h3 class="h6 fw-bold mb-2"><i class="bi bi-chat-square-dots-fill text-primary me-2"></i>Ask Performance Assistant</h3>
+                        <div class="ask">
+                            <input type="text" id="askInput" placeholder="e.g. Which subject is weakest? Who is at risk?">
+                            <button type="button" class="btn primary" id="askBtn">Ask</button>
+                        </div>
+                        <div class="sugg" id="sugg"></div>
+                        <div class="answer" id="answer">Answers appear here instantly.</div>
+                    </div>
                 </div>
-                <div class="sugg" id="sugg"></div>
-                <div class="answer" id="answer" aria-live="polite">Pick a suggested question or type your own.</div>
             </div>
-
-            <div class="section"><h2>Data checks</h2><p>Problems found in the stored results. Fix high-severity items before publishing.</p></div>
-            <div id="checks"></div>
-
-            <div class="section"><h2>Risk indicators</h2><p>Signals that point to students or subjects needing support</p></div>
-            <div class="grid g3" id="riskCards"></div>
         </section>
 
     @endif
-</div>
 
 @if ($kpi && empty($kpi['empty']))
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -530,19 +993,17 @@
                     line: isDark ? '#334155' : (V('--line', '#e2e8f0')),
                     line2: isDark ? 'rgba(255,255,255,0.08)' : (V('--line-2', '#edf0f6')),
                     accent: V('--accent', '#991b1b'),
-                    good: V('--good', '#0E7C66'),
-                    watch: V('--watch', '#B7791F'),
-                    risk: V('--risk', '#B42318'),
+                    good: '#10b981',
+                    watch: '#f59e0b',
+                    risk: '#ef4444',
                 };
-                const PALETTE = [C.accent, C.good, C.watch, '#6C4AB6', '#2B8CBE', C.risk, '#5B7065', '#A35C8E'];
-                const GRADE_COL = { O: '#0B5D4B', S: '#0E7C66', 'A+': '#2A9D8F', A: '#3FA796', 'B+': '#3E6FB0', B: '#4C78A8', C: '#B7791F', D: '#C2410C', E: '#9A3412', P: '#6B7280', F: '#B42318', AB: '#7A1C14' };
+                const GRADE_COL = { O: '#0B5D4B', S: '#0E7C66', 'A+': '#10b981', A: '#34d399', 'B+': '#3b82f6', B: '#60a5fa', C: '#f59e0b', D: '#ea580c', E: '#c2410c', P: '#6b7280', F: '#ef4444', AB: '#991b1b' };
                 const gradeCol = (g) => GRADE_COL[g] || '#8A93AD';
-                const passCol = (p) => (p >= 90 ? C.good : p >= 75 ? C.watch : C.risk);
                 const alpha = (hex, a) => { const h = hex.replace('#', ''); const i = parseInt(h, 16); return `rgba(${(i >> 16) & 255},${(i >> 8) & 255},${i & 255},${a})`; };
 
                 const S = K.summary, M = K.meta, isStudent = M.mode === 'student';
 
-                Chart.defaults.font.family = '"IBM Plex Sans","Segoe UI",Roboto,Arial,sans-serif';
+                Chart.defaults.font.family = '"Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, Arial, sans-serif';
                 Chart.defaults.font.size = 12;
                 Chart.defaults.color = C.ink2;
                 Chart.defaults.borderColor = C.line2;
@@ -554,406 +1015,314 @@
                 const mk = (id, cfg) => { const el = document.getElementById(id); if (!el) return; if (charts[id]) charts[id].destroy(); charts[id] = new Chart(el, cfg); };
                 const pctAxis = (title) => ({ min: 0, max: 100, title: { display: !!title, text: title }, ticks: { callback: (v) => v + '%' } });
 
-                // ---------- header ----------
-                $('#policyLbl').textContent = M.attempt_policy;
-                $('#gapLbl').textContent = M.gap_alert;
+                // Update Executive Headline & Cards
                 if (isStudent) {
                     const p = M.student;
-                    $('#scopeLine').textContent = `Student report for ${p.regno}, ${p.program}, regulation ${p.regulation}`;
-                    $('#cohortOnly').hidden = true;
+                    $('#execHeadlineTitle').textContent = `Student Standing: ${p.regno}`;
+                    $('#scopeLine').textContent = `${p.program} • Regulation ${p.regulation} • ${p.division || 'Regular'}`;
+                    $('#execScopeBadge').textContent = 'Student Report';
+                    $('#card1Label').textContent = 'Student CGPA';
+                    $('#card1Sub').textContent = p.division || 'Registered';
+                    $('#card3Sub').textContent = `${S.backlogs} backlog subject(s)`;
+                    $('#card4Val').textContent = S.records;
+                    $('#card4Sub').textContent = `${S.subjects} subjects • ${S.semesters} semesters`;
                 } else {
-                    $('#scopeLine').textContent = `Cohort view: ${S.students} students, ${S.records} result rows, ${S.sessions} exam sessions`;
+                    $('#execHeadlineTitle').textContent = `Cohort Overview: ${S.students} Students Evaluated.`;
+                    $('#scopeLine').textContent = `${S.students} Students • ${S.records} Exam Marks Rows • Average CGPA ${n(S.cgpa, 2)} • Pass Rate ${pc(S.pass_pct)}`;
+                    $('#execScopeBadge').textContent = 'Cohort Analytics';
                 }
 
-                // ---------- hero ----------
-                (function hero() {
-                    if (isStudent) {
-                        const p = M.student;
-                        $('#heroWho').innerHTML = `<strong>${esc(p.regno)}</strong>${esc(p.program)}, ${esc(p.gender)}, regulation ${esc(p.regulation)}<br>${esc(p.division || 'Division not recorded')}`;
-                    } else {
-                        $('#heroWho').innerHTML = `<strong>${S.students} students</strong>Average CGPA, median ${n(S.cgpa_median, 2)}<br>Range ${n(S.cgpa_min, 2)} to ${n(S.cgpa_max, 2)}`;
-                    }
-                    $('#heroCgpa').textContent = n(S.cgpa, 2);
-                    $('#heroCgpaSub').textContent = isStudent ? 'CGPA out of 10 (recomputed)' : 'Average CGPA out of 10';
-                    const cg = Math.max(0, Math.min(10, S.cgpa || 0));
-                    mk('cGauge', {
-                        type: 'doughnut',
-                        data: { datasets: [{ data: [cg, 10 - cg], backgroundColor: [cg >= 7.5 ? C.good : cg >= 6 ? C.watch : C.risk, C.line2], borderWidth: 0 }] },
-                        options: { rotation: -90, circumference: 180, cutout: '78%', plugins: { legend: { display: false }, tooltip: { enabled: false } } },
-                    });
-
-                    const strip = $('#semStrip');
-                    const stuSems = isStudent && K.students.length ? K.students[0].sems : null;
-                    strip.innerHTML = K.semesters.map((s, i) => {
-                        const prev = i ? K.semesters[i - 1].sgpa : null;
-                        const d = isNum(prev) && isNum(s.sgpa) ? s.sgpa - prev : null;
-                        const dHtml = d === null ? '<span class="delta flat">First semester</span>'
-                            : `<span class="delta ${d > 0.05 ? 'up' : d < -0.05 ? 'down' : 'flat'}">${d > 0.05 ? '▲' : d < -0.05 ? '▼' : '■'} ${d >= 0 ? '+' : ''}${n(d, 2)}</span>`;
-                        const off = isNum(s.sgpa_reported) && Math.abs(s.sgpa_reported - s.sgpa) > 0.05;
-                        const stored = isNum(s.sgpa_reported) ? `<span class="stored ${off ? 'off' : ''}">Stored SGPA ${n(s.sgpa_reported, 2)}${off ? ' (differs)' : ''}</span>` : '<span class="stored">No stored SGPA</span>';
-                        let foot;
-                        if (isStudent) {
-                            const subs = K.records.filter((r) => r.counted && r.sem === s.label);
-                            foot = `<div class="chips">${subs.map((r) => `<span class="chip" title="${esc(r.subcode)}: ${n(r.pct)}%" style="background:${gradeCol(r.grade)}">${esc(r.grade)}</span>`).join('')}</div>`;
-                        } else {
-                            foot = `<div class="muted">Pass ${pc(s.pass_pct)}</div><div class="meter"><i style="width:${s.pass_pct || 0}%;background:${passCol(s.pass_pct)}"></i></div>`;
-                        }
-                        return `<div class="sem"><div class="lbl"><span>${esc(s.label)}</span><span>${pc(s.avg_pct)}</span></div>
-        <div class="val">${n(s.sgpa, 2)}</div>${dHtml}${stored}${foot}</div>`;
+                // Render Semester Strip
+                (function renderSemStrip() {
+                    const semWrap = $('#semStrip');
+                    if (!semWrap) return;
+                    semWrap.innerHTML = K.semesters.map((s) => {
+                        const d = s.delta;
+                        const dHtml = isNum(d) ? `<div class="sem-card-delta ${d > 0 ? 'text-success' : d < 0 ? 'text-danger' : 'text-muted'}">${d > 0 ? '▲ +' : d < 0 ? '▼ ' : '— '}${n(Math.abs(d), 2)}</div>` : '';
+                        return `<div class="sem-card">
+                            <div class="sem-card-lbl"><span>${esc(s.label)}</span><span class="text-muted">${pc(s.avg_pct)}</span></div>
+                            <div class="sem-card-val">${n(s.sgpa, 2)}</div>
+                            ${dHtml}
+                            <div class="sem-card-sub">${s.pass_pct !== undefined ? `Pass: ${pc(s.pass_pct)}` : 'SGPA'}</div>
+                        </div>`;
                     }).join('');
                 })();
 
-                // ---------- KPI tiles ----------
-                (function tiles() {
-                    const t = [];
-                    const tile = (cls, k, v, s, meter) => t.push(`<div class="tile ${cls}"><div class="k">${k}</div><div class="v">${v}</div>${meter !== undefined ? `<div class="meter"><i style="width:${Math.max(0, Math.min(100, meter || 0))}%;background:${cls === 'risk' ? C.risk : cls === 'watch' ? C.watch : C.good}"></i></div>` : ''}<div class="s">${s}</div></div>`);
-                    const lvl = (v, g, w) => (v >= g ? 'good' : v >= w ? 'watch' : 'risk');
-
-                    tile(lvl(S.avg_pct, 75, 60), 'Average marks', pc(S.avg_pct), `Median ${pc(S.median_pct)}, spread ±${n(S.std_pct)}`);
-                    tile(lvl(S.pass_pct, 95, 80), 'Pass rate', pc(S.pass_pct), `First-attempt pass ${pc(S.first_attempt_pass_pct)}`, S.pass_pct);
-                    tile(lvl(S.credit_completion_pct, 100, 85), 'Credits earned', `${n(S.credits_earned, 0)} / ${n(S.credits_registered, 0)}`, `${pc(S.credit_completion_pct)} completed`, S.credit_completion_pct);
-                    tile(S.backlogs ? 'risk' : 'good', 'Pending backlogs', S.backlogs, isStudent ? (S.backlogs ? 'Subjects still to clear' : 'All subjects cleared') : `${S.students_with_backlog} students affected`);
-                    tile(S.fa_sa_gap >= M.gap_alert ? 'risk' : S.fa_sa_gap >= 10 ? 'watch' : 'good', 'Internal vs external', `${pc(S.fa_pct, 0)} / ${pc(S.sa_pct, 0)}`, `Gap ${n(S.fa_sa_gap)} points`);
-                    tile('info', 'Top grades', pc(S.top_grade_pct), `Results with 9+ grade points; average GP ${n(S.avg_grade_points, 2)}`, S.top_grade_pct);
-                    const sDiff = isNum(S.avg_sgpa_reported) && isNum(S.cgpa) ? S.avg_sgpa_reported - S.cgpa : null;
-                    tile(sDiff !== null && Math.abs(sDiff) > 0.05 ? 'watch' : 'info', 'Stored SGPA (average)', n(S.avg_sgpa_reported, 2), 'From sgpa_perc; compare with recomputed CGPA ' + n(S.cgpa, 2));
-                    tile(S.distinction_pct >= 50 ? 'good' : 'info', 'Distinction', isStudent ? (S.distinction_students ? 'Yes' : 'No') : pc(S.distinction_pct), isStudent ? 'Latest division' : `${S.distinction_students} students`);
-                    tile(S.reappear_attempts ? 'watch' : 'good', 'Reappear attempts', S.reappear_attempts, isNum(S.reappear_avg_gain) ? `Average change ${n(S.reappear_avg_gain)} points` : 'No reappear attempts');
-                    if (isStudent) {
-                        tile('good', 'Strongest subject', esc(S.best_subject ? S.best_subject.code : '–'), S.best_subject ? `${pc(S.best_subject.pct)} average` : '');
-                        tile('watch', 'Weakest subject', esc(S.weakest_subject ? S.weakest_subject.code : '–'), S.weakest_subject ? `${pc(S.weakest_subject.pct)} average` : '');
-                    } else {
-                        tile(S.at_risk_students ? 'risk' : 'good', 'Students at risk', S.at_risk_students, `Backlog, CGPA < ${M.risk_cgpa} or a falling SGPA`);
-                        tile('info', 'Students with no backlog', pc(S.all_clear_pct), `${S.students - S.students_with_backlog} of ${S.students}`, S.all_clear_pct);
-                    }
-                    tile('info', 'Coverage', `${S.subjects} subjects`, `${S.semesters} semesters, ${S.sessions} exam sessions, ${S.records} rows`);
-                    tile(S.quality_issues ? 'risk' : 'good', 'Data checks', S.quality_issues ? `${S.quality_issues} flags` : 'Clean', S.quality_issues ? '<a href="#" id="goChecks">Review in AI analytics</a>' : 'No problems found');
-                    $('#tiles').innerHTML = t.join('');
-                    const go = $('#goChecks');
-                    if (go) go.addEventListener('click', (e) => { e.preventDefault(); showPanel('ai'); setTimeout(() => $('#checks').scrollIntoView({ behavior: 'smooth' }), 50); });
-                })();
-
-                // ---------- KPI charts ----------
-                function kpiCharts() {
+                // ================= PRIMARY SAAS CHARTS =================
+                function initOverviewCharts() {
                     const G = K.grades;
-                    mk('cGrades', { type: 'bar', data: { labels: G.map((g) => g.grade), datasets: [{ label: 'Results', data: G.map((g) => g.count), backgroundColor: G.map((g) => gradeCol(g.grade)), borderRadius: 4 }] },
-                        options: { plugins: { legend: { display: false }, tooltip: { callbacks: { afterLabel: (c) => `Share ${G[c.dataIndex].share}%, avg GP ${G[c.dataIndex].avg_gp}` } } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
-                    mk('cGradeShare', { type: 'doughnut', data: { labels: G.map((g) => g.grade), datasets: [{ data: G.map((g) => g.count), backgroundColor: G.map((g) => gradeCol(g.grade)), borderWidth: 2, borderColor: '#fff' }] },
-                        options: { cutout: '58%', plugins: { legend: { position: 'right' } } } });
-                    mk('cHist', { type: 'bar', data: { labels: K.histogram.map((h) => h.label + '%'), datasets: [{ label: 'Results', data: K.histogram.map((h) => h.count), backgroundColor: K.histogram.map((h, i) => (i === 0 ? C.risk : i < 3 ? C.watch : i < 5 ? C.accent : C.good)), borderRadius: 4 }] },
-                        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+                    // 1. Grade Quality Distribution
+                    mk('cGrades', {
+                        type: 'bar',
+                        data: {
+                            labels: G.map((g) => g.grade),
+                            datasets: [{
+                                label: 'Results Count',
+                                data: G.map((g) => g.count),
+                                backgroundColor: G.map((g) => gradeCol(g.grade)),
+                                borderRadius: 6
+                            }]
+                        },
+                        options: {
+                            animation: { duration: 750, easing: 'easeOutQuart' },
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: { callbacks: { afterLabel: (c) => `Share: ${G[c.dataIndex].share}% (Avg GP: ${G[c.dataIndex].avg_gp})` } }
+                            },
+                            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                        }
+                    });
 
+                    // 2. Semester Growth Trajectory
                     const Sm = K.semesters;
                     mk('cSem', {
                         data: {
                             labels: Sm.map((s) => s.label),
                             datasets: [
-                                { type: 'line', label: 'SGPA (recomputed)', data: Sm.map((s) => s.sgpa), borderColor: C.accent, backgroundColor: C.accent, tension: 0.25, yAxisID: 'g', pointRadius: 4 },
-                                { type: 'line', label: 'SGPA (stored)', data: Sm.map((s) => s.sgpa_reported), borderColor: C.watch, backgroundColor: C.watch, borderDash: [5, 4], tension: 0.25, yAxisID: 'g', pointRadius: 4 },
-                                { type: 'line', label: 'CGPA (running)', data: Sm.map((s) => s.cgpa_running), borderColor: C.good, backgroundColor: C.good, tension: 0.25, yAxisID: 'g', pointRadius: 4 },
-                                { type: 'bar', label: 'Average marks %', data: Sm.map((s) => s.avg_pct), backgroundColor: alpha(C.ink3, 0.18), borderRadius: 4, yAxisID: 'p' },
+                                { type: 'line', label: 'SGPA (recomputed)', data: Sm.map((s) => s.sgpa), borderColor: '#2563eb', backgroundColor: alpha('#2563eb', 0.1), fill: true, tension: 0.3, yAxisID: 'g', pointRadius: 5 },
+                                { type: 'line', label: 'CGPA (running)', data: Sm.map((s) => s.cgpa_running), borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.3, yAxisID: 'g', pointRadius: 4 },
+                                { type: 'bar', label: 'Avg Marks %', data: Sm.map((s) => s.avg_pct), backgroundColor: alpha(C.ink3, 0.18), borderRadius: 4, yAxisID: 'p' },
                             ],
                         },
-                        options: { interaction: { mode: 'index', intersect: false }, scales: { g: { position: 'left', min: 0, max: 10, title: { display: true, text: 'Grade points' } }, p: { position: 'right', ...pctAxis('Marks %'), grid: { display: false } } } },
+                        options: {
+                            animation: { duration: 750 },
+                            interaction: { mode: 'index', intersect: false },
+                            scales: {
+                                g: { position: 'left', min: 0, max: 10, title: { display: true, text: 'Grade points' } },
+                                p: { position: 'right', ...pctAxis('Marks %'), grid: { display: false } }
+                            }
+                        },
                     });
-                    const D = K.divisions;
-                    mk('cDivision', { type: 'doughnut', data: { labels: D.map((d) => d.division), datasets: [{ data: D.map((d) => d.count), backgroundColor: D.map((d, i) => (/DISTINCTION/i.test(d.division) ? C.good : /FIRST/i.test(d.division) ? C.accent : /SECOND/i.test(d.division) ? C.watch : /FAIL|PROMOTED|THIRD|PASS/i.test(d.division) ? C.risk : PALETTE[i % PALETTE.length])), borderWidth: 2, borderColor: '#fff' }] },
-                        options: { cutout: '55%', plugins: { legend: { position: 'bottom' } } } });
 
+                    // 3. Subject Performance Spectrum
+                    const topSubs = K.subjects.slice(0, 10);
+                    mk('cSubjects', {
+                        type: 'bar',
+                        data: {
+                            labels: topSubs.map((s) => s.subcode),
+                            datasets: [{
+                                label: 'Average Marks %',
+                                data: topSubs.map((s) => s.avg_pct),
+                                backgroundColor: topSubs.map((s) => s.pass_pct >= 90 ? '#10b981' : s.pass_pct >= 75 ? '#f59e0b' : '#ef4444'),
+                                borderRadius: 5
+                            }]
+                        },
+                        options: {
+                            animation: { duration: 750 },
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: { callbacks: { afterLabel: (c) => `Pass rate: ${pc(topSubs[c.dataIndex].pass_pct)} (${topSubs[c.dataIndex].results} results)` } }
+                            },
+                            scales: { y: pctAxis() }
+                        }
+                    });
+
+                    // 4. FA vs SA Component Balance
+                    mk('cFaSa', {
+                        type: 'bar',
+                        data: {
+                            labels: topSubs.map((s) => s.subcode),
+                            datasets: [
+                                { label: 'Internal (FA) %', data: topSubs.map((s) => s.fa_pct), backgroundColor: '#3b82f6', borderRadius: 4 },
+                                { label: 'External (SA) %', data: topSubs.map((s) => s.sa_pct), backgroundColor: '#8b5cf6', borderRadius: 4 },
+                            ]
+                        },
+                        options: {
+                            animation: { duration: 750 },
+                            scales: { y: pctAxis() },
+                            plugins: { legend: { position: 'top' } }
+                        }
+                    });
+                }
+
+                // ================= DETAILED VIEW CHARTS =================
+                function initDetailedCharts() {
                     const Se = K.sessions;
                     mk('cSessions', {
                         data: {
                             labels: Se.map((s) => s.exam),
                             datasets: [
-                                { type: 'bar', label: 'Regular', data: Se.map((s) => s.regular), backgroundColor: C.accent, stack: 'n', yAxisID: 'n', borderRadius: 3 },
-                                { type: 'bar', label: 'Reappear', data: Se.map((s) => s.reappear), backgroundColor: C.watch, stack: 'n', yAxisID: 'n', borderRadius: 3 },
-                                { type: 'line', label: 'Average marks %', data: Se.map((s) => s.avg_pct), borderColor: C.good, backgroundColor: C.good, yAxisID: 'p', tension: 0.25 },
-                                { type: 'line', label: 'Pass %', data: Se.map((s) => s.pass_pct), borderColor: C.risk, backgroundColor: C.risk, borderDash: [4, 4], yAxisID: 'p', tension: 0.25 },
+                                { type: 'bar', label: 'Regular', data: Se.map((s) => s.regular), backgroundColor: '#3b82f6', stack: 'n', borderRadius: 3 },
+                                { type: 'bar', label: 'Reappear', data: Se.map((s) => s.reappear), backgroundColor: '#f59e0b', stack: 'n', borderRadius: 3 },
                             ],
                         },
-                        options: { interaction: { mode: 'index', intersect: false }, scales: { n: { stacked: true, beginAtZero: true, title: { display: true, text: 'Results' }, ticks: { precision: 0 } }, p: { position: 'right', ...pctAxis(), grid: { display: false } }, x: { stacked: true } } },
+                        options: { scales: { y: { beginAtZero: true } } }
                     });
-                    $('#creditNote').textContent = isStudent ? '' : '(average per student)';
+
+                    const Sm = K.semesters;
                     mk('cCredits', {
                         type: 'bar',
-                        data: { labels: Sm.map((s) => s.label), datasets: [
-                                { label: 'Earned', data: Sm.map((s) => s.credits_earned_avg), backgroundColor: C.good, borderRadius: 3 },
-                                { label: 'Pending', data: Sm.map((s) => Math.max(0, (s.credits_reg_avg || 0) - (s.credits_earned_avg || 0))), backgroundColor: C.risk, borderRadius: 3 },
-                            ] },
-                        options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Credits' } } } },
+                        data: {
+                            labels: Sm.map((s) => s.label),
+                            datasets: [
+                                { label: 'Credits Earned', data: Sm.map((s) => s.credits_earned_avg), backgroundColor: '#10b981', borderRadius: 3 },
+                                { label: 'Registered', data: Sm.map((s) => s.credits_reg_avg), backgroundColor: alpha('#94a3b8', 0.25), borderRadius: 3 },
+                            ]
+                        },
+                        options: { scales: { y: { beginAtZero: true } } }
                     });
 
-                    const Sb = K.subjects;
-                    mk('cSubjects', { type: 'bar', data: { labels: Sb.map((s) => s.subcode), datasets: [{ label: 'Average %', data: Sb.map((s) => s.avg_pct), backgroundColor: Sb.map((s) => passCol(s.pass_pct)), borderRadius: 3 }] },
-                        options: { indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { callbacks: { afterLabel: (c) => `Pass ${Sb[c.dataIndex].pass_pct}%, ${Sb[c.dataIndex].results} results` } } }, scales: { x: pctAxis() } } });
-                    mk('cRange', {
-                        data: { labels: Sb.map((s) => s.subcode), datasets: [
-                                { type: 'bar', label: 'Lowest to highest', data: Sb.map((s) => [s.min_pct, s.max_pct]), backgroundColor: alpha(C.accent, 0.25), borderColor: C.accent, borderWidth: 1, borderSkipped: false, borderRadius: 3 },
-                                { type: 'line', label: 'Average', data: Sb.map((s) => s.avg_pct), showLine: false, borderColor: C.ink, backgroundColor: C.ink, pointStyle: 'rectRot', pointRadius: 6 },
-                            ] },
-                        options: { scales: { y: pctAxis() }, plugins: { tooltip: { callbacks: { label: (c) => (Array.isArray(c.raw) ? `Range ${c.raw[0]}% to ${c.raw[1]}%` : `Average ${c.raw}%`) } } } },
-                    });
-                    mk('cRadar', {
-                        type: 'radar',
-                        data: { labels: Sb.map((s) => s.subcode), datasets: [
-                                { label: 'Average %', data: Sb.map((s) => s.avg_pct), borderColor: C.accent, backgroundColor: alpha(C.accent, 0.15) },
-                                { label: 'Internal (FA) %', data: Sb.map((s) => s.fa_pct), borderColor: C.good, backgroundColor: alpha(C.good, 0.08) },
-                                { label: 'External (SA) %', data: Sb.map((s) => s.sa_pct), borderColor: C.watch, backgroundColor: alpha(C.watch, 0.08) },
-                            ] },
-                        options: { scales: { r: { min: 0, max: 100, ticks: { stepSize: 20, backdropColor: 'transparent' }, grid: { color: C.line }, angleLines: { color: C.line } } } },
-                    });
-                    mk('cGp', {
-                        data: { labels: Sb.map((s) => s.subcode), datasets: [
-                                { type: 'bar', label: 'Average grade points', data: Sb.map((s) => s.avg_gp), backgroundColor: Sb.map((s) => (s.avg_gp >= 8 ? C.good : s.avg_gp >= 6 ? C.accent : C.risk)), borderRadius: 3, yAxisID: 'g' },
-                                { type: 'line', label: 'Credits', data: Sb.map((s) => s.credits), borderColor: C.ink3, backgroundColor: C.ink3, yAxisID: 'c', showLine: false, pointRadius: 5, pointStyle: 'triangle' },
-                            ] },
-                        options: { scales: { g: { min: 0, max: 10, title: { display: true, text: 'Grade points' } }, c: { position: 'right', beginAtZero: true, grid: { display: false }, title: { display: true, text: 'Credits' } } } },
-                    });
-                    mk('cFaSa', {
-                        type: 'bar',
-                        data: { labels: Sb.map((s) => s.subcode), datasets: [
-                                { label: 'Internal (FA) %', data: Sb.map((s) => s.fa_pct), backgroundColor: C.good, borderRadius: 3 },
-                                { label: 'External (SA) %', data: Sb.map((s) => s.sa_pct), backgroundColor: C.watch, borderRadius: 3 },
-                            ] },
-                        options: { scales: { y: pctAxis() }, plugins: { tooltip: { callbacks: { afterBody: (it) => `Gap ${Sb[it[0].dataIndex].gap} points` } } } },
-                    });
-                    const P = K.scatter.points;
-                    $('#scatterSub').textContent = `Each dot is one subject result. Correlation r = ${n(K.scatter.r, 2)}; dots on the dashed line score the same internally and externally.`;
-                    mk('cScatter', {
-                        type: 'scatter',
-                        data: { datasets: [
-                                { label: 'Results', data: P, backgroundColor: P.map((p) => (p.x - p.y >= M.gap_alert ? C.risk : alpha(C.accent, 0.6))), pointRadius: 5 },
-                                { label: 'Equal', type: 'line', data: [{ x: 0, y: 0 }, { x: 100, y: 100 }], borderColor: C.ink3, borderDash: [4, 4], pointRadius: 0, borderWidth: 1 },
-                            ] },
-                        options: { plugins: { legend: { display: false }, tooltip: { filter: (i) => i.datasetIndex === 0, callbacks: { label: (c) => (c.raw.s ? `${c.raw.s}${isStudent ? '' : ' (' + c.raw.g + ')'}: FA ${c.raw.x}%, SA ${c.raw.y}%` : '') } } }, scales: { x: { ...pctAxis('Internal (FA) %') }, y: { ...pctAxis('External (SA) %') } } },
-                    });
-
-                    const R = K.reappear, RR = R.rows.slice(0, 30);
-                    $('#reapLine').textContent = R.summary.attempts
-                        ? `${R.summary.attempts} reappear attempts: ${R.summary.backlogs_cleared} cleared a backlog, ${R.summary.improvement_only} improvement, ${R.summary.still_pending} still pending`
-                        : 'No reappear attempts in these results';
-                    mk('cReappear', {
-                        type: 'bar',
-                        data: { labels: RR.map((r) => (isStudent ? r.subcode : `${r.regno} ${r.subcode}`)), datasets: [
-                                { label: 'Earlier attempt %', data: RR.map((r) => r.before_pct), backgroundColor: alpha(C.ink3, 0.5), borderRadius: 3 },
-                                { label: 'Reappear %', data: RR.map((r) => r.after_pct), backgroundColor: RR.map((r) => (r.gain > 0 ? C.good : r.gain < 0 ? C.risk : C.watch)), borderRadius: 3 },
-                            ] },
-                        options: { scales: { y: pctAxis() } },
-                    });
-                    const ro = R.summary;
-                    mk('cReapOutcome', {
-                        type: 'doughnut',
-                        data: { labels: ['Backlog cleared', 'Improvement', 'Still pending', 'Identical to earlier'], datasets: [{ data: [ro.backlogs_cleared, ro.improvement_only, ro.still_pending, ro.identical], backgroundColor: [C.good, C.accent, C.risk, C.watch], borderWidth: 2, borderColor: '#fff' }] },
-                        options: { cutout: '55%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { footer: () => 'Identical attempts are also counted in their own outcome' } } } },
-                    });
-
-                    if (!isStudent) { groupChart('program'); cgpaDist(); }
+                    const R = K.reappear.rows.slice(0, 15);
+                    if (R.length) {
+                        mk('cReappear', {
+                            type: 'bar',
+                            data: {
+                                labels: R.map((r) => `${r.regno.slice(-6)} ${r.subcode}`),
+                                datasets: [
+                                    { label: 'Earlier %', data: R.map((r) => r.before_pct), backgroundColor: '#94a3b8', borderRadius: 3 },
+                                    { label: 'Reappear %', data: R.map((r) => r.after_pct), backgroundColor: '#3b82f6', borderRadius: 3 },
+                                ]
+                            },
+                            options: { scales: { y: pctAxis() } }
+                        });
+                        const outcomes = {};
+                        K.reappear.rows.forEach(r => outcomes[r.kind] = (outcomes[r.kind] || 0) + 1);
+                        mk('cReapOutcome', {
+                            type: 'doughnut',
+                            data: {
+                                labels: Object.keys(outcomes),
+                                datasets: [{ data: Object.values(outcomes), backgroundColor: ['#10b981', '#3b82f6', '#ef4444', '#f59e0b'] }]
+                            },
+                            options: { cutout: '60%' }
+                        });
+                    }
                 }
 
-                function groupChart(key) {
-                    const Gp = K.groups[key] || [];
-                    mk('cGroups', {
-                        data: { labels: Gp.map((g) => `${g.name} (${g.students})`), datasets: [
-                                { type: 'bar', label: 'Average CGPA', data: Gp.map((g) => g.avg_cgpa), backgroundColor: Gp.map((_, i) => PALETTE[i % PALETTE.length]), borderRadius: 4, yAxisID: 'g' },
-                                { type: 'line', label: 'Pass %', data: Gp.map((g) => g.pass_pct), borderColor: C.risk, backgroundColor: C.risk, yAxisID: 'p', showLine: false, pointRadius: 6 },
-                            ] },
-                        options: { scales: { g: { min: 0, max: 10, title: { display: true, text: 'CGPA' } }, p: { position: 'right', ...pctAxis(), grid: { display: false } } } },
-                    });
-                }
-                function cgpaDist() {
-                    const bins = [[0, 5, '< 5'], [5, 6, '5–6'], [6, 7, '6–7'], [7, 8, '7–8'], [8, 9, '8–9'], [9, 10.01, '9–10']];
-                    const counts = bins.map(([lo, hi]) => K.students.filter((s) => isNum(s.cgpa) && s.cgpa >= lo && s.cgpa < hi).length);
-                    mk('cCgpaDist', { type: 'bar', data: { labels: bins.map((b) => b[2]), datasets: [{ label: 'Students', data: counts, backgroundColor: [C.risk, C.risk, C.watch, C.accent, C.good, C.good], borderRadius: 4 }] },
-                        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
-                }
-
-                // ---------- sortable tables ----------
-                function table(id, cols, rows, opts = {}) {
-                    const el = document.getElementById(id);
-                    let sortKey = opts.sortKey || null, dir = opts.dir || -1;
-                    const draw = () => {
-                        let data = rows.slice();
-                        if (sortKey) {
-                            data.sort((a, b) => {
-                                const x = a[sortKey], y = b[sortKey];
-                                if (isNum(x) && isNum(y)) return (x - y) * dir;
-                                return String(x ?? '').localeCompare(String(y ?? '')) * dir;
-                            });
-                        }
-                        const limit = opts.limit || 500;
-                        el.innerHTML = `<thead><tr>${cols.map((c) => `<th data-sort="${c.k}" class="${c.num ? 'num' : ''} ${sortKey === c.k ? (dir > 0 ? 'asc' : 'desc') : ''}">${c.t}</th>`).join('')}</tr></thead>
-        <tbody>${data.slice(0, limit).map((r) => `<tr>${cols.map((c) => `<td class="${c.num ? 'num' : ''}">${c.f ? c.f(r[c.k], r) : esc(r[c.k] ?? '–')}</td>`).join('')}</tr>`).join('')}
-        ${data.length === 0 ? `<tr><td colspan="${cols.length}" class="muted">No rows</td></tr>` : ''}</tbody>`;
-                        el.querySelectorAll('th').forEach((th) => th.addEventListener('click', () => {
-                            const k = th.dataset.sort; dir = sortKey === k ? -dir : -1; sortKey = k; draw();
-                        }));
-                        if (opts.after) opts.after(data);
-                    };
-                    draw();
-                    return { set: (r) => { rows = r; draw(); } };
-                }
-                const badge = (txt, cls) => `<span class="badge ${cls}">${esc(txt)}</span>`;
-
-                function kpiTables() {
+                // ================= TABLES =================
+                function initTables() {
                     table('tSem', [
                         { k: 'label', t: 'Semester' }, { k: 'students', t: 'Students', num: 1 }, { k: 'subject_results', t: 'Results', num: 1 },
                         { k: 'sgpa', t: 'SGPA (recomputed)', num: 1, f: (v) => n(v, 2) },
                         { k: 'sgpa_reported', t: 'SGPA (stored)', num: 1, f: (v, r) => (isNum(v) && Math.abs(v - r.sgpa) > 0.05 ? badge(n(v, 2), 'risk') : n(v, 2)) },
-                        { k: 'cgpa_running', t: 'CGPA so far', num: 1, f: (v) => n(v, 2) },
+                        { k: 'cgpa_running', t: 'CGPA Running', num: 1, f: (v) => n(v, 2) },
                         { k: 'avg_pct', t: 'Avg %', num: 1, f: (v) => pc(v) }, { k: 'fa_pct', t: 'FA %', num: 1, f: (v) => pc(v) }, { k: 'sa_pct', t: 'SA %', num: 1, f: (v) => pc(v) },
                         { k: 'pass_pct', t: 'Pass %', num: 1, f: (v) => badge(pc(v), v >= 95 ? 'good' : v >= 80 ? 'watch' : 'risk') },
-                        { k: 'credits_earned_avg', t: 'Credits earned', num: 1, f: (v, r) => `${n(v, 0)} / ${n(r.credits_reg_avg, 0)}` },
+                        { k: 'credits_earned_avg', t: 'Credits Earned', num: 1, f: (v, r) => `${n(v, 0)} / ${n(r.credits_reg_avg, 0)}` },
                     ], K.semesters, { sortKey: 'label', dir: 1 });
 
                     table('tSub', [
                         { k: 'subcode', t: 'Subject' }, { k: 'semesters', t: 'Semester' }, { k: 'results', t: 'Results', num: 1 }, { k: 'attempts', t: 'Attempts', num: 1 },
                         { k: 'reappears', t: 'Reappears', num: 1 }, { k: 'credits', t: 'Credits', num: 1 },
                         { k: 'avg_pct', t: 'Avg %', num: 1, f: (v) => pc(v) }, { k: 'min_pct', t: 'Min %', num: 1, f: (v) => pc(v) }, { k: 'max_pct', t: 'Max %', num: 1, f: (v) => pc(v) },
-                        { k: 'std_pct', t: 'Spread', num: 1, f: (v) => n(v) },
-                        { k: 'fa_pct', t: 'FA %', num: 1, f: (v) => pc(v) }, { k: 'sa_pct', t: 'SA %', num: 1, f: (v) => pc(v) },
                         { k: 'gap', t: 'Gap', num: 1, f: (v) => (isNum(v) && v >= M.gap_alert ? badge(n(v), 'risk') : isNum(v) && v >= 10 ? badge(n(v), 'watch') : n(v)) },
-                        { k: 'avg_gp', t: 'Avg GP', num: 1, f: (v) => n(v, 2) },
                         { k: 'pass_pct', t: 'Pass %', num: 1, f: (v) => badge(pc(v), v >= 95 ? 'good' : v >= 80 ? 'watch' : 'risk') },
                     ], K.subjects, { sortKey: 'avg_pct' });
 
                     table('tReap', [
-                        { k: 'regno', t: 'Register no' }, { k: 'subcode', t: 'Subject' }, { k: 'semester', t: 'Semester' },
-                        { k: 'before_exam', t: 'Earlier exam' }, { k: 'before_pct', t: 'Earlier %', num: 1, f: (v) => pc(v) }, { k: 'before_grade', t: 'Grade' },
-                        { k: 'after_exam', t: 'Reappear exam' }, { k: 'after_pct', t: 'Reappear %', num: 1, f: (v) => pc(v) }, { k: 'after_grade', t: 'Grade' },
-                        { k: 'gain', t: 'Change', num: 1, f: (v) => `<span class="${v > 0 ? 'up' : v < 0 ? 'down' : 'flat'}">${v > 0 ? '+' : ''}${n(v)}</span>` },
+                        { k: 'regno', t: 'Register No' }, { k: 'subcode', t: 'Subject' }, { k: 'semester', t: 'Semester' },
+                        { k: 'before_exam', t: 'Earlier Exam' }, { k: 'before_pct', t: 'Earlier %', num: 1, f: (v) => pc(v) },
+                        { k: 'after_exam', t: 'Reappear Exam' }, { k: 'after_pct', t: 'Reappear %', num: 1, f: (v) => pc(v) },
+                        { k: 'gain', t: 'Change', num: 1, f: (v) => `<span class="${v > 0 ? 'up fw-bold' : v < 0 ? 'down fw-bold' : 'flat'}">${v > 0 ? '+' : ''}${n(v)}</span>` },
                         { k: 'kind', t: 'Outcome', f: (v) => badge(v, v === 'Backlog cleared' ? 'good' : v === 'Still pending' ? 'risk' : 'info') },
-                        { k: 'identical', t: 'Check', f: (v) => (v ? badge('Identical to earlier', 'watch') : '') },
                     ], K.reappear.rows, { sortKey: 'regno', dir: 1 });
 
-                    // records
-                    const recCols = [
-                        { k: 'regno', t: 'Register no' }, { k: 'sem', t: 'Sem' }, { k: 'exam', t: 'Exam' }, { k: 'type', t: 'Type', f: (v) => badge(v, v === 'REGULAR' ? 'muted' : 'watch') },
-                        { k: 'subcode', t: 'Subject' }, { k: 'fa', t: 'FA', num: 1, f: (v, r) => `${n(v, 0)}/${n(r.fa_c, 0)}` }, { k: 'sa', t: 'SA', num: 1, f: (v, r) => `${n(v, 0)}/${n(r.sa_c, 0)}` },
-                        { k: 'total', t: 'Total', num: 1, f: (v, r) => `${n(v, 0)}/${n(r.total_c, 0)}` }, { k: 'pct', t: '%', num: 1, f: (v) => n(v) },
-                        { k: 'grade', t: 'Grade', f: (v) => `<span class="chip" style="background:${gradeCol(v)}">${esc(v)}</span>` }, { k: 'gp', t: 'GP', num: 1 },
-                        { k: 'credits', t: 'Credits', num: 1 }, { k: 'sgpa', t: 'Stored SGPA', num: 1, f: (v) => n(v, 2) }, { k: 'division', t: 'Division' },
-                        { k: 'counted', t: 'Status', f: (v, r) => (r.passed ? '' : badge('Not cleared', 'risk') + ' ') + (v ? badge('Counted', 'good') : badge('Superseded', 'muted')) },
-                    ];
-                    const recT = table('tRec', recCols, K.records, { limit: 400, after: (d) => { $('#recCount').textContent = `${d.length} rows${d.length > 400 ? ', showing first 400' : ''}${M.row_count > K.records.length ? ` (of ${M.row_count} loaded)` : ''}`; } });
-                    const filterRec = () => {
-                        const q = $('#recSearch').value.trim().toLowerCase(), t = $('#recType').value;
-                        recT.set(K.records.filter((r) => (!q || [r.regno, r.subcode, r.exam, r.grade, r.sem, r.type].join(' ').toLowerCase().includes(q))
-                            && (!t || (t === 'counted' && r.counted) || (t === 'reappear' && r.type !== 'REGULAR') || (t === 'fail' && !r.passed))));
-                    };
-                    $('#recSearch').addEventListener('input', filterRec);
-                    $('#recType').addEventListener('change', filterRec);
-
-                    if (!isStudent) {
-                        const base = location.pathname;
+                    if (!isStudent && K.students) {
                         const stuCols = [
-                            { k: 'regno', t: 'Register no', f: (v) => `<a href="${base}?regno=${encodeURIComponent(v)}">${esc(v)}</a>` }, { k: 'program', t: 'Program' }, { k: 'gender', t: 'Gender' },
-                            { k: 'cgpa', t: 'CGPA', num: 1, f: (v) => n(v, 2) }, { k: 'avg_pct', t: 'Avg %', num: 1, f: (v) => pc(v) },
+                            { k: 'regno', t: 'Register No', f: (v) => `<a href="${location.pathname}?regno=${encodeURIComponent(v)}" class="fw-bold">${esc(v)}</a>` },
+                            { k: 'program', t: 'Program' }, { k: 'regulation', t: 'Reg' },
+                            { k: 'cgpa', t: 'CGPA', num: 1, f: (v) => n(v, 2) },
                             { k: 'last_sgpa', t: 'Last SGPA', num: 1, f: (v) => n(v, 2) },
-                            { k: 'delta', t: 'Change', num: 1, f: (v) => (isNum(v) ? `<span class="${v > 0.05 ? 'up' : v < -0.05 ? 'down' : 'flat'}">${v > 0 ? '+' : ''}${n(v, 2)}</span>` : '–') },
-                            { k: 'backlogs', t: 'Backlogs', num: 1, f: (v) => (v ? badge(v, 'risk') : '0') },
-                            { k: 'credits_earned', t: 'Credits', num: 1, f: (v, r) => `${n(v, 0)} / ${n(r.credits_reg, 0)}` },
-                            { k: 'division', t: 'Division' }, { k: 'at_risk', t: 'Risk', f: (v) => (v ? badge('At risk', 'risk') : badge('On track', 'good')) },
+                            { k: 'backlogs', t: 'Backlogs', num: 1, f: (v) => (v ? badge(v, 'risk') : badge('0', 'good')) },
+                            { k: 'avg_pct', t: 'Avg %', num: 1, f: (v) => pc(v) },
+                            { k: 'division', t: 'Division', f: (v) => esc(v || '—') },
                         ];
-                        let view = 'top';
-                        const pick = () => {
-                            const q = $('#stuSearch').value.trim().toLowerCase();
-                            let list = K.students.filter((s) => !q || s.regno.toLowerCase().includes(q));
-                            if (view === 'top') list = list.slice(0, 10);
-                            if (view === 'bottom') list = list.slice(-10).reverse();
-                            if (view === 'risk') list = list.filter((s) => s.at_risk);
-                            return list;
+                        const renderStu = (rows) => table('tStu', stuCols, rows, { sortKey: 'cgpa' });
+                        let curV = 'all';
+                        const filterStu = (v) => {
+                            curV = v;
+                            const q = ($('#stuSearch').value || '').toLowerCase().trim();
+                            let r = v === 'top' ? K.students.slice(0, 10) : v === 'bottom' ? K.students.slice(-10).reverse() : v === 'risk' ? K.students.filter((s) => s.at_risk) : K.students;
+                            if (q) r = r.filter((s) => s.regno.toLowerCase().includes(q));
+                            renderStu(r);
                         };
-                        const stuT = table('tStu', stuCols, pick(), { sortKey: view === 'bottom' ? 'cgpa' : null });
-                        document.querySelectorAll('#segStudents button').forEach((b) => b.addEventListener('click', () => {
-                            document.querySelectorAll('#segStudents button').forEach((x) => x.setAttribute('aria-pressed', x === b));
-                            view = b.dataset.v; stuT.set(pick());
+                        filterStu('all');
+                        $('#segStudents').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+                            $('#segStudents').querySelectorAll('button').forEach((x) => x.classList.remove('active'));
+                            b.classList.add('active');
+                            filterStu(b.dataset.v);
                         }));
-                        $('#stuSearch').addEventListener('input', () => stuT.set(pick()));
-                        document.querySelectorAll('#segGroup button').forEach((b) => b.addEventListener('click', () => {
-                            document.querySelectorAll('#segGroup button').forEach((x) => x.setAttribute('aria-pressed', x === b));
-                            groupChart(b.dataset.g);
-                        }));
+                        $('#stuSearch').addEventListener('input', () => filterStu(curV));
                     }
+
+                    // Raw Records Table
+                    const recCols = [
+                        { k: 'regno', t: 'Register No' }, { k: 'sem', t: 'Sem' }, { k: 'exam', t: 'Exam' },
+                        { k: 'type', t: 'Type' }, { k: 'subcode', t: 'Subject' },
+                        { k: 'fa', t: 'FA', num: 1, f: (v, r) => `${v}/${r.fa_c}` },
+                        { k: 'sa', t: 'SA', num: 1, f: (v, r) => `${v}/${r.sa_c}` },
+                        { k: 'pct', t: 'Marks %', num: 1, f: (v) => pc(v) },
+                        { k: 'grade', t: 'Grade', f: (v) => badge(v, /F|AB/.test(v) ? 'risk' : 'good') },
+                        { k: 'gp', t: 'GP', num: 1 },
+                        { k: 'counted', t: 'Counted', f: (v) => (v ? 'Yes' : 'Replaced') },
+                    ];
+                    let recR = K.records;
+                    const renderRec = () => {
+                        const q = ($('#recSearch').value || '').toLowerCase().trim();
+                        const ty = $('#recType').value;
+                        let r = recR;
+                        if (ty === 'counted') r = r.filter((x) => x.counted);
+                        else if (ty === 'reappear') r = r.filter((x) => x.is_reappear);
+                        else if (ty === 'fail') r = r.filter((x) => !x.passed);
+                        if (q) r = r.filter((x) => (x.regno + ' ' + x.subcode + ' ' + x.exam + ' ' + x.grade).toLowerCase().includes(q));
+                        $('#recCount').textContent = `${r.length} of ${recR.length} rows`;
+                        table('tRec', recCols, r.slice(0, 300), { sortKey: 'regno', dir: 1 });
+                    };
+                    renderRec();
+                    $('#recSearch').addEventListener('input', renderRec);
+                    $('#recType').addEventListener('change', renderRec);
                 }
 
-                // ---------- AI analytics ----------
-                let aiDone = false;
-                function aiPanel() {
-                    if (aiDone) return; aiDone = true;
-                    const kindCol = { good: C.good, watch: C.watch, risk: C.risk, info: C.accent };
-                    const kindLbl = { good: 'Strength', watch: 'Watch', risk: 'Action needed', info: 'Observation' };
-                    const order = { risk: 0, watch: 1, good: 2, info: 3 };
-                    const ins = K.insights.slice().sort((a, b) => order[a.kind] - order[b.kind]);
-                    $('#insights').innerHTML = ins.map((i) => `<div class="insight"><div class="rail" style="background:${kindCol[i.kind]}"></div>
-      <div><div class="t">${esc(i.title)} ${badge(kindLbl[i.kind], i.kind)} <span class="muted">${esc(i.area)}</span></div><div class="x">${esc(i.text)}</div></div></div>`).join('');
-
-                    // recommended actions
-                    const A = [];
-                    const Q = K.quality, hi = Q.filter((q) => q.severity === 'high');
-                    if (hi.length) A.push(`Correct the flagged rows before publishing: ${hi.map((q) => `${q.title} (${q.count})`).join(', ')}.`);
-                    if (Q.some((q) => q.id === 'cgpa_missing')) A.push(`Populate cgpa_perc from the recomputed CGPA (${n(S.cgpa, 2)}${isStudent ? '' : ' average'}) so reports and transcripts agree.`);
-                    if (Q.some((q) => q.id === 'identical_reappear')) A.push('Confirm the reappear rows that copy the earlier attempt are genuine re-examinations, or remove them.');
-                    if (S.backlogs) {
-                        const pend = K.records.filter((r) => r.counted && !r.passed).map((r) => r.subcode);
-                        A.push(isStudent ? `Register for the next supplementary exam in ${[...new Set(pend)].join(', ')}.` : `Plan supplementary-exam coaching for ${S.students_with_backlog} students with ${S.backlogs} pending subjects.`);
-                    }
-                    const gapSubs = K.subjects.filter((s) => isNum(s.gap) && s.gap >= M.gap_alert).sort((a, b) => b.gap - a.gap);
-                    if (gapSubs.length) A.push(`Review internal assessment in ${gapSubs.slice(0, 3).map((s) => s.subcode).join(', ')}: internal marks run ${M.gap_alert}+ points above external.`);
-                    if (S.weakest_subject) A.push(isStudent ? `Focus revision on ${S.weakest_subject.code} (${pc(S.weakest_subject.pct)}), especially external-exam practice.` : `Schedule remedial sessions for ${K.subjects.slice(-2).map((s) => s.subcode).join(' and ')}.`);
-                    if (!isStudent && S.at_risk_students) A.push(`Assign mentors to the ${S.at_risk_students} at-risk students listed on the KPI dashboard.`);
-                    if (K.forecast.available && K.forecast.slope < -0.1) A.push('SGPA is trending down; check semester workload and attendance early next term.');
-                    if (!A.length) A.push('No corrective action needed. Keep monitoring each new exam session.');
-                    $('#actions').innerHTML = A.map((a) => `<li>${esc(a)}</li>`).join('');
-
-                    // forecast
-                    const F = K.forecast;
-                    const sgpas = isStudent && K.students.length ? K.students[0].sems.map((s) => s.sgpa) : K.semesters.map((s) => s.sgpa);
-                    const labels = isStudent && K.students.length ? K.students[0].sems.map((s) => s.label) : K.semesters.map((s) => s.label);
-                    if (F.available) {
-                        $('#fcSub').textContent = `Straight-line fit over ${F.points} semesters. Next SGPA about ${n(F.next_sgpa, 2)} (confidence ${F.confidence}).`;
-                        mk('cForecast', {
-                            type: 'line',
-                            data: { labels: [...labels, 'Next'], datasets: [
-                                    { label: 'Actual SGPA', data: [...sgpas, null], borderColor: C.accent, backgroundColor: C.accent, tension: 0.2, pointRadius: 4 },
-                                    { label: 'Projected', data: [...sgpas.map((v, i) => (i === sgpas.length - 1 ? v : null)), F.next_sgpa], borderColor: C.watch, backgroundColor: C.watch, borderDash: [5, 4], pointRadius: 4 },
-                                ] },
-                            options: { scales: { y: { min: 0, max: 10 } } },
+                function table(id, cols, rows, opts = {}) {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    let sk = opts.sortKey || cols[0].k;
+                    let dir = opts.dir ?? -1;
+                    const draw = () => {
+                        const sRows = [...rows].sort((a, b) => {
+                            let va = a[sk], vb = b[sk];
+                            if (va === null || va === undefined) return 1;
+                            if (vb === null || vb === undefined) return -1;
+                            return (va > vb ? 1 : va < vb ? -1 : 0) * dir;
                         });
-                    } else {
-                        $('#fcSub').textContent = F.reason;
-                    }
+                        const ths = cols.map((c) => `<th class="${c.num ? 'num' : ''} ${c.k === sk ? (dir > 0 ? 'asc' : 'desc') : ''}" data-k="${c.k}">${esc(c.t)}</th>`).join('');
+                        const trs = sRows.map((r) => `<tr>${cols.map((c) => `<td class="${c.num ? 'num' : ''}">${c.f ? c.f(r[c.k], r) : esc(r[c.k])}</td>`).join('')}</tr>`).join('');
+                        el.innerHTML = `<thead><tr>${ths}</tr></thead><tbody>${trs || '<tr><td colspan="' + cols.length + '" class="text-center text-muted py-3">No matching records</td></tr>'}</tbody>`;
+                        el.querySelectorAll('th').forEach((th) => th.addEventListener('click', () => {
+                            const k = th.dataset.k;
+                            if (sk === k) dir = -dir; else { sk = k; dir = -1; }
+                            draw();
+                        }));
+                    };
+                    draw();
+                }
 
-                    // data checks
-                    const sevCls = { high: 'risk', medium: 'watch', info: 'info' };
-                    $('#checks').innerHTML = Q.length ? Q.map((q) => `<details class="check" ${q.severity === 'high' ? 'open' : ''}>
-        <summary>${badge(q.severity === 'high' ? 'High' : q.severity === 'medium' ? 'Medium' : 'Info', sevCls[q.severity])}<span class="t">${esc(q.title)}</span><span class="muted">${q.count} row(s)</span></summary>
-        <div class="body">${esc(q.detail)}${q.samples.map((s) => `<code>${esc(s)}</code>`).join('')}${q.count > q.samples.length ? `<div class="muted" style="margin-top:4px">and ${q.count - q.samples.length} more</div>` : ''}</div>
-      </details>`).join('') : '<div class="card">All checks passed.</div>';
+                function badge(txt, kind) {
+                    return `<span class="badge ${kind || 'muted'}">${esc(txt)}</span>`;
+                }
 
-                    // risk indicators
-                    const R = [];
-                    const risk = (cls, k, v, s) => R.push(`<div class="tile ${cls}"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`);
-                    risk(S.backlogs ? 'risk' : 'good', 'Pending backlogs', S.backlogs, isStudent ? 'Subjects not yet cleared' : `${S.students_with_backlog} students`);
-                    risk(S.fa_sa_gap >= M.gap_alert ? 'risk' : S.fa_sa_gap >= 10 ? 'watch' : 'good', 'Internal-external gap', `${n(S.fa_sa_gap)} pts`, `${gapSubs.length} subject(s) over ${M.gap_alert} points`);
-                    const low = K.subjects.filter((s) => s.pass_pct < 75).length;
-                    risk(low ? 'risk' : 'good', 'Low pass-rate subjects', low, 'Pass rate under 75%');
-                    const fall = K.semesters.length > 1 ? K.semesters[K.semesters.length - 1].sgpa - K.semesters[K.semesters.length - 2].sgpa : null;
-                    risk(isNum(fall) && fall <= -0.5 ? 'risk' : isNum(fall) && fall < 0 ? 'watch' : 'good', 'Latest SGPA change', isNum(fall) ? `${fall > 0 ? '+' : ''}${n(fall, 2)}` : '–', 'Last semester against the one before');
-                    risk(S.std_pct > 15 ? 'watch' : 'good', 'Consistency', `±${n(S.std_pct)}`, 'Standard deviation of marks %');
-                    risk(hi.length ? 'risk' : 'good', 'Data integrity', hi.length ? `${hi.reduce((a, q) => a + q.count, 0)} rows` : 'Clean', 'High-severity data checks');
-                    if (!isStudent) {
-                        risk(S.at_risk_students ? 'risk' : 'good', 'Students at risk', S.at_risk_students, `${n(S.at_risk_students / S.students * 100)}% of the cohort`);
-                        const below = K.students.filter((s) => isNum(s.cgpa) && s.cgpa < M.risk_cgpa).length;
-                        risk(below ? 'risk' : 'good', `CGPA below ${M.risk_cgpa}`, below, 'Students');
-                        const drop = K.students.filter((s) => isNum(s.delta) && s.delta <= -1).length;
-                        risk(drop ? 'watch' : 'good', 'Sharp SGPA drops', drop, 'Students down 1+ point');
-                    }
-                    $('#riskCards').innerHTML = R.join('');
+                // ================= AI PANEL =================
+                function aiPanel() {
+                    const Q = K.quality || [];
+                    const hi = Q.filter((q) => q.severity === 'high');
+                    const I = K.insights || [];
+                    $('#insights').innerHTML = I.length ? I.map((i) => `
+                        <div class="insight">
+                            <span class="rail" style="background:${i.kind === 'good' ? C.good : i.kind === 'risk' ? C.risk : C.watch}"></span>
+                            <div>
+                                <div class="t"><span class="badge ${i.kind}">${esc(i.area)}</span> ${esc(i.title)}</div>
+                                <div class="x">${esc(i.text)}</div>
+                            </div>
+                        </div>`).join('') : '<p class="text-muted">No specific findings for this cohort.</p>';
 
-                    // question box
+                    $('#checks').innerHTML = Q.length ? Q.map((q) => `
+                        <details class="check">
+                            <summary><span class="badge ${q.severity === 'high' ? 'risk' : q.severity === 'medium' ? 'watch' : 'info'}">${esc(q.severity)}</span> <span class="t">${esc(q.title)} (${q.count})</span></summary>
+                            <div class="body">${esc(q.detail)}${q.samples.map(s => `<code>${esc(s)}</code>`).join('')}</div>
+                        </details>`).join('') : '<p class="text-success"><i class="bi bi-check-circle-fill me-1"></i> All data integrity checks passed cleanly.</p>';
+
                     const sugg = isStudent
-                        ? ['What is my CGPA?', 'Which subject is the weakest?', 'Which subject is the strongest?', 'Show SGPA by semester', 'Any backlogs?', 'Compare internal and external', 'How did reappear go?', 'Is the data correct?']
-                        : ['What is the average CGPA?', 'Who are the top students?', 'Which students are at risk?', 'Which subject is the weakest?', 'Compare programs', 'Compare gender', 'Pass rate by semester', 'Is the data correct?'];
+                        ? ['What is my CGPA?', 'Which subject is the weakest?', 'Which subject is the strongest?', 'Any backlogs?', 'Is data correct?']
+                        : ['What is the average CGPA?', 'Who are the top students?', 'Which students are at risk?', 'Which subject is the weakest?', 'Is data correct?'];
                     $('#sugg').innerHTML = sugg.map((s) => `<button type="button">${esc(s)}</button>`).join('');
                     $('#sugg').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { $('#askInput').value = b.textContent; answer(b.textContent); }));
                     $('#askBtn').addEventListener('click', () => answer($('#askInput').value));
@@ -965,75 +1334,95 @@
                     const out = $('#answer');
                     const say = (html) => { out.innerHTML = html; };
                     if (!q) return say('Type a question first.');
-                    const subMatch = K.subjects.find((s) => q.includes(s.subcode.toLowerCase()));
-                    const semMatch = q.match(/(?:sem(?:ester)?|s)\s*(\d)/);
-                    const stuMatch = !isStudent && K.students.find((s) => q.includes(s.regno.toLowerCase()));
-
-                    if (stuMatch) return say(`<b>${esc(stuMatch.regno)}</b> (${esc(stuMatch.program)}): CGPA ${n(stuMatch.cgpa, 2)}, average ${pc(stuMatch.avg_pct)}, ${stuMatch.backlogs} backlog(s). <a href="${location.pathname}?regno=${encodeURIComponent(stuMatch.regno)}">Open full report</a>.`);
-                    if (subMatch) { const s = subMatch; return say(`<b>${esc(s.subcode)}</b>: average ${pc(s.avg_pct)} (range ${pc(s.min_pct)}–${pc(s.max_pct)}), internal ${pc(s.fa_pct)}, external ${pc(s.sa_pct)}, pass ${pc(s.pass_pct)}, average GP ${n(s.avg_gp, 2)} over ${s.results} result(s).`); }
-                    if (/weak|lowest|worst|poor|difficult|hard/.test(q)) { const w = K.subjects.slice(-3).reverse(); return say('Weakest subjects: ' + w.map((s) => `<b>${esc(s.subcode)}</b> ${pc(s.avg_pct)} (pass ${pc(s.pass_pct)})`).join(', ') + '.'); }
-                    if (/strong|best subject|highest subject|top subject/.test(q)) { const w = K.subjects.slice(0, 3); return say('Strongest subjects: ' + w.map((s) => `<b>${esc(s.subcode)}</b> ${pc(s.avg_pct)}`).join(', ') + '.'); }
-                    if (/risk|mentor|support|struggl/.test(q)) {
-                        if (isStudent) return say(S.backlogs || S.cgpa < M.risk_cgpa ? `This student needs support: ${S.backlogs} backlog(s), CGPA ${n(S.cgpa, 2)}.` : `Not at risk: no backlogs and CGPA ${n(S.cgpa, 2)}.`);
-                        const r = K.students.filter((s) => s.at_risk);
-                        return say(r.length ? `<b>${r.length}</b> at-risk students: ` + r.slice(0, 12).map((s) => `${esc(s.regno)} (CGPA ${n(s.cgpa, 2)}, ${s.backlogs} backlog)`).join(', ') + (r.length > 12 ? '…' : '') : 'No students are at risk.');
+                    if (/risk|backlog/.test(q)) {
+                        return say(S.backlogs ? `<b>${S.backlogs}</b> pending backlogs across <b>${S.students_with_backlog}</b> student(s).` : 'No students at risk.');
                     }
-                    if (/top|topper|rank|best student|highest cgpa/.test(q) && !isStudent) return say('Top students by CGPA: ' + K.students.slice(0, 5).map((s, i) => `${i + 1}. <b>${esc(s.regno)}</b> ${n(s.cgpa, 2)}`).join(', ') + '.');
-                    if (/bottom|lowest cgpa|least/.test(q) && !isStudent) return say('Lowest CGPA: ' + K.students.slice(-5).reverse().map((s) => `<b>${esc(s.regno)}</b> ${n(s.cgpa, 2)}`).join(', ') + '.');
-                    if (/program|course|branch/.test(q) && !isStudent) return say(K.groups.program.map((g) => `<b>${esc(g.name)}</b>: CGPA ${n(g.avg_cgpa, 2)}, pass ${pc(g.pass_pct)} (${g.students} students)`).join('<br>'));
-                    if (/gender|male|female|girls|boys/.test(q) && !isStudent) return say(K.groups.gender.map((g) => `<b>${esc(g.name)}</b>: CGPA ${n(g.avg_cgpa, 2)}, pass ${pc(g.pass_pct)} (${g.students} students)`).join('<br>'));
-                    if (/regulation/.test(q) && !isStudent) return say(K.groups.regulation.map((g) => `<b>${esc(g.name)}</b>: CGPA ${n(g.avg_cgpa, 2)}, pass ${pc(g.pass_pct)}`).join('<br>'));
-                    if (/sgpa|semester|sem\b|trend|progress/.test(q) || semMatch) {
-                        let rows = K.semesters;
-                        if (semMatch) rows = rows.filter((s) => s.label.endsWith('S' + semMatch[1]) || s.label.includes('S' + semMatch[1]));
-                        if (/pass/.test(q)) return say(rows.map((s) => `<b>${esc(s.label)}</b>: pass ${pc(s.pass_pct)}`).join('<br>'));
-                        return say(rows.map((s) => `<b>${esc(s.label)}</b>: SGPA ${n(s.sgpa, 2)} (stored ${n(s.sgpa_reported, 2)}), average ${pc(s.avg_pct)}, CGPA so far ${n(s.cgpa_running, 2)}`).join('<br>') || 'No semester matches that.');
-                    }
-                    if (/cgpa|overall|gpa/.test(q)) return say(`${isStudent ? 'Recomputed CGPA' : 'Average CGPA'}: <b>${n(S.cgpa, 2)}</b>${isStudent ? '' : ` (median ${n(S.cgpa_median, 2)}, range ${n(S.cgpa_min, 2)}–${n(S.cgpa_max, 2)})`}. Stored SGPA average is ${n(S.avg_sgpa_reported, 2)}.`);
-                    if (/backlog|fail|arrear|pending|clear/.test(q)) {
-                        const pend = K.records.filter((r) => r.counted && !r.passed);
-                        return say(S.backlogs ? `<b>${S.backlogs}</b> pending: ` + pend.slice(0, 15).map((r) => `${isStudent ? '' : esc(r.regno) + ' '}${esc(r.subcode)}`).join(', ') + (pend.length > 15 ? '…' : '') : 'No pending backlogs. Every counted subject is cleared.');
-                    }
-                    if (/internal|external|fa\b|sa\b|formative|summative/.test(q)) return say(`Internal (FA) ${pc(S.fa_pct)} against external (SA) ${pc(S.sa_pct)}; gap ${n(S.fa_sa_gap)} points. Correlation r = ${n(K.scatter.r, 2)}.`);
-                    if (/reappear|supply|supplementary|improv|re-?exam/.test(q)) { const r = K.reappear.summary; return say(r.attempts ? `${r.attempts} reappear attempts: ${r.backlogs_cleared} cleared a backlog, ${r.improvement_only} improvement, ${r.still_pending} pending, average change ${n(r.avg_gain)} points, ${r.identical} identical to the earlier attempt.` : 'No reappear attempts.'); }
-                    if (/grade|distribution/.test(q)) return say(K.grades.map((g) => `<b>${esc(g.grade)}</b> ${g.count} (${g.share}%)`).join(', '));
-                    if (/pass/.test(q)) return say(`Pass rate ${pc(S.pass_pct)}; first-attempt pass ${pc(S.first_attempt_pass_pct)}.`);
-                    if (/credit/.test(q)) return say(`Credits earned ${n(S.credits_earned, 0)} of ${n(S.credits_registered, 0)} (${pc(S.credit_completion_pct)}).`);
-                    if (/data|correct|error|mismatch|check|quality|wrong/.test(q)) return say(K.quality.length ? K.quality.map((x) => `${badge(x.severity, x.severity === 'high' ? 'risk' : x.severity === 'medium' ? 'watch' : 'info')} ${esc(x.title)} (${x.count})`).join('<br>') : 'All data checks passed.');
-                    if (/predict|forecast|next|future|project/.test(q)) return say(K.forecast.available ? `Projected next SGPA about <b>${n(K.forecast.next_sgpa, 2)}</b> (confidence ${K.forecast.confidence}).` : K.forecast.reason);
-                    if (/division|distinction|class/.test(q)) return say(K.divisions.map((d) => `${esc(d.division)}: ${d.count}`).join('<br>'));
-                    if (/average|mean|marks|percent/.test(q)) return say(`Average marks ${pc(S.avg_pct)}, median ${pc(S.median_pct)}, range ${pc(S.min_pct)}–${pc(S.max_pct)}.`);
-                    say('I can answer questions about CGPA, SGPA by semester, subjects (or a subject code), backlogs, internal vs external, reappear results, grades, credits, divisions, projections and data checks' + (isStudent ? '.' : ', plus top or at-risk students, programs and gender.'));
+                    if (/top/.test(q) && !isStudent) return say('Top students by CGPA: ' + K.students.slice(0, 5).map((s, i) => `${i + 1}. <b>${esc(s.regno)}</b> (CGPA ${n(s.cgpa, 2)})`).join(', ') + '.');
+                    if (/weak|lowest/.test(q)) { const w = K.subjects.slice(-3).reverse(); return say('Weakest subjects: ' + w.map((s) => `<b>${esc(s.subcode)}</b> (pass ${pc(s.pass_pct)})`).join(', ') + '.'); }
+                    if (/cgpa|gpa/.test(q)) return say(`Average CGPA: <b>${n(S.cgpa, 2)}</b> (median ${n(S.cgpa_median, 2)}, range ${n(S.cgpa_min, 2)}–${n(S.cgpa_max, 2)}).`);
+                    say(`Cohort has ${S.students} students with average CGPA ${n(S.cgpa, 2)} and pass rate ${pc(S.pass_pct)}.`);
                 }
 
-                // ---------- view toggle ----------
-                function showPanel(which) {
-                    const ai = which === 'ai';
-                    $('#panel-kpi').hidden = ai; $('#panel-ai').hidden = !ai;
-                    $('#btn-kpi').setAttribute('aria-pressed', !ai); $('#btn-ai').setAttribute('aria-pressed', ai);
-                    if (ai) aiPanel();
-                    history.replaceState(null, '', location.pathname + location.search + (ai ? '#ai' : ''));
-                }
-                $('#btn-kpi').addEventListener('click', () => showPanel('kpi'));
-                $('#btn-ai').addEventListener('click', () => showPanel('ai'));
-                window.addEventListener('beforeprint', () => aiPanel());
+                // ================= VIEW SWITCHING CONTROLLER =================
+                let currentView = 'overview';
+                function switchView(which) {
+                    currentView = which;
+                    $('#panel-overview').hidden = which !== 'overview';
+                    $('#panel-detailed').hidden = which !== 'detailed';
+                    $('#panel-ai').hidden = which !== 'ai';
 
-                // ---------- CSV export ----------
+                    $('#btn-overview').classList.toggle('is-active', which === 'overview');
+                    $('#btn-detailed').classList.toggle('is-active', which === 'detailed');
+                    $('#btn-ai').classList.toggle('is-active', which === 'ai');
+
+                    if (which === 'overview') {
+                        setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+                    } else if (which === 'detailed') {
+                        initDetailedCharts();
+                        setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+                    } else if (which === 'ai') {
+                        aiPanel();
+                    }
+                }
+
+                $('#btn-overview').addEventListener('click', () => switchView('overview'));
+                $('#btn-detailed').addEventListener('click', () => switchView('detailed'));
+                $('#btn-ai').addEventListener('click', () => switchView('ai'));
+                $('#btnGoDetailed').addEventListener('click', () => switchView('detailed'));
+
+                // Card Click Actions (SaaS Micro-Interactions)
+                $('#cardCgpa').addEventListener('click', () => {
+                    switchView('overview');
+                    setTimeout(() => $('#anchorGrades').scrollIntoView({ behavior: 'smooth' }), 50);
+                });
+                $('#cardPass').addEventListener('click', () => {
+                    switchView('detailed');
+                    activateSec('secSemesters');
+                });
+                $('#cardRisk').addEventListener('click', () => {
+                    switchView('detailed');
+                    activateSec('secStudents');
+                    const rBtn = document.querySelector('#segStudents button[data-v="risk"]');
+                    if (rBtn) rBtn.click();
+                });
+                $('#cardTotal').addEventListener('click', () => {
+                    switchView('detailed');
+                    activateSec('secStudents');
+                    const aBtn = document.querySelector('#segStudents button[data-v="all"]');
+                    if (aBtn) aBtn.click();
+                });
+
+                // Detailed Sub-Navigation
+                function activateSec(secId) {
+                    document.querySelectorAll('.detailed-section').forEach(s => s.classList.add('d-none'));
+                    document.querySelectorAll('.detailed-nav-btn').forEach(b => b.classList.toggle('is-active', b.dataset.sec === secId));
+                    const sec = document.getElementById(secId);
+                    if (sec) sec.classList.remove('d-none');
+                    setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+                }
+                document.querySelectorAll('.detailed-nav-btn').forEach(btn => {
+                    btn.addEventListener('click', () => activateSec(btn.dataset.sec));
+                });
+
+                // CSV Export
                 function csv(name, rows, cols) {
-                    const q = (v) => { const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-                    const text = [cols.join(','), ...rows.map((r) => cols.map((c) => q(r[c])).join(','))].join('\n');
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(new Blob(['\ufeff' + text], { type: 'text/csv;charset=utf-8' }));
+                    const q = (v) => {
+                        const s = String(v ?? "");
+                        return (s.includes('"') || s.includes(",") || s.includes("\n")) ? '"' + s.replace(/"/g, '""') + '"' : s;
+                    };
+                    const text = [cols.join(","), ...rows.map((r) => cols.map((c) => q(r[c])).join(","))].join("\n");
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(new Blob(['﻿' + text], { type: 'text/csv;charset=utf-8' }));
                     a.download = name; document.body.appendChild(a); a.click(); a.remove();
                 }
                 const stamp = (isStudent ? M.student.regno : 'cohort') + '_' + new Date().toISOString().slice(0, 10);
                 $('#btn-csv').addEventListener('click', () => csv(`marks_records_${stamp}.csv`, K.records, ['regno', 'program', 'sem', 'exam', 'type', 'mmno', 'subcode', 'fa', 'fa_c', 'sa', 'sa_c', 'total', 'total_c', 'pct', 'grade', 'gp', 'credits', 'sgpa', 'division', 'passed', 'counted']));
                 $('#btn-subcsv').addEventListener('click', () => csv(`marks_subjects_${stamp}.csv`, K.subjects, ['subcode', 'semesters', 'results', 'attempts', 'reappears', 'credits', 'avg_pct', 'min_pct', 'max_pct', 'std_pct', 'fa_pct', 'sa_pct', 'gap', 'avg_gp', 'pass_pct']));
 
-                // ---------- go ----------
-                kpiCharts();
-                kpiTables();
-                if (location.hash === '#ai') showPanel('ai');
+                // Initialize
+                initOverviewCharts();
+                initTables();
+                switchView('overview');
             })();
         </script>
     @endverbatim
