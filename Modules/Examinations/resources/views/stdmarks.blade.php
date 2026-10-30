@@ -341,20 +341,20 @@
         }
 
         /* ---- Table ---- */
-        .ss-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; margin-bottom: 0; background: transparent; }
-        .ss-table thead th { background: var(--bg-elevated); color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .45px; padding: 15px 18px; border: none; border-bottom: 1px solid var(--border-subtle); white-space: nowrap; }
-        .ss-table tbody td { padding: 16px 18px; vertical-align: middle; border: none; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); background: transparent; }
+        .ss-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; margin-bottom: 0; background: transparent; table-layout: auto; }
+        .ss-table thead th { background: var(--bg-elevated); color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; padding: 10px 8px; border: none; border-bottom: 1px solid var(--border-subtle); white-space: nowrap; }
+        .ss-table tbody td { padding: 10px 8px; vertical-align: middle; border: none; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); background: transparent; }
         .ss-table tbody tr:last-child td { border-bottom: none; }
         .ss-table tbody tr:hover td { background: var(--bg-hover-row); }
 
         /* Badges & Elements */
-        .ss-badge-reg { display: inline-block; padding: 5px 10px; border-radius: 6px; background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-subtle); font-weight: 600; font-size: 12px; }
-        .ss-badge-batch { display: inline-block; padding: 4px 8px; border-radius: 5px; background: rgba(59, 130, 246, 0.12); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.25); font-size: 11px; font-weight: 700; }
-        .ss-badge-regu { display: inline-block; padding: 4px 8px; border-radius: 20px; background: var(--bg-elevated); color: var(--text-primary); font-size: 11.5px; font-weight: 700; border: 1px solid var(--border-subtle); }
-        .ss-name { color: var(--text-primary); font-weight: 600; }
+        .ss-badge-reg { display: inline-block; padding: 3px 6px; border-radius: 6px; background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-subtle); font-weight: 600; font-size: 11.5px; }
+        .ss-badge-batch { display: inline-block; padding: 2px 6px; border-radius: 5px; background: rgba(59, 130, 246, 0.12); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.25); font-size: 10.5px; font-weight: 700; }
+        .ss-badge-regu { display: inline-block; padding: 2px 6px; border-radius: 20px; background: var(--bg-elevated); color: var(--text-primary); font-size: 11px; font-weight: 700; border: 1px solid var(--border-subtle); }
+        .ss-name { color: var(--text-primary); font-weight: 600; font-size: 12.5px; }
         .ss-avatar-mini {
-            width: 32px;
-            height: 32px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             background: var(--theme-gradient);
             color: #fff;
@@ -362,18 +362,18 @@
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 11px;
             flex-shrink: 0;
-            box-shadow: 0 2px 6px var(--theme-glow);
+            box-shadow: 0 1px 4px var(--theme-glow);
         }
-        .ss-sub-info { font-size: 11px; margin-top: 1px; }
+        .ss-sub-info { font-size: 10.5px; margin-top: 1px; }
 
         /* Division pills */
         .ss-div-pill {
             display: inline-block;
-            padding: 4px 10px;
+            padding: 3px 7px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: 700;
             white-space: nowrap;
         }
@@ -402,11 +402,11 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            padding: 3px 8px;
+            padding: 2px 6px;
             background: var(--bg-hover-row);
             border: 1px solid var(--border-subtle);
             border-radius: 6px;
-            font-size: 11.5px;
+            font-size: 11px;
             font-weight: 600;
             color: var(--text-secondary);
             white-space: nowrap;
@@ -418,7 +418,7 @@
         }
 
         /* View button */
-        .ss-view-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 14px; border-radius: 7px; background: var(--theme-gradient); color: #fff !important; border: none; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; box-shadow: 0 4px 12px var(--theme-glow); }
+        .ss-view-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 10px; border-radius: 6px; background: var(--theme-gradient); color: #fff !important; border: none; font-size: 11.5px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; box-shadow: 0 2px 8px var(--theme-glow); }
         .ss-view-btn:hover { filter: brightness(1.1); transform: translateY(-1px); color: #fff !important; }
         .ss-view-btn svg { transition: transform .15s; }
         .ss-view-btn:hover svg { transform: translateX(2px); }
