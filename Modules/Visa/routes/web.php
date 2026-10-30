@@ -10,6 +10,11 @@ Route::middleware(['web'])->group(function () {
     Route::post('visa/ticketriase', [VisaController::class, 'storeTicket'])
         ->name('visa.ticketraise.store');
 
+    // Menu alias: visa/ticketriasebyemp (Student Ticket Raise by Employee)
+    Route::get('visa/ticketriasebyemp', [VisaController::class, 'ticketRaise'])
+        ->name('visa.ticketraisebyemp');
+    Route::post('visa/ticketriasebyemp', [VisaController::class, 'storeTicket']);
+
     // Correct-spelling & kebab-case aliases
     Route::get('visa/ticketraise', [VisaController::class, 'ticketRaise']);
     Route::post('visa/ticketraise', [VisaController::class, 'storeTicket']);
