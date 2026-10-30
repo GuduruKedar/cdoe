@@ -160,18 +160,24 @@
             position: absolute;
             right: 0;
             top: calc(100% + 8px);
-            min-width: 260px;
+            width: 290px;
+            max-width: 320px;
+            max-height: calc(100vh - 80px);
+            display: flex;
+            flex-direction: column;
             background: var(--bg-card);
             backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--border-card);
-            border-radius: 12px;
-            padding: 8px;
-            box-shadow: var(--card-shadow);
+            border-radius: 14px;
+            padding: 10px;
+            box-shadow: var(--card-shadow-hover, 0 12px 32px rgba(15, 23, 42, 0.16));
             opacity: 0;
             visibility: hidden;
             transform: translateY(-8px);
-            transition: all .2s ease;
+            transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 999;
+            overflow: hidden;
         }
         .role-menu.open {
             opacity: 1;
@@ -179,21 +185,67 @@
             transform: translateY(0);
         }
 
+        .role-menu-header {
+            padding: 4px 6px 10px;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+        .role-menu-user-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .role-menu-section {
+            padding: 4px 2px 6px;
+            flex-shrink: 0;
+        }
         .role-menu-title {
             font-size: 11px;
             color: var(--text-muted);
             font-weight: 700;
             letter-spacing: .8px;
             text-transform: uppercase;
-            padding: 8px 12px 6px;
+            padding: 4px 6px 6px;
+            flex-shrink: 0;
+        }
+        .role-menu-divider {
+            height: 1px;
+            background: var(--border-subtle);
+            margin: 8px 4px;
+            flex-shrink: 0;
+        }
+
+        .role-options-list {
+            max-height: 200px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding-right: 4px;
+            margin-right: -2px;
+        }
+        .role-options-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .role-options-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .role-options-list::-webkit-scrollbar-thumb {
+            background: var(--border-subtle, #cbd5e1);
+            border-radius: 4px;
+        }
+        .role-options-list::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted, #94a3b8);
         }
 
         .role-option {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 9px;
             width: 100%;
-            padding: 10px 12px;
+            padding: 8px 10px;
             background: transparent;
             border: 1px solid transparent;
             border-radius: 8px;
@@ -201,24 +253,93 @@
             text-align: left;
             font-size: 13px;
             cursor: pointer;
-            transition: all .15s;
+            transition: all .15s ease;
             font-family: inherit;
         }
         .role-option:hover {
-            background: var(--bg-hover-row);
+            background: var(--bg-hover-row, rgba(0, 0, 0, 0.04));
             color: var(--text-primary);
         }
         .role-option.active {
-            background: var(--theme-primary-light);
-            color: var(--theme-primary);
-            border-color: var(--theme-focus-ring);
+            background: var(--bg-hover-row, rgba(0, 0, 0, 0.05));
+            color: var(--text-primary);
+            border-color: var(--border-subtle, #e2e8f0);
             font-weight: 600;
         }
-        .role-option i { font-size: 16px; color: var(--text-muted); }
-        .role-option.active i { color: var(--theme-primary); }
-        .role-option .rname { font-weight: 600; color: inherit; }
-        .role-option .rsub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-        .role-option.active .rsub { color: var(--theme-primary); }
+        html.dark .role-option.active {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #f8fafc;
+        }
+        .role-option i {
+            font-size: 14px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .role-option.active i {
+            color: var(--text-primary);
+        }
+        html.dark .role-option.active i {
+            color: #f8fafc;
+        }
+        .role-option .role-text-wrap {
+            flex: 1;
+            min-width: 0;
+        }
+        .role-option .rname {
+            font-weight: 600;
+            color: inherit;
+            font-size: 12.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .role-option .rsub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+        .role-option.active .rsub {
+            color: var(--text-muted);
+        }
+        .role-current-tag {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg-hover-row, rgba(0,0,0,0.05));
+            border: 1px solid var(--border-subtle, #e2e8f0);
+            padding: 1px 6px;
+            border-radius: 999px;
+            letter-spacing: 0.3px;
+            flex-shrink: 0;
+            text-transform: uppercase;
+        }
+        html.dark .role-current-tag {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #cbd5e1;
+        }
+
+        .role-logout-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 9px 12px;
+            color: #ef4444;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .role-logout-link:hover {
+            background: rgba(239, 68, 68, 0.09);
+            color: #dc2626;
+            transform: translateX(2px);
+        }
 
         /* ============ SIDEBAR ============ */
         .sidebar {
@@ -524,25 +645,30 @@
                 @if ($hasMultipleRoles)
                     <div class="role-menu-title">Switch Role</div>
 
-                    @foreach ($assignedRoles as $r)
-                        <form method="POST" action="{{ route('switch.role', ['roleId' => $r['role_id']]) }}">
-                            @csrf
-                            <button type="submit"
-                                    class="role-option {{ (int)$r['role_id'] === (int)$currentRoleId ? 'active' : '' }}">
-                                <i class="bi bi-check2-circle"></i>
-                                <div>
-                                    <div class="rname">{{ $r['role_name'] }}</div>
-                                    <div class="rsub">
-                                        @if (!empty($r['end_date']))
-                                             Till {{ \Carbon\Carbon::parse($r['end_date'])->format('d M Y') }}
-                                        @else
-                                            Active
-                                        @endif
+                    <div class="role-options-list">
+                        @foreach ($assignedRoles as $r)
+                            <form method="POST" action="{{ route('switch.role', ['roleId' => $r['role_id']]) }}" class="m-0 p-0">
+                                @csrf
+                                <button type="submit"
+                                        class="role-option {{ (int)$r['role_id'] === (int)$currentRoleId ? 'active' : '' }}">
+                                    <i class="bi {{ (int)$r['role_id'] === (int)$currentRoleId ? 'bi-check-circle-fill' : 'bi-circle' }}"></i>
+                                    <div class="role-text-wrap">
+                                        <div class="rname">{{ $r['role_name'] }}</div>
+                                        <div class="rsub">
+                                            @if (!empty($r['end_date']))
+                                                 Till {{ \Carbon\Carbon::parse($r['end_date'])->format('d M Y') }}
+                                            @else
+                                                Active
+                                            @endif
+                                        </div>
                                     </div>
-                                </div>
-                            </button>
-                        </form>
-                    @endforeach
+                                    @if ((int)$r['role_id'] === (int)$currentRoleId)
+                                        <span class="role-current-tag">Current</span>
+                                    @endif
+                                </button>
+                            </form>
+                        @endforeach
+                    </div>
                     <div class="role-menu-divider"></div>
                 @endif
 
