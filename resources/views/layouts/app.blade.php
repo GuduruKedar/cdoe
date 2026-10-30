@@ -646,13 +646,6 @@
                     </div>
                 </div>
 
-                {{-- Consolidated Theme Mode Switcher (Color palette removed from profile dropdown) --}}
-                <div class="role-menu-section">
-                    <div class="role-menu-title">Appearance & Theme</div>
-                    @include('partials.theme-toggle', ['hidePalette' => true])
-                </div>
-
-                <div class="role-menu-divider"></div>
 
                 {{-- Role Switcher --}}
                 @if ($hasMultipleRoles)
