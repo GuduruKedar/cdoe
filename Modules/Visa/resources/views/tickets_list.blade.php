@@ -85,12 +85,37 @@
                     @if ($activeStatus !== null && $activeStatus !== '' && $activeStatus !== 'all')
                         <input type="hidden" name="status" value="{{ $activeStatus }}">
                     @endif
+                    <input type="hidden" name="per_page" value="{{ $tickets->perPage() }}">
                     <div class="input-group input-group-sm dsm-search-input">
                         <input type="text" name="search" class="form-control" placeholder="Search ticket / regno..." value="{{ request('search') }}">
                         <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
                     </div>
                 </form>
-                <span class="sample-rect-badge">{{ $tickets->total() }} records</span>
+
+                {{-- Editable Records Counter / Pagination Limit --}}
+                <form id="perPageForm" action="{{ route('visa.ticketslist') }}" method="GET" class="d-inline-flex align-items-center m-0">
+                    @if ($activeStatus !== null && $activeStatus !== '' && $activeStatus !== 'all')
+                        <input type="hidden" name="status" value="{{ $activeStatus }}">
+                    @endif
+                    @if (request()->filled('search'))
+                        <input type="hidden" name="search" value="{{ request('search') }}">
+                    @endif
+                    <div class="sample-rect-badge d-inline-flex align-items-center gap-1 py-1 px-2 border" title="Change records per page (Max: {{ $tickets->total() }})">
+                        <input
+                            type="number"
+                            name="per_page"
+                            id="perPageInput"
+                            class="per-page-input"
+                            value="{{ min($tickets->perPage(), max(1, $tickets->total())) }}"
+                            min="1"
+                            max="{{ max(1, $tickets->total()) }}"
+                            data-max="{{ max(1, $tickets->total()) }}"
+                            title="Edit records per page (1 to {{ $tickets->total() }}) and press Enter"
+                            aria-label="Records per page">
+                        <span class="text-muted fw-semibold">records /</span>
+                        <span class="fw-bold text-dark">{{ $tickets->total() }} records</span>
+                    </div>
+                </form>
 
                 {{-- Download Button --}}
                 <div class="dropdown" id="downloadDropdownList">
@@ -425,9 +450,10 @@
 {{-- ================= STYLING ================= --}}
 <style>
     .tickets-container {
+        width: 100%;
         max-width: 100%;
-        margin: 0 auto;
-        padding: 6px 8px 28px;
+        margin: 0;
+        padding: 6px 6px 28px;
     }
 
     /* 1. TOP ROW: 4 SMALL COMPACT PILLS */
@@ -504,6 +530,34 @@
         color: #334155;
         padding: 3px 9px;
         border-radius: 10px;
+    }
+    .per-page-input {
+        width: 48px;
+        height: 22px;
+        padding: 0 4px;
+        font-size: 11.5px;
+        font-weight: 800;
+        color: #0284c7;
+        background: #ffffff;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 6px;
+        text-align: center;
+        outline: none;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+    .per-page-input:focus {
+        border-color: #0284c7;
+        background: #f0f9ff;
+        box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+    }
+    .per-page-input::-webkit-outer-spin-button,
+    .per-page-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    .per-page-input[type=number] {
+        -moz-appearance: textfield;
     }
 
     /* TABLE: Clean layout with NO horizontal scrollbar */
@@ -1118,5 +1172,52 @@
         document.body.appendChild(div);
         setTimeout(() => div.remove(), 4000);
     }
+
+    // Editable Per-Page Input: Enforce max ticket count and submit on change / Enter
+    (function () {
+        const perPageInput = document.getElementById('perPageInput');
+        const perPageForm = document.getElementById('perPageForm');
+        if (!perPageInput || !perPageForm) return;
+
+        const maxVal = parseInt(perPageInput.getAttribute('data-max') || perPageInput.getAttribute('max') || '1');
+        const minVal = 1;
+        const initialVal = perPageInput.value;
+
+        // Prevent typing any number greater than max tickets count
+        perPageInput.addEventListener('input', function () {
+            if (this.value === '') return;
+            let num = parseInt(this.value);
+            if (isNaN(num)) {
+                this.value = minVal;
+            } else if (num > maxVal) {
+                this.value = maxVal;
+            } else if (num < minVal) {
+                this.value = minVal;
+            }
+        });
+
+        function submitIfChanged() {
+            let num = parseInt(perPageInput.value);
+            if (isNaN(num) || num < minVal) {
+                num = minVal;
+                perPageInput.value = minVal;
+            } else if (num > maxVal) {
+                num = maxVal;
+                perPageInput.value = maxVal;
+            }
+            if (String(num) !== String(initialVal)) {
+                perPageForm.submit();
+            }
+        }
+
+        perPageInput.addEventListener('blur', submitIfChanged);
+
+        perPageInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitIfChanged();
+            }
+        });
+    })();
 </script>
 @endsection

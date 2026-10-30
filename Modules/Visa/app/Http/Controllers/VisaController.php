@@ -202,6 +202,238 @@ class VisaController extends Controller
     }
 
     /**
+     * Display the Student Ticket Raise screen for Staff / Employees (visa/ticketriasebyemp).
+     * Takes student register number. If exists, loads student info and opens ticket raise form on their behalf.
+     */
+    public function ticketRaiseByEmp(Request $request)
+    {
+        $user = $this->requireLogin();
+        $menus = MenuService::getMenusForUser($user);
+
+        if ($menus === null && ! ($request->ajax() || $request->wantsJson())) {
+            return view('errors.no-role', compact('user'));
+        }
+
+        $searchedRegNo = trim((string) $request->query('regno', old('student_regno', '')));
+        $student = null;
+        $searchPerformed = false;
+        $studentNotFound = false;
+
+        if ($searchedRegNo !== '') {
+            $searchPerformed = true;
+            $student = StudentRegistration::with('program')
+                ->where(function ($q) use ($searchedRegNo) {
+                    $q->where('register_no', $searchedRegNo)
+                        ->orWhere('application_no', $searchedRegNo);
+                })
+                ->first();
+
+            if (! $student) {
+                $studentNotFound = true;
+            }
+        }
+
+        $stats = [
+            'total' => 0,
+            'raised' => 0,
+            'pending' => 0,
+            'in_process' => 0,
+            'resolved' => 0,
+        ];
+        $recentTickets = collect();
+        $activeStatus = $request->query('status');
+
+        if ($student) {
+            $regNo = $student->register_no ?: $student->application_no;
+            $statsRow = TicketDetail::where('regno', $regNo)
+                ->selectRaw('
+                    COUNT(*) as total,
+                    COUNT(CASE WHEN std_tkt_status = '.TicketDetail::STATUS_RAISED.' THEN 1 END) as raised,
+                    COUNT(CASE WHEN std_tkt_status = '.TicketDetail::STATUS_PENDING.' THEN 1 END) as pending,
+                    COUNT(CASE WHEN std_tkt_status = '.TicketDetail::STATUS_IN_PROCESS.' THEN 1 END) as in_process,
+                    COUNT(CASE WHEN std_tkt_status = '.TicketDetail::STATUS_RESOLVED.' THEN 1 END) as resolved
+                ')
+                ->first();
+
+            $stats = [
+                'total' => (int) ($statsRow?->total ?? 0),
+                'raised' => (int) ($statsRow?->raised ?? 0),
+                'pending' => (int) ($statsRow?->pending ?? 0),
+                'in_process' => (int) ($statsRow?->in_process ?? 0),
+                'resolved' => (int) ($statsRow?->resolved ?? 0),
+            ];
+
+            $recentTicketsQuery = TicketDetail::with('ticketMaster')
+                ->where('regno', $regNo)
+                ->orderByDesc('tkt_raised_datetime');
+
+            if ($activeStatus !== null && $activeStatus !== '' && $activeStatus !== 'all') {
+                $recentTicketsQuery->where('std_tkt_status', (int) $activeStatus);
+            }
+
+            $recentTickets = $recentTicketsQuery->limit(25)->get();
+        }
+
+        // Distinct main query types from visa.ticket_master
+        $mainTypes = TicketMaster::where('lock_status', 0)
+            ->select('tkt_main_type')
+            ->distinct()
+            ->whereNotNull('tkt_main_type')
+            ->pluck('tkt_main_type');
+
+        // Pre-group sub types
+        $groupedSubTypes = TicketMaster::where('lock_status', 0)
+            ->select('tkt_head_id', 'tkt_main_type', 'tkt_sub_type')
+            ->orderBy('sno')
+            ->get()
+            ->groupBy('tkt_main_type');
+
+        return view('visa::ticket_raise_by_emp', compact(
+            'user',
+            'menus',
+            'searchedRegNo',
+            'student',
+            'searchPerformed',
+            'studentNotFound',
+            'stats',
+            'mainTypes',
+            'groupedSubTypes',
+            'recentTickets',
+            'activeStatus'
+        ));
+    }
+
+    /**
+     * Store new ticket raised by Staff/Employee on behalf of a student.
+     */
+    public function storeTicketByEmp(Request $request)
+    {
+        $user = $this->requireLogin();
+        $userCode = $user->usercode ?? session('user.usercode');
+
+        $request->validate([
+            'student_regno' => 'required|string',
+            'tkt_main_type' => 'required|string',
+            'tkt_head_id' => ['required', 'string', Rule::exists(TicketMaster::class, 'tkt_head_id')],
+            'std_tkt_query' => 'required|string|max:500',
+            'std_tkt_file' => 'nullable|file|max:10240|mimes:pdf,jpg,jpeg,png,doc,docx,zip,txt,xls,xlsx,csv',
+        ], [
+            'student_regno.required' => 'Student register number is required.',
+            'tkt_main_type.required' => 'Please select a main query category.',
+            'tkt_head_id.required' => 'Please select a specific query sub-type.',
+            'std_tkt_query.required' => 'Please enter the reason or problem details.',
+            'std_tkt_query.max' => 'The problem description may not exceed 500 characters.',
+            'std_tkt_file.max' => 'Attachment file size must not exceed 10MB.',
+            'std_tkt_file.mimes' => 'Attachment must be a PDF, image, Word document, or ZIP.',
+        ]);
+
+        $studentRegNo = trim((string) $request->student_regno);
+        $student = StudentRegistration::where(function ($q) use ($studentRegNo) {
+            $q->where('register_no', $studentRegNo)
+                ->orWhere('application_no', $studentRegNo);
+        })->first();
+
+        if (! $student) {
+            return redirect()->route('visa.ticketraisebyemp', ['regno' => $studentRegNo])
+                ->withErrors(['student_regno' => "Student with register number '{$studentRegNo}' does not exist."])
+                ->withInput();
+        }
+
+        $regNo = $student->register_no ?: $studentRegNo;
+        $appliNo = $student->application_no ?: $regNo;
+
+        // Generate clean unique Ticket ID: TKT-YYYYMMDD-XXXX
+        $dateStr = now()->format('Ymd');
+        $todayCount = TicketDetail::whereDate('tkt_raised_datetime', today())->count() + 1;
+        $ticketId = 'TKT'.$dateStr.str_pad((string) $todayCount, 4, '0', STR_PAD_LEFT);
+
+        while (TicketDetail::where('tkt_id', $ticketId)->exists()) {
+            $todayCount++;
+            $ticketId = 'TKT'.$dateStr.str_pad((string) $todayCount, 4, '0', STR_PAD_LEFT);
+        }
+
+        $stdFilePath = null;
+        $stdFileName = null;
+        if ($request->hasFile('std_tkt_file')) {
+            $file = $request->file('std_tkt_file');
+            $stdFileName = $file->getClientOriginalName();
+            $stdFilePath = $file->store('tickets/student_attachments', 'public');
+        }
+
+        $ticket = TicketDetail::create([
+            'tkt_id' => $ticketId,
+            'tkt_head_id' => $request->tkt_head_id,
+            'regno' => $regNo,
+            'applino' => $appliNo,
+            'tkt_raised_datetime' => now(),
+            'std_tkt_query' => trim($request->std_tkt_query),
+            'std_tkt_status' => TicketDetail::STATUS_RAISED,
+            'std_tkt_file_path' => $stdFilePath,
+            'std_tkt_file_name' => $stdFileName,
+            'std_userid' => substr((string) $regNo, 0, 20),
+            'assigned_empcode' => substr((string) $userCode, 0, 20),
+            'std_ipaddress' => substr((string) $request->ip(), 0, 50),
+            'std_timestamp' => now(),
+        ]);
+
+        ActivityLogger::log('VISA', 'RAISE_TICKET_BY_STAFF', "Staff {$userCode} raised ticket {$ticketId} on behalf of student {$regNo}.", [
+            'ticket_id' => $ticketId,
+            'staff_code' => $userCode,
+            'student_regno' => $regNo,
+            'tkt_head_id' => $request->tkt_head_id,
+            'status' => 'success',
+        ]);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Ticket #{$ticketId} has been successfully raised for student {$student->student_name} ({$regNo})!",
+                'ticket_id' => $ticketId,
+            ]);
+        }
+
+        return redirect()->route('visa.ticketraisebyemp', ['regno' => $regNo])
+            ->with('success', "Ticket #{$ticketId} has been successfully raised on behalf of student {$student->student_name} ({$regNo})!");
+    }
+
+    /**
+     * AJAX endpoint to lookup student details by register number or application number.
+     */
+    public function lookupStudent(Request $request)
+    {
+        $this->requireLogin();
+        $regNo = trim((string) $request->query('regno'));
+
+        if (! $regNo) {
+            return response()->json(['found' => false, 'message' => 'Please provide a registration number.']);
+        }
+
+        $student = StudentRegistration::with('program')
+            ->where(function ($q) use ($regNo) {
+                $q->where('register_no', $regNo)
+                    ->orWhere('application_no', $regNo);
+            })
+            ->first();
+
+        if (! $student) {
+            return response()->json(['found' => false, 'message' => "No student found matching '{$regNo}'."]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'student' => [
+                'register_no' => $student->register_no,
+                'application_no' => $student->application_no,
+                'student_name' => $student->student_name,
+                'program_name' => $student->program?->program_name ?? 'N/A',
+                'batch' => $student->adm_batch_code ?: ($student->admyear ? (string) $student->admyear : 'N/A'),
+                'mobile' => $student->mobile ?: '—',
+                'email' => $student->personal_email ?: ($student->ofc_mail ?: '—'),
+            ],
+        ]);
+    }
+
+    /**
      * Display Tickets Management for DSM / Staff
      */
     public function ticketsList(Request $request)
@@ -257,7 +489,20 @@ class VisaController extends Controller
             });
         }
 
-        $tickets = $query->paginate(15)->withQueryString();
+        // Configurable & bounded per-page records count (cannot exceed total tickets)
+        $totalTicketsCount = (clone $query)->count();
+        $defaultPerPage = 15;
+        $perPageInput = $request->query('per_page');
+
+        if ($perPageInput !== null && $perPageInput !== '') {
+            $requested = (int) $perPageInput;
+            $maxAllowed = max(1, $totalTicketsCount);
+            $perPage = max(1, min($requested, $maxAllowed));
+        } else {
+            $perPage = $defaultPerPage;
+        }
+
+        $tickets = $query->paginate($perPage)->withQueryString();
 
         return view('visa::tickets_list', compact(
             'user',

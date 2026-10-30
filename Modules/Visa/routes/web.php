@@ -10,10 +10,21 @@ Route::middleware(['web'])->group(function () {
     Route::post('visa/ticketriase', [VisaController::class, 'storeTicket'])
         ->name('visa.ticketraise.store');
 
-    // Menu alias: visa/ticketriasebyemp (Student Ticket Raise by Employee)
-    Route::get('visa/ticketriasebyemp', [VisaController::class, 'ticketRaise'])
+    // Student Ticket Raise by Employee (exact menu reference: visa/ticketriasebyemp)
+    Route::get('visa/ticketriasebyemp', [VisaController::class, 'ticketRaiseByEmp'])
         ->name('visa.ticketraisebyemp');
-    Route::post('visa/ticketriasebyemp', [VisaController::class, 'storeTicket']);
+    Route::post('visa/ticketriasebyemp', [VisaController::class, 'storeTicketByEmp'])
+        ->name('visa.ticketraisebyemp.store');
+
+    // Aliases for Employee Student Ticket Raise
+    Route::get('visa/ticketraisebyemp', [VisaController::class, 'ticketRaiseByEmp']);
+    Route::post('visa/ticketraisebyemp', [VisaController::class, 'storeTicketByEmp']);
+    Route::get('visa/ticket-raise-by-emp', [VisaController::class, 'ticketRaiseByEmp']);
+    Route::post('visa/ticket-raise-by-emp', [VisaController::class, 'storeTicketByEmp']);
+
+    // Student Lookup AJAX for Staff Ticket Raise
+    Route::get('visa/student-lookup', [VisaController::class, 'lookupStudent'])
+        ->name('visa.student.lookup');
 
     // Correct-spelling & kebab-case aliases
     Route::get('visa/ticketraise', [VisaController::class, 'ticketRaise']);

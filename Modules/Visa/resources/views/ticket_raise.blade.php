@@ -202,19 +202,19 @@
             <span class="sample-rect-badge">{{ count($recentTickets) }} records</span>
         </div>
 
-        <div class="sample-rect-body">
+        <div class="sample-rect-body p-0">
             @if ($recentTickets->isNotEmpty())
-                <div class="table-responsive">
+                <div class="table-responsive-student">
                     <table class="table sample-table align-middle mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 140px;">TICKET ID</th>
-                                <th>CATEGORY</th>
-                                <th>SUB-TYPE / QUERY</th>
-                                <th>REASON</th>
-                                <th style="width: 120px;">DATE</th>
-                                <th style="width: 105px;">STATUS</th>
-                                <th style="width: 155px;" class="text-center">ACTION</th>
+                                <th style="width: 125px;">TICKET ID</th>
+                                <th style="width: 135px;">CATEGORY</th>
+                                <th style="width: 155px;">SUB-TYPE / QUERY</th>
+                                <th>REASON / PROBLEM</th>
+                                <th style="width: 95px;">DATE</th>
+                                <th style="width: 90px;">STATUS</th>
+                                <th style="width: 140px;" class="text-center">ACTION</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -224,21 +224,23 @@
                                         <span class="tkt-code">{{ $tkt->tkt_id }}</span>
                                     </td>
                                     <td>
-                                        <span class="cat-pill">{{ $tkt->ticketMaster->tkt_main_type ?? 'N/A' }}</span>
+                                        <span class="cat-pill d-inline-block text-truncate" style="max-width: 100%;" title="{{ $tkt->ticketMaster->tkt_main_type ?? 'N/A' }}">
+                                            {{ $tkt->ticketMaster->tkt_main_type ?? 'N/A' }}
+                                        </span>
                                     </td>
                                     <td>
-                                        <div class="sub-type-text" title="{{ $tkt->ticketMaster->tkt_sub_type ?? '' }}">
+                                        <div class="sub-type-text text-truncate" title="{{ $tkt->ticketMaster->tkt_sub_type ?? $tkt->tkt_head_id }}">
                                             {{ $tkt->ticketMaster->tkt_sub_type ?? $tkt->tkt_head_id }}
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="query-preview" title="{{ $tkt->std_tkt_query }}">
+                                        <div class="query-preview text-truncate" title="{{ $tkt->std_tkt_query }}">
                                             {{ $tkt->std_tkt_query ?: '—' }}
                                         </div>
                                         @if ($tkt->std_tkt_file_path)
                                             <div class="mt-1">
-                                                <a href="{{ route('visa.ticket.download_student', $tkt->tkt_id) }}" class="badge bg-light text-primary border border-primary-subtle text-decoration-none py-1 px-2" title="Download your attached document">
-                                                    <i class="bi bi-paperclip me-1"></i>{{ $tkt->std_tkt_file_name ?: 'My Attachment' }}
+                                                <a href="{{ route('visa.ticket.download_student', $tkt->tkt_id) }}" class="badge bg-light text-primary border border-primary-subtle text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1 text-truncate" style="max-width: 220px;" title="Download your attached document">
+                                                    <i class="bi bi-paperclip flex-shrink-0"></i><span class="text-truncate">{{ $tkt->std_tkt_file_name ?: 'My Attachment' }}</span>
                                                 </a>
                                             </div>
                                         @endif
@@ -249,8 +251,8 @@
                                         @endif
                                         @if ($tkt->emp_tkt_file_path)
                                             <div class="mt-1">
-                                                <a href="{{ route('visa.ticket.download', $tkt->tkt_id) }}" class="badge bg-success-subtle text-success border border-success-subtle text-decoration-none py-1 px-2" title="Download resolution attachment">
-                                                    <i class="bi bi-paperclip me-1"></i>{{ $tkt->emp_tkt_file_name ?: 'Attachment' }}
+                                                <a href="{{ route('visa.ticket.download', $tkt->tkt_id) }}" class="badge bg-success-subtle text-success border border-success-subtle text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1 text-truncate" style="max-width: 220px;" title="Download resolution attachment">
+                                                    <i class="bi bi-paperclip flex-shrink-0"></i><span class="text-truncate">{{ $tkt->emp_tkt_file_name ?: 'Attachment' }}</span>
                                                 </a>
                                             </div>
                                         @endif
@@ -272,17 +274,19 @@
                                         @endif
                                     </td>
                                     <td class="text-center text-nowrap">
-                                        <button type="button"
-                                                class="btn-oval-action {{ $tkt->std_tkt_status === 3 ? 'btn-oval-success' : '' }}"
-                                                onclick="openStudentSolutionModal('{{ $tkt->tkt_id }}')">
-                                            {{ $tkt->std_tkt_status === 3 ? 'View Solution' : 'View Details' }}
-                                        </button>
-                                        <button type="button"
-                                                class="btn-oval-action btn-oval-danger ms-1"
-                                                onclick="confirmDeleteTicket('{{ $tkt->tkt_id }}')"
-                                                title="Delete Ticket">
-                                            <i class="bi bi-trash3"></i>
-                                        </button>
+                                        <div class="d-inline-flex align-items-center justify-content-center gap-1">
+                                            <button type="button"
+                                                    class="btn-oval-action btn-oval-view {{ $tkt->std_tkt_status === 3 ? 'btn-oval-success' : '' }}"
+                                                    onclick="openStudentSolutionModal('{{ $tkt->tkt_id }}')">
+                                                {{ $tkt->std_tkt_status === 3 ? 'View Solution' : 'View Details' }}
+                                            </button>
+                                            <button type="button"
+                                                    class="btn-oval-action btn-oval-danger"
+                                                    onclick="confirmDeleteTicket('{{ $tkt->tkt_id }}')"
+                                                    title="Delete Ticket">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -442,9 +446,10 @@
 {{-- ================= SCOPED COMPACT STYLING ================= --}}
 <style>
     .tickets-container {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 6px 4px 28px;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 6px 6px 28px;
     }
 
     /* Alerts and Close Button Positioning */
@@ -500,19 +505,31 @@
         background: #ffffff;
         border: 1.5px solid #000000;
         border-radius: 9999px;
-        padding: 3px 12px;
-        font-size: 11.5px;
+        padding: 2.5px 9px;
+        font-size: 11px;
         font-weight: 700;
         color: #0f172a;
         cursor: pointer;
         transition: all 0.15s ease;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
     .btn-oval-action:hover {
         background: #0f172a;
         color: #ffffff;
         transform: translateY(-1px);
+    }
+    .btn-oval-action.btn-oval-view {
+        width: 96px;
+        min-width: 96px;
+        max-width: 96px;
+        padding: 2.5px 0;
+        font-size: 11px;
+        text-align: center;
+        justify-content: center;
     }
     .btn-oval-action.btn-oval-success {
         border-color: #16a34a;
@@ -527,7 +544,14 @@
         border-color: #ef4444;
         color: #dc2626;
         background: #fef2f2;
-        padding: 3px 9px;
+        width: 26px;
+        min-width: 26px;
+        height: 24px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11.5px;
     }
     .btn-oval-action.btn-oval-danger:hover {
         background: #ef4444;
@@ -643,21 +667,22 @@
     /* 3. BOTTOM: LARGE RECTANGLE BOX */
     .sample-rect-box {
         background: var(--bg-card, #ffffff);
-        border: 2px solid #000000;
-        border-radius: 16px;
-        padding: 16px 20px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        border: 1.5px solid #000000;
+        border-radius: 14px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
     }
     .sample-rect-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding-bottom: 12px;
-        border-bottom: 1.5px solid #e2e8f0;
-        margin-bottom: 12px;
+        padding: 10px 16px;
+        background: #fafafa;
+        border-bottom: 1.5px solid #000000;
+        margin-bottom: 0;
     }
     .sample-rect-title {
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 700;
         color: var(--text-primary, #0f172a);
     }
@@ -669,51 +694,71 @@
         padding: 3px 10px;
         border-radius: 10px;
     }
+    .empty-lines-wrap {
+        padding: 24px 20px;
+    }
 
     /* Table within bottom rectangle */
+    .table-responsive-student {
+        width: 100%;
+        overflow-x: hidden;
+    }
     .sample-table {
-        font-size: 13px;
+        table-layout: fixed;
+        width: 100%;
+        font-size: 12px;
+        margin-bottom: 0;
     }
     .sample-table th {
-        font-size: 11px;
+        font-size: 10.5px;
         font-weight: 700;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.03em;
         color: #64748b;
         background: #f8fafc;
         border-bottom: 1.5px solid #e2e8f0;
-        padding: 8px 12px;
+        padding: 8px 8px;
+        white-space: nowrap;
+        text-transform: uppercase;
     }
     .sample-table td {
-        padding: 10px 12px;
+        padding: 8px 8px;
         border-bottom: 1px solid #f1f5f9;
+        font-size: 12px;
+        vertical-align: middle;
     }
     .tkt-code {
         font-family: monospace;
         font-weight: 700;
         color: #0284c7;
+        font-size: 11.5px;
+        white-space: nowrap;
     }
     .cat-pill {
         background: #f1f5f9;
         color: #334155;
-        font-size: 11.5px;
-        padding: 2px 8px;
+        font-size: 11px;
+        padding: 2px 6px;
         border-radius: 6px;
         font-weight: 600;
     }
     .sub-type-text {
-        max-width: 220px;
+        width: 100%;
+        max-width: 100%;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         font-weight: 600;
         color: #1e293b;
+        font-size: 12px;
     }
     .query-preview {
-        max-width: 260px;
+        width: 100%;
+        max-width: 100%;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         color: #64748b;
+        font-size: 12px;
     }
     .status-chip {
         font-size: 11px;

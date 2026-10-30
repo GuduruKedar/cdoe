@@ -418,11 +418,11 @@
                                 <tr>
                                     <th style="width: 125px;">TICKET ID</th>
                                     <th>STUDENT / REG NO</th>
-                                    <th>EMPLOYEE</th>
-                                    <th style="width: 110px;">RAISED</th>
-                                    <th style="width: 110px;">SOLVED</th>
-                                    <th style="width: 120px;">TIME TAKEN</th>
-                                    <th style="width: 95px;">STATUS</th>
+                                    <th style="width: 150px;">EMPLOYEE</th>
+                                    <th style="width: 105px;">RAISED</th>
+                                    <th style="width: 105px;">SOLVED</th>
+                                    <th style="width: 110px;">TIME TAKEN</th>
+                                    <th style="width: 90px;">STATUS</th>
                                     <th style="width: 65px;" class="text-center">ACTION</th>
                                 </tr>
                             </thead>
@@ -725,9 +725,10 @@
 {{-- ================= STYLING ================= --}}
 <style>
     .tickets-container {
+        width: 100%;
         max-width: 100%;
-        margin: 0 auto;
-        padding: 6px 8px 28px;
+        margin: 0;
+        padding: 6px 6px 28px;
     }
 
     /* 1. TOP ROW: 4 SMALL COMPACT PILLS */
@@ -836,16 +837,18 @@
         width: 220px;
     }
 
-    /* TABLE */
+    /* TABLE: Clean layout with NO horizontal scrollbar */
     .table-responsive-dsm {
-        overflow-x: auto;
+        overflow-x: hidden;
         width: 100%;
     }
     .sample-table {
+        table-layout: fixed;
         width: 100%;
         font-size: 12px;
         border-collapse: separate;
         border-spacing: 0;
+        margin-bottom: 0;
     }
     .sample-table thead th {
         background: #f8fafc;
