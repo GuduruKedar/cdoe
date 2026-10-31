@@ -7,6 +7,7 @@ use Modules\Admissions\Http\Controllers\DocumentUploadController;
 use Modules\Admissions\Http\Controllers\DocumentViewController;
 use Modules\Admissions\Http\Controllers\StudentAdmissionController;
 use Modules\Admissions\Http\Controllers\StudentSearchController;
+use Modules\Admissions\Http\Controllers\StudentStatusUpdateController;
 
 Route::middleware(['web'])->group(function () {
 
@@ -66,6 +67,14 @@ Route::middleware(['web'])->group(function () {
         ->name('admissions.dataupload.post');
     Route::get('admissions/addatauplaod/sample-template', [AdmissionDataUploadController::class, 'sampleTemplate'])
         ->name('admissions.dataupload.sample');
+
+    // ================= 5. STUDENT STATUS UPDATE =================
+    Route::get('admissions/stdstatusupdate', [StudentStatusUpdateController::class, 'index'])
+        ->name('admissions.stdstatusupdate');
+    Route::post('admissions/stdstatusupdate', [StudentStatusUpdateController::class, 'update'])
+        ->name('admissions.stdstatusupdate.update');
+    Route::get('admissions/stdstatusupdate/lookup', [StudentStatusUpdateController::class, 'lookup'])
+        ->name('admissions.stdstatusupdate.lookup');
 
     // Database menu aliases (controller_ref compatibility)
     Route::get('admissions/admdataupload', [AdmissionDataUploadController::class, 'index']);
