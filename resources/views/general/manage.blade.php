@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page_title', 'Manage Regulations & Documents')
+@section('page_title', 'Manage Regulations & PPR Details')
 
 @section('content')
 
@@ -21,19 +21,34 @@
     </div>
 @endif
 
+@if ($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" style="border-radius: 12px;">
+        <div class="d-flex align-items-center gap-2 fw-bold mb-1">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span>Please check the form inputs:</span>
+        </div>
+        <ul class="mb-0 ps-3 small">
+            @foreach ($errors->all() as $err)
+                <li>{{ $err }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
     <div>
         <h1 class="h3 fw-bold text-primary mb-1">
             <i class="bi bi-gear-wide-connected me-2"></i>
-            Manage Regulations &amp; Documents
+            Manage Regulations (PPR Details)
         </h1>
-        <p class="text-muted small mb-0">Main Admin portal for uploading, editing, and managing dynamic regulation sections for Online MBA &amp; BBA.</p>
+        <p class="text-muted small mb-0">Main Admin portal for uploading, editing, and managing regulations stored in <code>visa.ppr_details</code>.</p>
     </div>
 
     <div class="d-flex align-items-center gap-2">
         <a href="{{ route('general.index') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" style="border-radius: 10px; font-weight: 600;">
             <i class="bi bi-grid"></i>
-            <span>Back to Cards View</span>
+            <span>All Regulations (Cards View)</span>
         </a>
     </div>
 </div>
@@ -41,110 +56,93 @@
 <div class="row g-4">
 
     {{-- Left Column: Upload New Regulation Form --}}
-    <div class="col-lg-5">
-        <div class="card p-4" style="border-radius: 16px; margin-top: 0;">
+    <div class="col-lg-4">
+        <div class="card p-4" style="border-radius: 16px; margin-top: 0; box-shadow: var(--card-shadow); border: 1px solid var(--border-card);">
             <h2 class="h5 fw-bold mb-3 d-flex align-items-center gap-2" style="color: var(--text-primary);">
                 <i class="bi bi-cloud-arrow-up-fill text-primary"></i>
-                Upload New Document / Regulation
+                Upload Regulation
             </h2>
 
             <form method="POST" action="{{ route('general.store') }}" enctype="multipart/form-data">
                 @csrf
 
-                {{-- Program Selection --}}
+                {{-- 1. Program Selection: MCA, BBA, BCA, MBA --}}
                 <div class="mb-3">
                     <label class="form-label fw-bold small text-secondary">
                         Program <span class="text-danger">*</span>
                     </label>
-                    <div class="d-flex gap-3">
+                    <div class="d-flex gap-3 flex-wrap">
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="program" id="pMBA" value="MBA" checked>
-                            <label class="form-check-label fw-semibold small" for="pMBA">Online MBA</label>
+                            <input class="form-check-input" type="radio" name="prog_name" id="mProgMCA" value="MCA" {{ old('prog_name') === 'MCA' ? 'checked' : '' }} checked>
+                            <label class="form-check-label fw-semibold small" for="mProgMCA">MCA</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="program" id="pBBA" value="BBA">
-                            <label class="form-check-label fw-semibold small" for="pBBA">Online BBA</label>
+                            <input class="form-check-input" type="radio" name="prog_name" id="mProgBBA" value="BBA" {{ old('prog_name') === 'BBA' ? 'checked' : '' }}>
+                            <label class="form-check-label fw-semibold small" for="mProgBBA">BBA</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="program" id="pCommon" value="COMMON">
-                            <label class="form-check-label fw-semibold small" for="pCommon">Common</label>
+                            <input class="form-check-input" type="radio" name="prog_name" id="mProgBCA" value="BCA" {{ old('prog_name') === 'BCA' ? 'checked' : '' }}>
+                            <label class="form-check-label fw-semibold small" for="mProgBCA">BCA</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="prog_name" id="mProgMBA" value="MBA" {{ old('prog_name') === 'MBA' ? 'checked' : '' }}>
+                            <label class="form-check-label fw-semibold small" for="mProgMBA">MBA</label>
                         </div>
                     </div>
                 </div>
 
-                {{-- Subcategory Dropdown --}}
+                {{-- 2. Regulation Code (Validation: auto lowercase 'r' -> 'R', strictly 3 chars, 1st char R) --}}
                 <div class="mb-3">
-                    <label for="m_sub_category" class="form-label fw-bold small text-secondary">
-                        Sub-Category / Nav Section <span class="text-danger">*</span>
+                    <label for="m_regcode" class="form-label fw-bold small text-secondary">
+                        Regulation Code <span class="text-danger">*</span>
                     </label>
-                    <select name="sub_category" id="m_sub_category" class="form-select form-select-sm" onchange="toggleManageNewCat(this.value)">
-                        <option value="Regulations">Regulations</option>
-                        <option value="Syllabus">Syllabus</option>
-                        <option value="Exam Guidelines">Exam Guidelines</option>
-                        <option value="Academic Calendar">Academic Calendar</option>
-                        <option value="Curriculum">Curriculum</option>
-                        @foreach ($existingSubCategories as $cat)
-                            @if (!in_array($cat, ['Regulations', 'Syllabus', 'Exam Guidelines', 'Academic Calendar', 'Curriculum']))
-                                <option value="{{ $cat }}">{{ $cat }}</option>
-                            @endif
-                        @endforeach
-                        <option value="__NEW__">+ Create New Sub-Category...</option>
-                    </select>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text fw-bold text-primary">R</span>
+                        <input type="text"
+                               name="regcode"
+                               id="m_regcode"
+                               class="form-control form-control-sm text-uppercase fw-bold"
+                               placeholder="R22"
+                               maxlength="3"
+                               required
+                               oninput="formatManageRegulationCode(this)"
+                               value="{{ old('regcode') }}">
+                    </div>
+                    <div class="form-text small" style="font-size: 11px;">
+                        Must be exactly 3 characters starting with R (e.g. <code>r22</code> &rarr; <code>R22</code>).
+                    </div>
                 </div>
 
-                {{-- New Subcategory input --}}
-                <div class="mb-3" id="m_newCatWrap" style="display: none;">
-                    <label for="m_new_sub_category" class="form-label fw-bold small text-secondary">
-                        New Sub-Category Name
-                    </label>
-                    <input type="text"
-                           name="new_sub_category"
-                           id="m_new_sub_category"
-                           class="form-control form-control-sm"
-                           placeholder="e.g. Capstone Projects, Grading Norms">
-                </div>
-
-                {{-- Regulation Code --}}
+                {{-- 3. Regulation Name (regname) --}}
                 <div class="mb-3">
-                    <label for="m_regulation_code" class="form-label fw-bold small text-secondary">
-                        Regulation Code (Optional)
+                    <label for="m_regname" class="form-label fw-bold small text-secondary">
+                        Regulation Name (regname) <span class="text-danger">*</span>
                     </label>
                     <input type="text"
-                           name="regulation_code"
-                           id="m_regulation_code"
+                           name="regname"
+                           id="m_regname"
                            class="form-control form-control-sm"
-                           placeholder="e.g. R22, R21, R24">
-                </div>
-
-                {{-- Title --}}
-                <div class="mb-3">
-                    <label for="m_title" class="form-label fw-bold small text-secondary">
-                        Document Title <span class="text-danger">*</span>
-                    </label>
-                    <input type="text"
-                           name="title"
-                           id="m_title"
-                           class="form-control form-control-sm"
-                           placeholder="e.g. R22 MBA Academic Regulations"
+                           placeholder="e.g. R22 MCA Academic Regulations & Course Scheme"
+                           value="{{ old('regname') }}"
                            required>
                 </div>
 
-                {{-- Description --}}
+                {{-- 4. Description --}}
                 <div class="mb-3">
                     <label for="m_description" class="form-label fw-bold small text-secondary">
-                        Description / Summary
+                        Description
                     </label>
                     <textarea name="description"
                               id="m_description"
                               rows="2"
                               class="form-control form-control-sm"
-                              placeholder="Brief description..."></textarea>
+                              placeholder="Brief description / summary...">{{ old('description') }}</textarea>
                 </div>
 
-                {{-- File upload --}}
+                {{-- 5. File upload --}}
                 <div class="mb-4">
                     <label for="m_document" class="form-label fw-bold small text-secondary">
-                        Upload Document File <span class="text-danger">*</span>
+                        Upload Regulation Document <span class="text-danger">*</span>
                     </label>
                     <input type="file"
                            name="document"
@@ -158,62 +156,94 @@
 
                 <button type="submit" class="btn btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-2" style="border-radius: 10px; font-weight: 700; height: 42px;">
                     <i class="bi bi-cloud-arrow-up-fill"></i>
-                    <span>Upload &amp; Publish Document</span>
+                    <span>Upload &amp; Save to visa.ppr_details</span>
                 </button>
 
             </form>
         </div>
     </div>
 
-    {{-- Right Column: Uploaded Documents Table --}}
-    <div class="col-lg-7">
-        <div class="card p-4" style="border-radius: 16px; margin-top: 0;">
-            <div class="d-flex align-items-center justify-content-between mb-3">
+    {{-- Right Column: visa.ppr_details Table --}}
+    <div class="col-lg-8">
+        <div class="card p-4" style="border-radius: 16px; margin-top: 0; box-shadow: var(--card-shadow); border: 1px solid var(--border-card);">
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                 <h2 class="h5 fw-bold mb-0" style="color: var(--text-primary);">
-                    <i class="bi bi-file-earmark-check-fill text-success me-2"></i>
-                    Published Documents ({{ $documents->total() }})
+                    <i class="bi bi-table text-primary me-2"></i>
+                    visa.ppr_details Table ({{ $documents->total() }})
                 </h2>
+                <span class="badge bg-light text-secondary border">Schema: visa &bull; Table: ppr_details</span>
             </div>
 
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                <table class="table table-hover align-middle mb-0" style="font-size: 12.5px;">
                     <thead class="table-light">
                         <tr>
-                            <th>Program</th>
-                            <th>Title &amp; Sub-Category</th>
-                            <th>File</th>
-                            <th>Downloads</th>
-                            <th class="text-end">Actions</th>
+                            <th style="width: 60px;">S.no</th>
+                            <th style="width: 75px;">Prog id</th>
+                            <th style="width: 90px;">Prog name</th>
+                            <th style="width: 90px;">regcode</th>
+                            <th>regname</th>
+                            <th>filename &amp; filepath</th>
+                            <th>description</th>
+                            <th class="text-end" style="width: 90px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($documents as $item)
                             <tr>
-                                <td>
-                                    <span class="badge {{ $item->program === 'MBA' ? 'bg-primary' : ($item->program === 'BBA' ? 'bg-purple' : 'bg-secondary') }}" style="font-weight: 700;">
-                                        {{ $item->program }}
-                                    </span>
-                                    @if ($item->regulation_code)
-                                        <div class="small text-muted mt-1 fw-bold">{{ $item->regulation_code }}</div>
-                                    @endif
+                                {{-- S.no --}}
+                                <td class="fw-bold text-muted">
+                                    #{{ $item->s_no }}
                                 </td>
+
+                                {{-- Prog id --}}
                                 <td>
-                                    <div class="fw-bold text-dark">{{ $item->title }}</div>
-                                    <div class="small text-muted">
-                                        <span class="badge bg-light text-dark border">{{ $item->sub_category }}</span>
-                                        • {{ $item->created_at ? $item->created_at->format('d M Y') : 'Recent' }}
+                                    <span class="badge bg-light text-dark border">{{ $item->prog_id ?? '-' }}</span>
+                                </td>
+
+                                {{-- Prog name --}}
+                                <td>
+                                    <span class="badge {{ $item->program_badge_class }}" style="font-weight: 700;">
+                                        {{ $item->prog_name }}
+                                    </span>
+                                </td>
+
+                                {{-- regcode --}}
+                                <td>
+                                    <span class="badge bg-warning text-dark fw-bold" style="letter-spacing: 0.5px;">
+                                        {{ $item->regcode }}
+                                    </span>
+                                </td>
+
+                                {{-- regname --}}
+                                <td>
+                                    <div class="fw-bold text-dark">{{ $item->regname }}</div>
+                                    <div class="small text-muted" style="font-size: 11px;">
+                                        {{ $item->created_at ? $item->created_at->format('d M Y, h:i A') : 'Recent' }}
                                     </div>
                                 </td>
+
+                                {{-- filename & filepath --}}
                                 <td>
-                                    <i class="{{ $item->file_icon }} me-1" style="font-size: 18px;"></i>
-                                    <span class="fw-semibold text-uppercase" style="font-size: 11px;">{{ $item->file_type }}</span>
-                                    <div class="small text-muted">{{ $item->formatted_size }}</div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <i class="{{ $item->file_icon }} me-1" style="font-size: 16px;"></i>
+                                        <span class="fw-semibold text-truncate" style="max-width: 140px;" title="{{ $item->filename }}">
+                                            {{ $item->filename }}
+                                        </span>
+                                    </div>
+                                    <div class="text-muted text-truncate" style="font-size: 10.5px; max-width: 160px;" title="{{ $item->filepath }}">
+                                        <code>{{ $item->filepath }}</code>
+                                    </div>
                                 </td>
+
+                                {{-- description --}}
                                 <td>
-                                    <span class="badge bg-light text-secondary border">
-                                        <i class="bi bi-download me-1"></i>{{ $item->downloads_count }}
-                                    </span>
+                                    <div class="text-muted text-truncate" style="max-width: 150px;" title="{{ $item->description }}">
+                                        {{ $item->description ?: '-' }}
+                                    </div>
                                 </td>
+
+                                {{-- Actions --}}
                                 <td class="text-end">
                                     <div class="d-inline-flex gap-1">
                                         <a href="{{ route('general.download', $item) }}" class="btn btn-sm btn-outline-primary" title="Download">
@@ -222,7 +252,7 @@
                                         <form method="POST"
                                               action="{{ route('general.destroy', $item) }}"
                                               class="d-inline m-0 p-0"
-                                              onsubmit="return confirm('Delete document: {{ addslashes($item->title) }}?')">
+                                              onsubmit="return confirm('Delete regulation #{{ $item->s_no }} ({{ addslashes($item->regname) }})?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
@@ -234,8 +264,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">
-                                    No documents published yet.
+                                <td colspan="8" class="text-center py-4 text-muted">
+                                    No records found in <code>visa.ppr_details</code>.
                                 </td>
                             </tr>
                         @endforelse
@@ -255,18 +285,15 @@
 
 @push('scripts')
 <script>
-    function toggleManageNewCat(val) {
-        const wrap = document.getElementById('m_newCatWrap');
-        const input = document.getElementById('m_new_sub_category');
-        if (val === '__NEW__') {
-            wrap.style.display = 'block';
-            input.required = true;
-            input.focus();
-        } else {
-            wrap.style.display = 'none';
-            input.required = false;
-            input.value = '';
+    function formatManageRegulationCode(input) {
+        let val = (input.value || '').toUpperCase().trim();
+        if (val.length > 0 && !val.startsWith('R')) {
+            val = 'R' + val.replace(/^R+/i, '');
         }
+        if (val.length > 3) {
+            val = val.substring(0, 3);
+        }
+        input.value = val;
     }
 </script>
 @endpush

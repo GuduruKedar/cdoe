@@ -652,25 +652,25 @@
 
     <div class="portal-layout-container">
 
-        {{-- ================= LEFT HERO & FEATURE CARDS (Online MBA & BBA) ================= --}}
+        {{-- ================= LEFT HERO & FEATURE CARDS (Online Learning) ================= --}}
         <section class="portal-hero-section">
 
             {{-- University Pill Badge --}}
             <div class="university-badge-pill">
                 <img src="{{ asset('images/vignan-emblem.png') }}" alt="Vignan Shield" class="badge-emblem-icon">
-                <span>VFSTR • CDOE ONLINE MBA &amp; BBA</span>
+                <span>VFSTR • CDOE Online Learning</span>
             </div>
 
             {{-- Large Headline --}}
             <h1 class="hero-portal-title">
-                Online MBA &amp; BBA <span class="highlight-cyan">Portal</span>
+                Online Learning <span class="highlight-cyan">Portal</span>
             </h1>
 
             <p class="hero-portal-desc">
-                A unified digital campus platform empowering Online MBA &amp; BBA learners with industry-aligned curriculum, interactive live lectures, case studies, and corporate mentor connectivity.
+                A unified digital campus platform empowering Online MBA &amp; BBA &amp; MCA &amp; BCA learners with industry-aligned curriculum, interactive live lectures, case studies, and corporate mentor connectivity.
             </p>
 
-            {{-- Feature Cards Grid (Customized for Online MBA & BBA) --}}
+            {{-- Feature Cards Grid (Customized for Online MBA & BBA & MCA & BCA) --}}
             <div class="features-grid">
 
                 {{-- Card 1: Specializations & Electives --}}
@@ -682,7 +682,7 @@
                         <div class="feature-header">
                             <span class="feature-name">Specializations &amp; Electives</span>
                             <span class="feature-badge badge-blue">
-                                <span class="dot"></span> MBA &amp; BBA
+                                <span class="dot"></span> Online Learning
                             </span>
                         </div>
                         <p class="feature-desc">Dual specializations in Finance, Marketing, HR, Operations, and Business Analytics.</p>
@@ -767,10 +767,10 @@
                          alt="VFSTR Vignan University"
                          class="portal-shield-img">
                     <div class="auth-institution-tag">
-                        <span>• VFSTR • ONLINE MBA &amp; BBA (CDOE)</span>
+                        <span>• VFSTR • ONLINE LEARNING (CDOE)</span>
                     </div>
                     <h2 class="auth-portal-title">
-                        Online MBA &amp; BBA <span class="portal-blue">Portal</span>
+                        Online Learning <span class="portal-blue">Portal</span>
                     </h2>
                     <p class="auth-portal-sub">Welcome Back! Please enter your credentials to continue.</p>
                 </div>

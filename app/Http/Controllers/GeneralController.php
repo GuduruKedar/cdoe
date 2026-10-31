@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Common\Services\MenuService;
-use App\Models\GeneralDocument;
+use App\Models\PprDetail;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -11,6 +11,16 @@ use Illuminate\Support\Str;
 
 class GeneralController extends Controller
 {
+    /**
+     * Program definition mapping (Prog ID to Code/Name).
+     */
+    public const PROGRAM_MAP = [
+        'MBA' => ['id' => 1, 'name' => 'MBA', 'title' => 'Online MBA'],
+        'MCA' => ['id' => 2, 'name' => 'MCA', 'title' => 'Online MCA'],
+        'BBA' => ['id' => 3, 'name' => 'BBA', 'title' => 'Online BBA'],
+        'BCA' => ['id' => 4, 'name' => 'BCA', 'title' => 'Online BCA'],
+    ];
+
     /**
      * Check if the current ACTIVE role is Main Admin.
      */
@@ -34,7 +44,7 @@ class GeneralController extends Controller
     }
 
     /**
-     * Main General Regulations & Academic Documents Hub (Cards View).
+     * Main General Regulations Hub (Cards View).
      * Accessible by ALL roles.
      */
     public function index(Request $request)
@@ -46,71 +56,51 @@ class GeneralController extends Controller
         $menus = MenuService::getMenusForUser($user);
 
         $activeProgram = strtoupper(trim($request->query('program', 'ALL')));
-        $activeSubCategory = trim($request->query('sub', 'All'));
         $search = trim($request->query('q', ''));
 
-        $query = GeneralDocument::query()->where('status', 1);
+        $query = PprDetail::query();
 
-        // Filter by program (MBA / BBA / COMMON)
+        // Filter by program (MCA / BBA / BCA / MBA)
         if ($activeProgram && $activeProgram !== 'ALL') {
-            $query->where(function ($q) use ($activeProgram) {
-                $q->where('program', $activeProgram)
-                    ->orWhere('program', 'COMMON');
-            });
-        }
-
-        // Filter by dynamic subcategory (e.g. Regulations, Syllabus, etc.)
-        if ($activeSubCategory && $activeSubCategory !== 'All') {
-            $query->where('sub_category', $activeSubCategory);
+            $query->where('prog_name', $activeProgram);
         }
 
         // Search in title, code, description, filename
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('title', 'ILIKE', "%{$search}%")
-                    ->orWhere('regulation_code', 'ILIKE', "%{$search}%")
+                $q->where('regname', 'ILIKE', "%{$search}%")
+                    ->orWhere('regcode', 'ILIKE', "%{$search}%")
                     ->orWhere('description', 'ILIKE', "%{$search}%")
-                    ->orWhere('file_name', 'ILIKE', "%{$search}%");
+                    ->orWhere('filename', 'ILIKE', "%{$search}%");
             });
         }
 
-        $documents = $query->orderBy('program')
-            ->orderBy('regulation_code', 'desc')
+        $documents = $query->orderBy('prog_name')
+            ->orderBy('regcode', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
 
         // Calculate dynamic program counts
         $counts = [
-            'ALL' => GeneralDocument::where('status', 1)->count(),
-            'MBA' => GeneralDocument::where('status', 1)->whereIn('program', ['MBA', 'COMMON'])->count(),
-            'BBA' => GeneralDocument::where('status', 1)->whereIn('program', ['BBA', 'COMMON'])->count(),
+            'ALL' => PprDetail::count(),
+            'MCA' => PprDetail::where('prog_name', 'MCA')->count(),
+            'MBA' => PprDetail::where('prog_name', 'MBA')->count(),
+            'BCA' => PprDetail::where('prog_name', 'BCA')->count(),
+            'BBA' => PprDetail::where('prog_name', 'BBA')->count(),
         ];
 
-        // Retrieve all distinct subcategories currently registered in the DB
-        $allSubCategories = GeneralDocument::where('status', 1)
-            ->distinct()
-            ->pluck('sub_category')
-            ->filter()
-            ->values()
-            ->toArray();
-
-        // Default standard subcategories if DB is initially empty
-        if (empty($allSubCategories)) {
-            $allSubCategories = ['Regulations', 'Syllabus', 'Exam Guidelines', 'Academic Calendar'];
-        }
-
         $isMainAdmin = self::isMainAdmin();
+        $programMap = self::PROGRAM_MAP;
 
         return view('general.index', compact(
             'menus',
             'user',
             'documents',
             'activeProgram',
-            'activeSubCategory',
             'search',
             'counts',
-            'allSubCategories',
-            'isMainAdmin'
+            'isMainAdmin',
+            'programMap'
         ));
     }
 
@@ -121,7 +111,7 @@ class GeneralController extends Controller
     {
         if (! self::isMainAdmin()) {
             return redirect()->route('general.index')
-                ->with('error', 'Unauthorized access. Only Main Admin can manage regulations and documents.');
+                ->with('error', 'Unauthorized access. Only Main Admin can manage regulations.');
         }
 
         $user = (object) [
@@ -130,24 +120,19 @@ class GeneralController extends Controller
         ];
         $menus = MenuService::getMenusForUser($user);
 
-        $documents = GeneralDocument::orderBy('created_at', 'desc')->paginate(20);
-
-        $existingSubCategories = GeneralDocument::distinct()
-            ->pluck('sub_category')
-            ->filter()
-            ->values()
-            ->toArray();
+        $documents = PprDetail::orderBy('created_at', 'desc')->paginate(20);
+        $programMap = self::PROGRAM_MAP;
 
         return view('general.manage', compact(
             'menus',
             'user',
             'documents',
-            'existingSubCategories'
+            'programMap'
         ));
     }
 
     /**
-     * Upload a new regulation / document (Main Admin Only).
+     * Upload a new regulation into visa.ppr_details (Main Admin Only).
      */
     public function store(Request $request)
     {
@@ -156,100 +141,99 @@ class GeneralController extends Controller
         }
 
         $request->validate([
-            'program' => 'required|in:MBA,BBA,COMMON',
-            'title' => 'required|string|max:255',
-            'regulation_code' => 'nullable|string|max:50',
-            'sub_category' => 'nullable|string|max:100',
-            'new_sub_category' => 'nullable|string|max:100',
+            'prog_name' => 'required|in:MCA,BBA,BCA,MBA',
+            'regname' => 'required|string|max:255',
+            'regcode' => 'required|string',
             'description' => 'nullable|string|max:2000',
             'document' => 'required|file|max:51200', // max 50MB, any file type allowed
         ]);
 
-        // Resolve sub-category (either custom newly typed or selected from dropdown)
-        $subCategory = trim($request->input('new_sub_category') ?: $request->input('sub_category') ?: 'Regulations');
+        // Validation for Regulation Code:
+        // Automatically uppercase, must be exactly 3 characters, and 1st character must be 'R'
+        $regcode = strtoupper(trim((string) $request->input('regcode')));
+        if (strlen($regcode) !== 3 || ! str_starts_with($regcode, 'R')) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['regcode' => 'Regulation code must be exactly 3 characters starting with R (e.g. R22, R21, R24).']);
+        }
+
+        $progName = strtoupper(trim($request->input('prog_name')));
+        $progId = self::PROGRAM_MAP[$progName]['id'] ?? null;
 
         $file = $request->file('document');
         $originalName = $file->getClientOriginalName();
         $extension = strtolower($file->getClientOriginalExtension() ?: 'bin');
-        $fileSize = $file->getSize();
 
-        // Generate safe unique filename
+        // Safe unique file name
         $safeName = Str::slug(pathinfo($originalName, PATHINFO_FILENAME));
         $storedFilename = time().'_'.$safeName.'.'.$extension;
 
         // Store into storage/app/public/general_documents
         $path = $file->storeAs('general_documents', $storedFilename, 'public');
 
-        GeneralDocument::create([
-            'program' => strtoupper($request->input('program')),
-            'sub_category' => $subCategory,
-            'title' => trim($request->input('title')),
-            'regulation_code' => $request->input('regulation_code') ? strtoupper(trim($request->input('regulation_code'))) : null,
+        PprDetail::create([
+            'prog_id' => $progId,
+            'prog_name' => $progName,
+            'regname' => trim($request->input('regname')),
+            'regcode' => $regcode,
+            'filename' => $originalName,
+            'filepath' => $path,
             'description' => $request->input('description'),
-            'file_path' => $path,
-            'file_name' => $originalName,
-            'file_type' => $extension,
-            'file_size' => $fileSize,
-            'uploaded_by' => session('user.usercode', 'Main Admin'),
-            'downloads_count' => 0,
-            'status' => 1,
         ]);
 
         return redirect()->back()
-            ->with('success', 'Document uploaded and published successfully!');
+            ->with('success', "Regulation {$regcode} for {$progName} uploaded successfully!");
     }
 
     /**
      * Download document.
      */
-    public function download(GeneralDocument $document)
+    public function download(PprDetail $document)
     {
-        if (! Storage::disk('public')->exists($document->file_path)) {
+        if (! Storage::disk('public')->exists($document->filepath)) {
             return redirect()->back()->with('error', 'File not found on storage.');
         }
 
-        $document->increment('downloads_count');
+        $filePath = Storage::disk('public')->path($document->filepath);
 
-        $filePath = Storage::disk('public')->path($document->file_path);
-
-        return response()->download($filePath, $document->file_name);
+        return response()->download($filePath, $document->filename);
     }
 
     /**
      * Preview document inline (PDF / Images).
      */
-    public function preview(GeneralDocument $document)
+    public function preview(PprDetail $document)
     {
-        if (! Storage::disk('public')->exists($document->file_path)) {
+        if (! Storage::disk('public')->exists($document->filepath)) {
             return redirect()->back()->with('error', 'File not found on storage.');
         }
 
-        $filePath = Storage::disk('public')->path($document->file_path);
-        $mime = Storage::disk('public')->mimeType($document->file_path) ?: 'application/octet-stream';
+        $filePath = Storage::disk('public')->path($document->filepath);
+        $mime = Storage::disk('public')->mimeType($document->filepath) ?: 'application/octet-stream';
 
         return response()->file($filePath, [
             'Content-Type' => $mime,
-            'Content-Disposition' => 'inline; filename="'.$document->file_name.'"',
+            'Content-Disposition' => 'inline; filename="'.$document->filename.'"',
         ]);
     }
 
     /**
      * Delete document (Main Admin Only).
      */
-    public function destroy(GeneralDocument $document)
+    public function destroy(PprDetail $document)
     {
         if (! self::isMainAdmin()) {
             abort(403, 'Unauthorized access.');
         }
 
-        if (Storage::disk('public')->exists($document->file_path)) {
-            Storage::disk('public')->delete($document->file_path);
+        if (Storage::disk('public')->exists($document->filepath)) {
+            Storage::disk('public')->delete($document->filepath);
         }
 
         $document->delete();
 
         return redirect()->back()
-            ->with('success', 'Document deleted successfully.');
+            ->with('success', 'Regulation document deleted successfully.');
     }
 
     /**
@@ -257,6 +241,6 @@ class GeneralController extends Controller
      */
     public function pprBooks(Request $request)
     {
-        return redirect()->route('general.index', ['sub' => 'PPR Books']);
+        return redirect()->route('general.index');
     }
 }

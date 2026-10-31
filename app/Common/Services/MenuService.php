@@ -98,53 +98,14 @@ class MenuService
                 'menu_code' => 'GENE_ALL',
                 'menu_name' => 'All Regulations',
                 'controller_ref' => 'general',
-                'icon_name' => 'bi bi-grid-fill',
+                'icon_name' => 'bi bi-file-earmark-text-fill',
                 'is_collapsible' => false,
                 'mposition' => 1,
                 'morder' => 1,
                 'url' => '/general',
                 'children' => [],
             ],
-            [
-                'menu_id' => 'gen-mba',
-                'menu_code' => 'GENE_MBA',
-                'menu_name' => 'Online MBA',
-                'controller_ref' => 'general/mba',
-                'icon_name' => 'bi bi-mortarboard-fill',
-                'is_collapsible' => false,
-                'mposition' => 1,
-                'morder' => 2,
-                'url' => '/general?program=MBA',
-                'children' => [],
-            ],
-            [
-                'menu_id' => 'gen-bba',
-                'menu_code' => 'GENE_BBA',
-                'menu_name' => 'Online BBA',
-                'controller_ref' => 'general/bba',
-                'icon_name' => 'bi bi-book-fill',
-                'is_collapsible' => false,
-                'mposition' => 1,
-                'morder' => 3,
-                'url' => '/general?program=BBA',
-                'children' => [],
-            ],
         ];
-
-        if ($isMainAdmin) {
-            $generalChildren[] = [
-                'menu_id' => 'gen-manage',
-                'menu_code' => 'GENE_MANAGE',
-                'menu_name' => 'Upload & Manage',
-                'controller_ref' => 'general/manage',
-                'icon_name' => 'bi bi-cloud-arrow-up-fill',
-                'is_collapsible' => false,
-                'mposition' => 1,
-                'morder' => 4,
-                'url' => '/general/manage',
-                'children' => [],
-            ];
-        }
 
         $found = false;
         foreach ($tree as &$node) {

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page_title', 'General Regulations & Documents')
+@section('page_title', 'All Regulations — CDOE')
 
 @push('styles')
 <style>
@@ -51,7 +51,7 @@
         box-shadow: 0 6px 18px var(--theme-glow);
     }
 
-    /* Program Filter Switcher (All / MBA / BBA) */
+    /* Program Filter Switcher (All / MCA / MBA / BCA / BBA) */
     .filter-controls-card {
         background: var(--bg-card);
         border: 1px solid var(--border-card);
@@ -63,11 +63,15 @@
     .program-tabs-bar {
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+    .program-pills-wrap {
+        display: flex;
+        align-items: center;
         gap: 10px;
         flex-wrap: wrap;
-        border-bottom: 1px solid var(--border-subtle);
-        padding-bottom: 16px;
-        margin-bottom: 16px;
     }
     .program-tab-btn {
         padding: 8px 18px;
@@ -106,42 +110,7 @@
         color: #ffffff;
     }
 
-    /* Sub-Categories Pills & Search Row */
-    .subcat-search-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        flex-wrap: wrap;
-    }
-    .subcat-pills-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-    .subcat-pill {
-        padding: 5px 14px;
-        border-radius: 8px;
-        font-size: 12.5px;
-        font-weight: 600;
-        background: transparent;
-        border: 1px solid var(--border-subtle);
-        color: var(--text-muted);
-        text-decoration: none;
-        transition: all 0.15s ease;
-    }
-    .subcat-pill:hover {
-        background: var(--bg-hover-row);
-        color: var(--text-primary);
-    }
-    .subcat-pill.active {
-        background: var(--bg-hover-row);
-        color: var(--theme-primary);
-        border-color: var(--theme-primary);
-        font-weight: 700;
-    }
-
+    /* Search Input */
     .search-box-wrap {
         position: relative;
         min-width: 240px;
@@ -209,33 +178,27 @@
         margin-bottom: 14px;
     }
     .doc-program-badge {
-        font-size: 11px;
+        font-size: 11.5px;
         font-weight: 800;
         padding: 3px 10px;
         border-radius: 6px;
         letter-spacing: 0.3px;
     }
     .badge-program-mba { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+    .badge-program-mca { background: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; }
     .badge-program-bba { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
-    .badge-program-common { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+    .badge-program-bca { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+    .badge-program-common { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
 
-    .doc-subcat-badge {
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--text-muted);
-        background: var(--bg-hover-row);
-        padding: 2px 8px;
-        border-radius: 999px;
-        border: 1px solid var(--border-subtle);
-    }
     .doc-regcode-tag {
-        font-size: 11px;
+        font-size: 11.5px;
         font-weight: 800;
         color: #d97706;
         background: #fef3c7;
         border: 1px solid #fde68a;
-        padding: 2px 8px;
+        padding: 3px 9px;
         border-radius: 6px;
+        letter-spacing: 0.5px;
     }
 
     /* Main Card Content */
@@ -406,10 +369,17 @@
     </div>
 @endif
 
-@if (session('error'))
+@if (session('error') || $errors->any())
     <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2 mb-4" role="alert" style="border-radius: 12px;">
         <i class="bi bi-exclamation-triangle-fill"></i>
-        <span>{{ session('error') }}</span>
+        <div>
+            @if (session('error'))
+                <div>{{ session('error') }}</div>
+            @endif
+            @foreach ($errors->all() as $err)
+                <div>{{ $err }}</div>
+            @endforeach
+        </div>
         <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
@@ -419,77 +389,75 @@
     <div class="gen-page-header-text">
         <h1>
             <i class="bi bi-folder2-open text-primary"></i>
-            <span>Regulations &amp; Academic Documents</span>
+            <span>All Regulations</span>
         </h1>
-        <p>Curriculum regulations, course syllabi, and official university documentation for Online MBA &amp; BBA.</p>
+        <p>Curriculum regulations and academic guidelines for MCA, MBA, BCA, and BBA programs.</p>
     </div>
 
     @if ($isMainAdmin)
         <button type="button" class="btn-upload-trigger" data-bs-toggle="modal" data-bs-target="#uploadDocModal">
             <i class="bi bi-cloud-arrow-up-fill"></i>
-            <span>Upload Regulation / Document</span>
+            <span>Upload Regulation</span>
         </button>
     @endif
 </div>
 
 {{-- Filter & Control Card --}}
 <div class="filter-controls-card">
-
-    {{-- Program Selection Tabs (All / MBA / BBA) --}}
     <div class="program-tabs-bar">
-        <a href="{{ route('general.index', ['program' => 'ALL', 'sub' => $activeSubCategory]) }}"
-           class="program-tab-btn {{ $activeProgram === 'ALL' ? 'active' : '' }}">
-            <i class="bi bi-grid-fill"></i>
-            <span>All Programs</span>
-            <span class="badge-count">{{ $counts['ALL'] ?? 0 }}</span>
-        </a>
 
-        <a href="{{ route('general.index', ['program' => 'MBA', 'sub' => $activeSubCategory]) }}"
-           class="program-tab-btn {{ $activeProgram === 'MBA' ? 'active' : '' }}">
-            <i class="bi bi-mortarboard-fill"></i>
-            <span>Online MBA</span>
-            <span class="badge-count">{{ $counts['MBA'] ?? 0 }}</span>
-        </a>
-
-        <a href="{{ route('general.index', ['program' => 'BBA', 'sub' => $activeSubCategory]) }}"
-           class="program-tab-btn {{ $activeProgram === 'BBA' ? 'active' : '' }}">
-            <i class="bi bi-book-fill"></i>
-            <span>Online BBA</span>
-            <span class="badge-count">{{ $counts['BBA'] ?? 0 }}</span>
-        </a>
-    </div>
-
-    {{-- Subcategories Pills & Live Search --}}
-    <div class="subcat-search-bar">
-        <div class="subcat-pills-row">
-            <a href="{{ route('general.index', ['program' => $activeProgram, 'sub' => 'All', 'q' => $search]) }}"
-               class="subcat-pill {{ $activeSubCategory === 'All' ? 'active' : '' }}">
-                All Categories
+        {{-- Program Selection Tabs (All / MCA / MBA / BCA / BBA) --}}
+        <div class="program-pills-wrap">
+            <a href="{{ route('general.index', ['program' => 'ALL']) }}"
+               class="program-tab-btn {{ $activeProgram === 'ALL' ? 'active' : '' }}">
+                <i class="bi bi-grid-fill"></i>
+                <span>All Programs</span>
+                <span class="badge-count">{{ $counts['ALL'] ?? 0 }}</span>
             </a>
 
-            @foreach ($allSubCategories as $cat)
-                <a href="{{ route('general.index', ['program' => $activeProgram, 'sub' => $cat, 'q' => $search]) }}"
-                   class="subcat-pill {{ $activeSubCategory === $cat ? 'active' : '' }}">
-                    {{ $cat }}
-                </a>
-            @endforeach
+            <a href="{{ route('general.index', ['program' => 'MCA']) }}"
+               class="program-tab-btn {{ $activeProgram === 'MCA' ? 'active' : '' }}">
+                <i class="bi bi-laptop"></i>
+                <span>MCA</span>
+                <span class="badge-count">{{ $counts['MCA'] ?? 0 }}</span>
+            </a>
+
+            <a href="{{ route('general.index', ['program' => 'MBA']) }}"
+               class="program-tab-btn {{ $activeProgram === 'MBA' ? 'active' : '' }}">
+                <i class="bi bi-mortarboard-fill"></i>
+                <span>MBA</span>
+                <span class="badge-count">{{ $counts['MBA'] ?? 0 }}</span>
+            </a>
+
+            <a href="{{ route('general.index', ['program' => 'BCA']) }}"
+               class="program-tab-btn {{ $activeProgram === 'BCA' ? 'active' : '' }}">
+                <i class="bi bi-code-square"></i>
+                <span>BCA</span>
+                <span class="badge-count">{{ $counts['BCA'] ?? 0 }}</span>
+            </a>
+
+            <a href="{{ route('general.index', ['program' => 'BBA']) }}"
+               class="program-tab-btn {{ $activeProgram === 'BBA' ? 'active' : '' }}">
+                <i class="bi bi-book-fill"></i>
+                <span>BBA</span>
+                <span class="badge-count">{{ $counts['BBA'] ?? 0 }}</span>
+            </a>
         </div>
 
-        {{-- Search Input --}}
+        {{-- Live Search Input --}}
         <form method="GET" action="{{ route('general.index') }}" class="search-box-wrap m-0 p-0">
             <input type="hidden" name="program" value="{{ $activeProgram }}">
-            <input type="hidden" name="sub" value="{{ $activeSubCategory }}">
             <i class="bi bi-search"></i>
             <input type="text"
                    name="q"
                    id="searchDocsInput"
                    class="search-box-input"
-                   placeholder="Search regulations, code (R22)..."
+                   placeholder="Search regulations (R22)..."
                    value="{{ $search }}"
                    onkeyup="filterCardsClientSide(this.value)">
         </form>
-    </div>
 
+    </div>
 </div>
 
 {{-- Cards Grid --}}
@@ -497,36 +465,28 @@
 
     @forelse ($documents as $doc)
         <div class="doc-card"
-             data-title="{{ strtolower($doc->title) }}"
-             data-code="{{ strtolower($doc->regulation_code ?? '') }}"
-             data-program="{{ strtolower($doc->program) }}"
-             data-cat="{{ strtolower($doc->sub_category) }}">
+             data-title="{{ strtolower($doc->regname) }}"
+             data-code="{{ strtolower($doc->regcode ?? '') }}"
+             data-program="{{ strtolower($doc->prog_name) }}">
 
             <div>
                 {{-- Tags Bar --}}
                 <div class="doc-card-tags">
                     <span class="doc-program-badge {{ $doc->program_badge_class }}">
-                        {{ $doc->program }}
+                        {{ $doc->prog_name }}
                     </span>
 
-                    <div class="d-flex align-items-center gap-1">
-                        @if ($doc->regulation_code)
-                            <span class="doc-regcode-tag">
-                                {{ $doc->regulation_code }}
-                            </span>
-                        @endif
-                        <span class="doc-subcat-badge">
-                            {{ $doc->sub_category }}
-                        </span>
-                    </div>
+                    <span class="doc-regcode-tag">
+                        {{ $doc->regcode }}
+                    </span>
                 </div>
 
                 {{-- Main Title & Description --}}
                 <div class="doc-main-content">
                     <i class="{{ $doc->file_icon }} doc-type-icon"></i>
                     <div class="doc-text-wrap">
-                        <h2 class="doc-card-title" title="{{ $doc->title }}">
-                            {{ $doc->title }}
+                        <h2 class="doc-card-title" title="{{ $doc->regname }}">
+                            {{ $doc->regname }}
                         </h2>
                         @if ($doc->description)
                             <p class="doc-card-desc">
@@ -551,8 +511,8 @@
                     </span>
                     <span>•</span>
                     <span>
-                        <i class="bi bi-download"></i>
-                        {{ $doc->downloads_count }} downloads
+                        <i class="bi bi-file-earmark-check"></i>
+                        {{ strtoupper($doc->file_type) }}
                     </span>
                 </div>
 
@@ -561,13 +521,13 @@
                     {{-- Quick View Button --}}
                     <button type="button"
                             class="btn-quick-view"
-                            onclick="openQuickViewModal('{{ $doc->title }}', '{{ route('general.preview', $doc) }}', '{{ $doc->file_type }}', '{{ route('general.download', $doc) }}', '{{ $doc->formatted_size }}')">
+                            onclick="openQuickViewModal('{{ addslashes($doc->regname) }}', '{{ route('general.preview', $doc) }}', '{{ $doc->file_type }}', '{{ route('general.download', $doc) }}', '{{ $doc->formatted_size }}')">
                         <i class="bi bi-eye-fill"></i>
                         <span>Quick View</span>
                     </button>
 
                     {{-- Download Button --}}
-                    <a href="{{ route('general.download', $doc) }}" class="btn-card-download" title="Download {{ $doc->file_name }}">
+                    <a href="{{ route('general.download', $doc) }}" class="btn-card-download" title="Download {{ $doc->filename }}">
                         <i class="bi bi-download"></i>
                         <span>Download</span>
                     </a>
@@ -577,10 +537,10 @@
                         <form method="POST"
                               action="{{ route('general.destroy', $doc) }}"
                               class="m-0 p-0"
-                              onsubmit="return confirm('Are you sure you want to delete this document: {{ addslashes($doc->title) }}?')">
+                              onsubmit="return confirm('Are you sure you want to delete this regulation: {{ addslashes($doc->regname) }}?')">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn-card-delete" title="Delete document">
+                            <button type="submit" class="btn-card-delete" title="Delete regulation">
                                 <i class="bi bi-trash3-fill"></i>
                             </button>
                         </form>
@@ -592,11 +552,11 @@
     @empty
         <div class="empty-state-card">
             <i class="bi bi-folder-x"></i>
-            <h3>No Regulations or Documents Found</h3>
+            <h3>No Regulations Found</h3>
             <p>
-                No documents match the selected program or category.
+                No documents match the selected program filter.
                 @if ($isMainAdmin)
-                    Click the <strong>Upload Regulation</strong> button above to publish new documents.
+                    Click the <strong>Upload Regulation</strong> button above to upload new regulations.
                 @endif
             </p>
         </div>
@@ -621,7 +581,7 @@
                 </div>
             </div>
             <div class="modal-body p-0" id="quickViewContainer" style="height: 75vh; background: #525659; display: flex; align-items: center; justify-content: center;">
-                {{-- Dynamically populated iframe or notice --}}
+                {{-- Dynamically populated iframe or preview notice --}}
             </div>
         </div>
     </div>
@@ -639,108 +599,92 @@
                 <div class="modal-header" style="background: var(--bg-hover-row); border-bottom: 1px solid var(--border-subtle); padding: 18px 24px;">
                     <h5 class="modal-title fw-bold" id="uploadDocModalLabel" style="font-size: 18px; color: var(--text-primary);">
                         <i class="bi bi-cloud-arrow-up-fill text-primary me-2"></i>
-                        Upload Regulation &amp; Document
+                        Upload Regulation
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body" style="padding: 24px;">
 
-                    {{-- 1. Program Selection --}}
+                    {{-- 1. Program Selection: MCA, BBA, BCA, MBA --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
                             1. Select Program <span class="text-danger">*</span>
                         </label>
-                        <div class="d-flex gap-3">
+                        <div class="d-flex gap-3 flex-wrap">
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="program" id="progMBA" value="MBA" checked>
-                                <label class="form-check-label fw-semibold" for="progMBA">Online MBA</label>
+                                <input class="form-check-input" type="radio" name="prog_name" id="progMCA" value="MCA" checked>
+                                <label class="form-check-label fw-semibold" for="progMCA">MCA</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="program" id="progBBA" value="BBA">
-                                <label class="form-check-label fw-semibold" for="progBBA">Online BBA</label>
+                                <input class="form-check-input" type="radio" name="prog_name" id="progBBA" value="BBA">
+                                <label class="form-check-label fw-semibold" for="progBBA">BBA</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="program" id="progCommon" value="COMMON">
-                                <label class="form-check-label fw-semibold" for="progCommon">Common (Both MBA &amp; BBA)</label>
+                                <input class="form-check-input" type="radio" name="prog_name" id="progBCA" value="BCA">
+                                <label class="form-check-label fw-semibold" for="progBCA">BCA</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="prog_name" id="progMBA" value="MBA">
+                                <label class="form-check-label fw-semibold" for="progMBA">MBA</label>
                             </div>
                         </div>
                     </div>
 
-                    {{-- 2. Sub-Category (Dynamic creation supported) --}}
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label for="sub_category" class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
-                                2. Sub-Category / Nav Section <span class="text-danger">*</span>
-                            </label>
-                            <select name="sub_category" id="sub_category" class="form-select" onchange="checkCustomSubCategory(this.value)">
-                                <option value="Regulations">Regulations</option>
-                                <option value="Syllabus">Syllabus</option>
-                                <option value="Exam Guidelines">Exam Guidelines</option>
-                                <option value="Academic Calendar">Academic Calendar</option>
-                                <option value="Curriculum">Curriculum</option>
-                                @foreach ($allSubCategories as $extraCat)
-                                    @if (!in_array($extraCat, ['Regulations', 'Syllabus', 'Exam Guidelines', 'Academic Calendar', 'Curriculum']))
-                                        <option value="{{ $extraCat }}">{{ $extraCat }}</option>
-                                    @endif
-                                @endforeach
-                                <option value="__NEW__">+ Create New Sub-Category...</option>
-                            </select>
-                        </div>
-
-                        {{-- Dynamic New Sub-Category Input --}}
-                        <div class="col-md-6" id="newSubCatGroup" style="display: none;">
-                            <label for="new_sub_category" class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
-                                New Sub-Category Name
-                            </label>
-                            <input type="text"
-                                   name="new_sub_category"
-                                   id="new_sub_category"
-                                   class="form-control"
-                                   placeholder="e.g. Internship Guidelines, Case Studies">
-                        </div>
-
-                        <div class="col-md-6" id="regCodeGroup">
-                            <label for="regulation_code" class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
-                                Regulation Code (Optional)
-                            </label>
-                            <input type="text"
-                                   name="regulation_code"
-                                   id="regulation_code"
-                                   class="form-control"
-                                   placeholder="e.g. R22, R21, R24">
-                        </div>
-                    </div>
-
-                    {{-- 3. Document Title --}}
+                    {{-- 2. Regulation Code with strict validation (Exactly 3 chars, 1st char R, uppercase) --}}
                     <div class="mb-3">
-                        <label for="title" class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
-                            3. Document Title <span class="text-danger">*</span>
+                        <label for="regcode" class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
+                            2. Regulation Code <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text fw-bold text-primary" style="border-radius: 10px 0 0 10px;">R</span>
+                            <input type="text"
+                                   name="regcode"
+                                   id="regcode"
+                                   class="form-control"
+                                   style="text-transform: uppercase; font-weight: 700; letter-spacing: 1px; border-radius: 0 10px 10px 0;"
+                                   placeholder="R22"
+                                   maxlength="3"
+                                   pattern="[Rr][A-Za-z0-9]{2}"
+                                   required
+                                   oninput="formatRegulationCode(this)"
+                                   value="{{ old('regcode') }}">
+                        </div>
+                        <div class="form-text" style="font-size: 11.5px; color: var(--text-muted);">
+                            Must be exactly 3 characters starting with <strong>R</strong> (e.g. typing <code>r22</code> automatically becomes <code>R22</code>).
+                        </div>
+                    </div>
+
+                    {{-- 3. Document / Regulation Title --}}
+                    <div class="mb-3">
+                        <label for="regname" class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
+                            3. Regulation Name / Title <span class="text-danger">*</span>
                         </label>
                         <input type="text"
-                               name="title"
-                               id="title"
+                               name="regname"
+                               id="regname"
                                class="form-control"
-                               placeholder="e.g. R22 MBA Academic Regulations &amp; Promotion Criteria"
+                               placeholder="e.g. R22 MCA Academic Regulations &amp; Course Scheme"
+                               value="{{ old('regname') }}"
                                required>
                     </div>
 
                     {{-- 4. Description --}}
                     <div class="mb-3">
                         <label for="description" class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
-                            4. Description / Summary
+                            4. Description (Optional)
                         </label>
                         <textarea name="description"
                                   id="description"
                                   rows="2"
                                   class="form-control"
-                                  placeholder="Brief overview of what this document covers..."></textarea>
+                                  placeholder="Summary of regulations, credits, or requirements...">{{ old('description') }}</textarea>
                     </div>
 
                     {{-- 5. File Upload (Any document type supported) --}}
                     <div class="mb-2">
                         <label for="document" class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
-                            5. Attach Document File (Any Type: PDF, DOC, DOCX, ZIP, XLS, etc.) <span class="text-danger">*</span>
+                            5. Attach Regulation Document (PDF, Word, Excel, ZIP, etc.) <span class="text-danger">*</span>
                         </label>
                         <input type="file"
                                name="document"
@@ -748,7 +692,7 @@
                                class="form-control"
                                required>
                         <div class="form-text" style="font-size: 12px; color: var(--text-muted);">
-                            Supports all formats: PDF, Word (.doc, .docx), Excel (.xls, .xlsx), PowerPoint (.ppt, .pptx), ZIP, Images. Max 50 MB.
+                            All document types accepted (PDF, DOC, DOCX, ZIP, XLS, etc.). Max 50 MB.
                         </div>
                     </div>
 
@@ -773,6 +717,19 @@
 
 @push('scripts')
 <script>
+    // Format Regulation Code on input: auto uppercase, ensure starts with R, max 3 chars
+    function formatRegulationCode(input) {
+        let val = (input.value || '').toUpperCase().trim();
+        // If user typed without R, prepend R
+        if (val.length > 0 && !val.startsWith('R')) {
+            val = 'R' + val.replace(/^R+/i, '');
+        }
+        if (val.length > 3) {
+            val = val.substring(0, 3);
+        }
+        input.value = val;
+    }
+
     // Quick View modal logic
     function openQuickViewModal(title, previewUrl, fileType, downloadUrl, sizeText) {
         document.getElementById('quickViewTitle').textContent = title;
@@ -804,21 +761,6 @@
 
         const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
         modal.show();
-    }
-
-    // Toggle custom dynamic subcategory input
-    function checkCustomSubCategory(val) {
-        const group = document.getElementById('newSubCatGroup');
-        const input = document.getElementById('new_sub_category');
-        if (val === '__NEW__') {
-            group.style.display = 'block';
-            input.required = true;
-            input.focus();
-        } else {
-            group.style.display = 'none';
-            input.required = false;
-            input.value = '';
-        }
     }
 
     // Client-side instant filter
