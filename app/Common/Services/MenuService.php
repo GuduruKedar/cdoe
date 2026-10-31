@@ -2,6 +2,7 @@
 
 namespace App\Common\Services;
 
+use App\Http\Controllers\GeneralController;
 use App\Models\Menu;
 use App\Models\MenuAccessRole;
 use App\Models\Role;
@@ -79,7 +80,104 @@ class MenuService
             ];
         }
 
-        return self::buildTree($menuRecords, $meta);
+        $tree = self::buildTree($menuRecords, $meta);
+
+        return self::enhanceGeneralMenu($tree, $user);
+    }
+
+    /**
+     * Ensure General menu is present for EVERY role with dynamic MBA/BBA sub-sections.
+     */
+    private static function enhanceGeneralMenu(array $tree, $user): array
+    {
+        $isMainAdmin = GeneralController::isMainAdmin();
+
+        $generalChildren = [
+            [
+                'menu_id' => 'gen-all',
+                'menu_code' => 'GENE_ALL',
+                'menu_name' => 'All Regulations',
+                'controller_ref' => 'general',
+                'icon_name' => 'bi bi-grid-fill',
+                'is_collapsible' => false,
+                'mposition' => 1,
+                'morder' => 1,
+                'url' => '/general',
+                'children' => [],
+            ],
+            [
+                'menu_id' => 'gen-mba',
+                'menu_code' => 'GENE_MBA',
+                'menu_name' => 'Online MBA',
+                'controller_ref' => 'general/mba',
+                'icon_name' => 'bi bi-mortarboard-fill',
+                'is_collapsible' => false,
+                'mposition' => 1,
+                'morder' => 2,
+                'url' => '/general?program=MBA',
+                'children' => [],
+            ],
+            [
+                'menu_id' => 'gen-bba',
+                'menu_code' => 'GENE_BBA',
+                'menu_name' => 'Online BBA',
+                'controller_ref' => 'general/bba',
+                'icon_name' => 'bi bi-book-fill',
+                'is_collapsible' => false,
+                'mposition' => 1,
+                'morder' => 3,
+                'url' => '/general?program=BBA',
+                'children' => [],
+            ],
+        ];
+
+        if ($isMainAdmin) {
+            $generalChildren[] = [
+                'menu_id' => 'gen-manage',
+                'menu_code' => 'GENE_MANAGE',
+                'menu_name' => 'Upload & Manage',
+                'controller_ref' => 'general/manage',
+                'icon_name' => 'bi bi-cloud-arrow-up-fill',
+                'is_collapsible' => false,
+                'mposition' => 1,
+                'morder' => 4,
+                'url' => '/general/manage',
+                'children' => [],
+            ];
+        }
+
+        $found = false;
+        foreach ($tree as &$node) {
+            if (
+                ($node['menu_id'] ?? null) == 140
+                || strtolower($node['menu_name'] ?? '') === 'general'
+                || strtolower($node['controller_ref'] ?? '') === 'general/index'
+            ) {
+                $node['is_collapsible'] = true;
+                $node['icon_name'] = 'bi bi-folder2-open';
+                $node['children'] = $generalChildren;
+                $found = true;
+                break;
+            }
+        }
+        unset($node);
+
+        if (! $found) {
+            $tree[] = [
+                'menu_id' => 140,
+                'menu_code' => 'GENE0001',
+                'menu_name' => 'General',
+                'controller_ref' => 'general/index',
+                'icon_name' => 'bi bi-folder2-open',
+                'is_collapsible' => true,
+                'mposition' => 1,
+                'morder' => 99,
+                'url' => '/general',
+                'children' => $generalChildren,
+            ];
+        }
+
+        return $tree;
     }
 
     private static function buildTree($menuRecords, $meta, $parentId = null): array
