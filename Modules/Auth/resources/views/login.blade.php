@@ -602,29 +602,46 @@
 
         /* Responsive Breakpoints */
         @media (max-width: 1024px) {
+            .portal-hero-section {
+                display: none !important;
+            }
             .portal-layout-container {
                 grid-template-columns: 1fr;
-                gap: 40px;
-            }
-            .portal-hero-section {
-                text-align: center;
+                justify-content: center;
                 align-items: center;
+                margin: auto;
+                padding: 0;
+                gap: 0;
+                max-width: 460px;
             }
-            .hero-portal-desc {
-                margin-left: auto;
-                margin-right: auto;
-            }
-            .university-badge-pill {
-                margin-left: auto;
-                margin-right: auto;
+            .auth-card-wrapper {
+                max-width: 100%;
+                width: 100%;
             }
         }
 
         @media (max-width: 640px) {
-            body { padding: 20px 14px; }
-            .hero-portal-title { font-size: 32px; }
-            .features-grid { grid-template-columns: 1fr; }
-            .auth-card { padding: 28px 20px 24px; border-radius: 20px; }
+            body {
+                padding: 16px 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .auth-card {
+                padding: 32px 22px 26px;
+                border-radius: 22px;
+                box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.45);
+            }
+            .portal-shield-img {
+                width: 50px;
+                height: 50px;
+            }
+            .auth-portal-title {
+                font-size: 22px;
+            }
+            .auth-portal-sub {
+                font-size: 13px;
+            }
         }
     </style>
 </head>
