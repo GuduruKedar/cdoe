@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Learning Management Portal — VFSTR Vignan University</title>
+    <title>Learning Management Portal — Online MBA &amp; BBA | Vignan CDOE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -635,13 +635,13 @@
 
     <div class="portal-layout-container">
 
-        {{-- ================= LEFT HERO & FEATURE CARDS (Image 1 replica) ================= --}}
+        {{-- ================= LEFT HERO & FEATURE CARDS (Online MBA & BBA) ================= --}}
         <section class="portal-hero-section">
 
             {{-- University Pill Badge --}}
             <div class="university-badge-pill">
                 <img src="{{ asset('images/vignan-emblem.png') }}" alt="Vignan Shield" class="badge-emblem-icon">
-                <span>VFSTR • VIGNAN UNIVERSITY</span>
+                <span>VFSTR • CDOE ONLINE MBA &amp; BBA</span>
             </div>
 
             {{-- Large Headline --}}
@@ -650,89 +650,89 @@
             </h1>
 
             <p class="hero-portal-desc">
-                A unified digital campus platform empowering students with streamlined course allocations, instant study materials, and direct faculty connectivity.
+                A unified digital campus platform empowering Online MBA &amp; BBA learners with industry-aligned curriculum, interactive live lectures, case studies, and corporate mentor connectivity.
             </p>
 
-            {{-- Feature Cards Grid (Exact replica of Image 1) --}}
+            {{-- Feature Cards Grid (Customized for Online MBA & BBA) --}}
             <div class="features-grid">
 
-                {{-- Card 1: Course Enrollment --}}
+                {{-- Card 1: Specializations & Electives --}}
                 <div class="feature-card">
                     <div class="feature-icon bg-icon-blue">
-                        <i class="bi bi-journal-bookmark-fill"></i>
+                        <i class="bi bi-briefcase-fill"></i>
                     </div>
                     <div class="feature-body">
                         <div class="feature-header">
-                            <span class="feature-name">Course Enrollment</span>
+                            <span class="feature-name">Specializations &amp; Electives</span>
                             <span class="feature-badge badge-blue">
-                                <span class="dot"></span> Online
+                                <span class="dot"></span> MBA &amp; BBA
                             </span>
                         </div>
-                        <p class="feature-desc">Register for semester courses, electives, and core subjects seamlessly.</p>
+                        <p class="feature-desc">Dual specializations in Finance, Marketing, HR, Operations, and Business Analytics.</p>
                     </div>
                 </div>
 
-                {{-- Card 2: Study Materials --}}
+                {{-- Card 2: Digital Study Materials --}}
                 <div class="feature-card">
                     <div class="feature-icon bg-icon-cyan">
-                        <i class="bi bi-download"></i>
+                        <i class="bi bi-journal-album"></i>
                     </div>
                     <div class="feature-body">
                         <div class="feature-header">
-                            <span class="feature-name">Study Materials</span>
+                            <span class="feature-name">Digital Study Materials</span>
                             <span class="feature-badge badge-cyan">
-                                <span class="dot"></span> 24/7 Access
+                                <span class="dot"></span> 24/7 E-Learning
                             </span>
                         </div>
-                        <p class="feature-desc">Instant access to presentations, syllabus PDFs, and lecture notes.</p>
+                        <p class="feature-desc">Instant access to case studies, e-books, video lectures, and business journals.</p>
                     </div>
                 </div>
 
-                {{-- Card 3: Assigned Faculty --}}
+                {{-- Card 3: Corporate Mentors & Faculty --}}
                 <div class="feature-card">
                     <div class="feature-icon bg-icon-green">
                         <i class="bi bi-people-fill"></i>
                     </div>
                     <div class="feature-body">
                         <div class="feature-header">
-                            <span class="feature-name">Assigned Faculty</span>
+                            <span class="feature-name">Corporate Mentors &amp; Faculty</span>
                             <span class="feature-badge badge-green">
                                 <span class="dot"></span> Direct Sync
                             </span>
                         </div>
-                        <p class="feature-desc">View allocated professors, mentors, and departmental teachers.</p>
+                        <p class="feature-desc">Connect with seasoned management faculty, industry CXOs, and academic advisors.</p>
                     </div>
                 </div>
 
-                {{-- Card 4: Civil Services --}}
+                {{-- Card 4: Industry Projects & Case Studies --}}
                 <div class="feature-card">
                     <div class="feature-icon bg-icon-orange">
-                        <i class="bi bi-check-circle-fill"></i>
+                        <i class="bi bi-graph-up-arrow"></i>
                     </div>
                     <div class="feature-body">
                         <div class="feature-header">
-                            <span class="feature-name">Civil Services</span>
+                            <span class="feature-name">Live Projects &amp; Case Studies</span>
                             <span class="feature-badge badge-orange">
-                                <span class="dot"></span> UPSC Track
+                                <span class="dot"></span> Practical Track
                             </span>
                         </div>
-                        <p class="feature-desc">Integrated coaching modules, GS prep, and practice materials.</p>
+                        <p class="feature-desc">Integrated corporate simulations, capstone projects, and real-world business case analyses.</p>
                     </div>
                 </div>
 
                 {{-- Card 5: Academic Progress & Tracking (Full width) --}}
                 <div class="feature-card full-width">
                     <div class="feature-icon bg-icon-purple">
-                        <i class="bi bi-bar-chart-line-fill"></i>
+                        <i class="bi bi-award-fill"></i>
                     </div>
                     <div class="feature-body">
                         <div class="feature-header">
-                            <span class="feature-name">Academic Progress &amp; Tracking</span>
+                            <span class="feature-name">Examinations &amp; Academic Progress</span>
                             <span class="feature-badge badge-purple">
                                 <span class="dot"></span> Real-Time
                             </span>
                         </div>
-                        <p class="feature-desc">Check registered curriculum, regulation requirements, and overall academic status.</p>
+                        <p class="feature-desc">Track semester SGPA/CGPA, continuous internal assessments, proctored examinations, and marks memos.</p>
                     </div>
                 </div>
 
@@ -740,7 +740,7 @@
 
         </section>
 
-        {{-- ================= RIGHT AUTH CARD (Image 1 replica) ================= --}}
+        {{-- ================= RIGHT AUTH CARD ================= --}}
         <div class="auth-card-wrapper">
             <main class="auth-card">
 
@@ -750,7 +750,7 @@
                          alt="VFSTR Vignan University"
                          class="portal-shield-img">
                     <div class="auth-institution-tag">
-                        <span>• VFSTR • VIGNAN UNIVERSITY</span>
+                        <span>• VFSTR • ONLINE MBA &amp; BBA (CDOE)</span>
                     </div>
                     <h2 class="auth-portal-title">
                         Learning Management <span class="portal-blue">Portal</span>
@@ -798,7 +798,7 @@
 
                         <div class="form-group">
                             <label for="usercode" class="form-label">
-                                <span>Username</span>
+                                <span>User Code / Register Number</span>
                             </label>
                             <div class="input-wrap">
                                 <i class="bi bi-person field-icon"></i>
@@ -806,7 +806,7 @@
                                        id="usercode"
                                        name="usercode"
                                        class="portal-input"
-                                       placeholder="e.g. 02598 or student register no"
+                                       placeholder="e.g. 261CK01001 or staff code"
                                        value="{{ old('usercode') }}"
                                        autocomplete="username"
                                        required
@@ -818,10 +818,10 @@
                         <div class="quick-chips-row">
                             <span class="chip-label">Quick fill:</span>
                             <button type="button" class="quick-chip" onclick="fillCode('02598')">
-                                <i class="bi bi-shield-check text-primary me-1"></i>02598 (Admin)
+                                <i class="bi bi-shield-check text-primary me-1"></i>02598 (Main Admin)
                             </button>
                             <button type="button" class="quick-chip" onclick="fillCode('261CK01001')">
-                                <i class="bi bi-mortarboard text-secondary me-1"></i>261CK01001 (Student)
+                                <i class="bi bi-mortarboard text-secondary me-1"></i>261CK01001 (MBA Student)
                             </button>
                         </div>
 
@@ -875,13 +875,13 @@
                 <div id="pane-register" class="register-container hidden" role="tabpanel">
                     <h3 class="register-title">Registration</h3>
                     <p class="register-text">
-                        New user registration is currently managed by university administration.
+                        Online MBA &amp; BBA learner registration and course admissions are managed by CDOE administration.
                     </p>
 
                     <div class="register-contact-box">
                         <div class="contact-box-title">
                             <i class="bi bi-info-circle-fill text-primary"></i>
-                            <span>Administrative Contact</span>
+                            <span>CDOE Admissions &amp; Records Office</span>
                         </div>
 
                         <div class="contact-row">
@@ -908,8 +908,8 @@
 
                 {{-- Auth Card Footer --}}
                 <div class="auth-card-footer">
-                    <p>© {{ now()->year }} Learning Management Portal</p>
-                    <p class="powered-by">Powered by Technology Development (TD)</p>
+                    <p>© {{ now()->year }} Centre for Distance &amp; Online Education (CDOE)</p>
+                    <p class="powered-by">VFSTR Deemed to be University • Powered by Technology Development (TD)</p>
                 </div>
 
             </main>
