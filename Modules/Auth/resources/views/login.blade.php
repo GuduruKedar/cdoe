@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ERP Login — Vignan Online CDOE</title>
+    <title>ERP Portal Login — Vignan Online CDOE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -16,152 +16,228 @@
         :root {
             --brand-crimson: #c1121f;
             --brand-crimson-dark: #8e0b14;
-            --brand-crimson-deep: #6a070e;
-            --brand-gold-border: rgba(217, 119, 6, 0.32);
-            --bg-warm-canvas: radial-gradient(circle at 50% 15%, #fffdfa 0%, #fef7ed 45%, #faede0 100%);
-            --text-heading: #1f2937;
+            --brand-crimson-deep: #5e060d;
+            --brand-crimson-light: #fef2f2;
+            --brand-gold: #d97706;
+            --brand-gold-soft: #f59e0b;
+            --brand-gold-border: rgba(217, 119, 6, 0.28);
+            --bg-canvas: #faf6f0;
+            --text-heading: #111827;
             --text-body: #4b5563;
             --text-muted: #6b7280;
         }
 
         body {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-            background: var(--bg-warm-canvas);
+            background: var(--bg-canvas);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(193, 18, 31, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(217, 119, 6, 0.09) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(193, 18, 31, 0.06) 0px, transparent 60%),
+                radial-gradient(circle at 50% 50%, #fffefc 0%, #fbf5ec 70%, #f6ebdc 100%);
+            background-attachment: fixed;
             color: var(--text-body);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 24px 16px;
+            padding: 30px 16px;
             position: relative;
             overflow-x: hidden;
         }
 
-        /* Ambient glow backdrop effects */
-        .ambient-glow-1 {
+        /* Ambient Dynamic Glow Orbs */
+        .ambient-orb {
             position: fixed;
-            top: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: min(650px, 90vw);
-            height: 350px;
-            background: radial-gradient(circle, rgba(220, 38, 38, 0.12) 0%, rgba(245, 158, 11, 0.06) 50%, transparent 70%);
-            filter: blur(50px);
+            border-radius: 50%;
+            filter: blur(75px);
             pointer-events: none;
             z-index: 0;
+            opacity: 0.65;
+            transition: all 0.5s ease;
+        }
+        .ambient-orb-top {
+            top: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(600px, 90vw);
+            height: 380px;
+            background: radial-gradient(circle, rgba(193, 18, 31, 0.22) 0%, rgba(245, 158, 11, 0.12) 50%, transparent 75%);
+        }
+        .ambient-orb-bottom {
+            bottom: -150px;
+            right: 10%;
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(217, 119, 6, 0.15) 0%, rgba(193, 18, 31, 0.08) 50%, transparent 75%);
+        }
+
+        /* Watermark Crest Background */
+        .background-watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(650px, 85vw);
+            height: min(650px, 85vw);
+            background-image: url('{{ asset("images/vignan-emblem.png") }}');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: 0.035;
+            pointer-events: none;
+            z-index: 0;
+            filter: grayscale(1);
         }
 
         .login-page-container {
             width: 100%;
-            max-width: 480px;
+            max-width: 460px;
             display: flex;
             flex-direction: column;
             align-items: center;
             position: relative;
-            z-index: 1;
+            z-index: 2;
             margin: auto;
         }
 
-        /* Top Institutional Banner Logo */
-        .brand-banner-wrap {
+        /* Institutional Banner Header */
+        .brand-banner-card {
             width: 100%;
-            max-width: 460px;
-            background: #ffffff;
-            border: 1px solid rgba(226, 232, 240, 0.9);
-            border-radius: 16px;
-            padding: 12px 18px;
-            margin-bottom: 22px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.06),
+                        0 2px 6px rgba(0, 0, 0, 0.02),
+                        0 0 0 1px rgba(217, 119, 6, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s ease;
         }
-        .brand-banner-wrap:hover {
+        .brand-banner-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #c1121f 0%, #d97706 50%, #2563eb 100%);
+        }
+        .brand-banner-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.08),
+                        0 0 0 1px rgba(217, 119, 6, 0.25);
         }
         .brand-banner-img {
             width: 100%;
             height: auto;
-            max-height: 78px;
+            max-height: 74px;
             object-fit: contain;
             display: block;
         }
 
-        /* Main ERP Login Card */
+        /* Luxury ERP Auth Card */
         .erp-auth-card {
             width: 100%;
             background: #ffffff;
-            border-radius: 24px;
-            border: 1.5px solid var(--brand-gold-border);
-            box-shadow: 0 20px 50px -10px rgba(185, 28, 28, 0.16),
-                        0 8px 24px -6px rgba(0, 0, 0, 0.06),
-                        0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+            border-radius: 28px;
+            border: 1.5px solid rgba(217, 119, 6, 0.35);
+            box-shadow:
+                0 30px 70px -15px rgba(185, 28, 28, 0.20),
+                0 15px 35px -8px rgba(0, 0, 0, 0.08),
+                0 0 0 1px rgba(255, 255, 255, 0.9) inset;
             overflow: hidden;
-            transition: all 0.3s ease;
+            position: relative;
+            transition: box-shadow 0.3s ease;
         }
 
-        /* Red Textured Hero Section (Matches Screenshot 1) */
+        /* Red Textured Hero Header (Screenshot 1 Authentic Design) */
         .card-hero-header {
             background-color: var(--brand-crimson);
             background-image:
-                repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.045) 0px, rgba(255, 255, 255, 0.045) 1.5px, transparent 1.5px, transparent 12px),
-                repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.045) 0px, rgba(255, 255, 255, 0.045) 1.5px, transparent 1.5px, transparent 12px),
-                linear-gradient(135deg, #a8101b 0%, #c1121f 48%, #780811 100%);
-            padding: 26px 24px 34px;
+                repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.045) 0px, rgba(255, 255, 255, 0.045) 1.5px, transparent 1.5px, transparent 13px),
+                repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.045) 0px, rgba(255, 255, 255, 0.045) 1.5px, transparent 1.5px, transparent 13px),
+                linear-gradient(135deg, #7c0710 0%, #b3101b 46%, #d81c2b 85%, #60040a 100%);
+            padding: 28px 24px 38px;
             color: #ffffff;
             position: relative;
-            box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        /* Shimmering Top Light Streak */
+        .card-hero-header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -50%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(60deg, transparent 40%, rgba(255, 255, 255, 0.08) 50%, transparent 60%);
+            pointer-events: none;
         }
 
         /* Secure OTP pill badge */
         .secure-badge-pill {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            background: rgba(255, 255, 255, 0.16);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.32);
+            gap: 7px;
+            padding: 5px 13px;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.38);
             border-radius: 999px;
             color: #ffffff;
             font-size: 11.5px;
-            font-weight: 600;
-            letter-spacing: 0.2px;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
         }
         .secure-badge-pill i {
             font-size: 11px;
             color: #fef08a;
         }
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: #4ade80;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #4ade80;
+            display: inline-block;
+        }
 
         .hero-title {
             font-family: 'Playfair Display', Georgia, serif;
-            font-size: 30px;
+            font-size: 32px;
             font-weight: 700;
-            letter-spacing: -0.3px;
+            letter-spacing: -0.4px;
             color: #ffffff;
             margin: 0 0 4px;
-            line-height: 1.2;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            line-height: 1.15;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
         }
 
         .hero-subtitle {
             font-size: 13.5px;
-            color: rgba(255, 255, 255, 0.88);
+            color: rgba(255, 255, 255, 0.92);
             font-weight: 400;
             margin: 0;
-            letter-spacing: 0.1px;
+            letter-spacing: 0.15px;
         }
 
-        /* Tab Switcher Capsule Container (Overlapping Hero & Body) */
+        /* Tab Switcher Capsule Container */
         .tab-capsule-wrapper {
             padding: 0 20px;
-            margin-top: -18px;
+            margin-top: -20px;
             position: relative;
             z-index: 5;
         }
@@ -170,52 +246,53 @@
             display: flex;
             background: #ffffff;
             border-radius: 999px;
-            padding: 4px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
-            border: 1px solid rgba(226, 232, 240, 0.8);
+            padding: 5px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(226, 232, 240, 0.9);
             position: relative;
         }
 
         .tab-btn {
             flex: 1;
-            padding: 9px 18px;
+            padding: 10px 20px;
             border-radius: 999px;
-            font-size: 13.5px;
+            font-size: 14px;
             font-weight: 700;
             border: none;
             background: transparent;
             color: #64748b;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
             font-family: inherit;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 7px;
             outline: none;
         }
 
+        /* 3D Glossy Crimson Pill (Exact match to Screenshot 1) */
         .tab-btn.active {
-            background: linear-gradient(180deg, #d91c2b 0%, #a10e18 100%);
+            background: linear-gradient(180deg, #d91c2b 0%, #9e0e18 100%);
             color: #ffffff;
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4),
-                        0 4px 12px rgba(161, 14, 24, 0.35);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5),
+                        0 4px 14px rgba(161, 14, 24, 0.38);
         }
 
         .tab-btn:not(.active):hover {
             color: var(--brand-crimson);
-            background: rgba(193, 18, 31, 0.04);
+            background: rgba(193, 18, 31, 0.05);
         }
 
-        /* Card Content Area */
+        /* Card Body Content Area */
         .card-body-section {
             padding: 26px 26px 30px;
         }
 
-        /* Alert notifications */
+        /* Notifications Alert Box */
         .alert-box {
             padding: 12px 14px;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 13px;
             margin-bottom: 18px;
             display: flex;
@@ -239,12 +316,14 @@
 
         /* Form Labels & Inputs */
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         .form-label-title {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13.5px;
+            font-weight: 700;
             color: #374151;
             margin-bottom: 8px;
         }
@@ -257,14 +336,14 @@
             position: absolute;
             left: 14px;
             color: #9ca3af;
-            font-size: 16px;
+            font-size: 17px;
             pointer-events: none;
-            transition: color 0.2s ease;
+            transition: color 0.2s ease, transform 0.2s ease;
         }
         .cdoe-input {
             width: 100%;
-            height: 46px;
-            padding: 10px 14px 10px 42px;
+            height: 48px;
+            padding: 10px 14px 10px 44px;
             background: #f9fafb;
             border: 1.5px solid #e5e7eb;
             border-radius: 12px;
@@ -272,16 +351,17 @@
             color: #111827;
             font-family: inherit;
             outline: none;
-            transition: all 0.2s ease;
+            transition: all 0.22s ease;
         }
         .cdoe-input:focus {
             background: #ffffff;
             border-color: var(--brand-crimson);
-            box-shadow: 0 0 0 3px rgba(193, 18, 31, 0.12);
+            box-shadow: 0 0 0 3.5px rgba(193, 18, 31, 0.14);
         }
         .cdoe-input:focus ~ .field-icon,
         .input-icon-wrap:focus-within .field-icon {
             color: var(--brand-crimson);
+            transform: scale(1.08);
         }
         .cdoe-input::placeholder {
             color: #9ca3af;
@@ -290,45 +370,79 @@
 
         /* 6-digit OTP input */
         .otp-input-field {
-            height: 52px;
-            font-size: 24px !important;
+            height: 54px;
+            font-size: 26px !important;
             letter-spacing: 12px;
             text-align: center;
             padding-left: 24px !important;
             font-weight: 700;
             color: #111827;
             background: #ffffff;
+            border-color: #cbd5e1;
         }
 
-        /* Primary Button (Matches 3D red pill styling) */
+        /* Quick Demo Account Selector (High Usability) */
+        .demo-accounts-pill-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .demo-label {
+            font-size: 11.5px;
+            color: #6b7280;
+            font-weight: 600;
+        }
+        .demo-chip {
+            padding: 3px 9px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 11.5px;
+            color: #374151;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+        .demo-chip:hover {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: var(--brand-crimson);
+            transform: translateY(-1px);
+        }
+
+        /* Primary Action Button (Matches 3D Pill Design) */
         .btn-brand-primary {
             width: 100%;
-            padding: 12px 20px;
+            height: 48px;
             background: linear-gradient(180deg, #d91c2b 0%, #a10e18 100%);
             color: #ffffff;
             border: none;
             border-radius: 12px;
-            font-size: 14.5px;
+            font-size: 15px;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4),
-                        0 4px 14px rgba(185, 28, 28, 0.35);
-            transition: all 0.2s ease;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45),
+                        0 5px 16px rgba(185, 28, 28, 0.38);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             outline: none;
+            letter-spacing: 0.2px;
         }
         .btn-brand-primary:hover {
             filter: brightness(1.08);
             transform: translateY(-1px);
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4),
-                        0 6px 18px rgba(185, 28, 28, 0.4);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45),
+                        0 8px 22px rgba(185, 28, 28, 0.44);
         }
         .btn-brand-primary:active {
             transform: translateY(1px);
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
         }
         .btn-brand-primary:disabled {
             opacity: 0.65;
@@ -339,7 +453,7 @@
         .btn-secondary-back {
             width: 100%;
             margin-top: 10px;
-            padding: 10px 16px;
+            height: 42px;
             background: transparent;
             color: #4b5563;
             border: 1px solid #d1d5db;
@@ -365,20 +479,20 @@
             margin-top: 14px;
         }
 
-        /* ================= REGISTRATION TAB (Matches Screenshot 1) ================= */
+        /* ================= REGISTRATION TAB (Screenshot 1 Authentic Layout) ================= */
         .register-tab-content {
             animation: fadeIn 0.25s ease-in-out;
         }
         .register-heading {
             font-family: 'Playfair Display', Georgia, serif;
-            font-size: 23px;
+            font-size: 24px;
             font-weight: 700;
-            color: #6a070e;
+            color: #5e060d;
             margin-bottom: 6px;
             line-height: 1.25;
         }
         .register-intro {
-            font-size: 13px;
+            font-size: 13.5px;
             color: #4b5563;
             line-height: 1.55;
             margin-bottom: 18px;
@@ -388,9 +502,10 @@
         .contact-details-card {
             background: #fffdf9;
             border: 1px solid #f3d2a2;
+            border-left: 3.5px solid var(--brand-crimson);
             border-radius: 14px;
             padding: 18px 20px;
-            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.08);
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.08);
             position: relative;
         }
         .contact-title {
@@ -400,13 +515,13 @@
             margin-bottom: 14px;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 7px;
             letter-spacing: 0.1px;
         }
         .contact-field-row {
             font-size: 13.5px;
             color: #374151;
-            margin-bottom: 9px;
+            margin-bottom: 10px;
             line-height: 1.5;
             display: flex;
             flex-wrap: wrap;
@@ -452,16 +567,32 @@
         .switch-to-login-btn:hover {
             background: #fee2e2;
             color: var(--brand-crimson-dark);
+            transform: translateY(-1px);
         }
 
-        /* Footer Copyright */
+        /* Footer Copyright & Trust Marks */
         .page-footer {
-            margin-top: 22px;
+            margin-top: 24px;
             text-align: center;
             font-size: 12px;
-            color: #9ca3af;
+            color: #8c827a;
             line-height: 1.6;
             max-width: 440px;
+        }
+        .footer-trust-pills {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+            font-size: 11px;
+            color: #9c8e82;
+            font-weight: 600;
+        }
+        .footer-trust-pills span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         @keyframes fadeIn {
@@ -472,21 +603,24 @@
         .hidden { display: none !important; }
 
         @media (max-width: 520px) {
-            body { padding: 16px 12px; }
-            .hero-title { font-size: 26px; }
+            body { padding: 18px 12px; }
+            .hero-title { font-size: 27px; }
             .card-body-section { padding: 22px 18px 26px; }
-            .brand-banner-wrap { padding: 10px 14px; margin-bottom: 16px; }
+            .brand-banner-card { padding: 10px 14px; margin-bottom: 16px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="ambient-glow-1" aria-hidden="true"></div>
+    {{-- Ambient Lighting Effects --}}
+    <div class="ambient-orb ambient-orb-top" aria-hidden="true"></div>
+    <div class="ambient-orb ambient-orb-bottom" aria-hidden="true"></div>
+    <div class="background-watermark" aria-hidden="true"></div>
 
     <div class="login-page-container">
 
         {{-- ================= 1. INSTITUTIONAL HEADER LOGO BANNER (Image 2) ================= --}}
-        <header class="brand-banner-wrap">
+        <header class="brand-banner-card">
             <img src="{{ asset('images/vignan-online-banner.png') }}"
                  alt="Vignan's Online — Centre for Distance and Online Education"
                  class="brand-banner-img">
@@ -498,7 +632,8 @@
             {{-- Red Textured Hero Section --}}
             <div class="card-hero-header">
                 <div class="secure-badge-pill">
-                    <i class="bi bi-lock-fill"></i>
+                    <span class="live-dot"></span>
+                    <i class="bi bi-shield-lock-fill"></i>
                     <span>Secure OTP sign-in</span>
                 </div>
                 <h1 class="hero-title">ERP Login</h1>
@@ -515,7 +650,8 @@
                             aria-selected="true"
                             aria-controls="pane-login"
                             onclick="switchAuthTab('login')">
-                        Login
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        <span>Login</span>
                     </button>
                     <button type="button"
                             class="tab-btn"
@@ -524,7 +660,8 @@
                             aria-selected="false"
                             aria-controls="pane-register"
                             onclick="switchAuthTab('register')">
-                        Register
+                        <i class="bi bi-person-lines-fill"></i>
+                        <span>Register</span>
                     </button>
                 </div>
             </div>
@@ -550,7 +687,7 @@
 
                         <div class="form-group">
                             <label for="usercode" class="form-label-title">
-                                User Code / Register Number
+                                <span>User Code / Register Number</span>
                             </label>
                             <div class="input-icon-wrap">
                                 <i class="bi bi-person-badge field-icon"></i>
@@ -566,9 +703,20 @@
                             </div>
                         </div>
 
+                        {{-- Quick Account Shortcuts for Testing --}}
+                        <div class="demo-accounts-pill-row">
+                            <span class="demo-label">Quick fill:</span>
+                            <button type="button" class="demo-chip" onclick="fillCode('02598')">
+                                <i class="bi bi-shield-check text-danger me-1"></i>02598 (Admin)
+                            </button>
+                            <button type="button" class="demo-chip" onclick="fillCode('261CK01001')">
+                                <i class="bi bi-mortarboard text-primary me-1"></i>261CK01001 (Student)
+                            </button>
+                        </div>
+
                         <button type="submit" id="send-otp-btn" class="btn-brand-primary">
                             <span>Get OTP</span>
-                            <i class="bi bi-arrow-right-short" style="font-size: 19px;"></i>
+                            <i class="bi bi-arrow-right-short" style="font-size: 21px; margin-left: -2px;"></i>
                         </button>
                     </form>
 
@@ -578,7 +726,7 @@
 
                         <div class="form-group">
                             <label for="otp" class="form-label-title" id="otp-label">
-                                Enter the 6-digit OTP
+                                <span>Enter the 6-digit OTP</span>
                             </label>
                             <div class="input-icon-wrap">
                                 <input type="text"
@@ -655,6 +803,14 @@
             {{ now()->year }} © Vignan's Foundation for Science, Technology &amp; Research
             <br>
             Centre for Distance and Online Education (CDOE). All Rights Reserved.
+
+            <div class="footer-trust-pills">
+                <span><i class="bi bi-award-fill text-warning"></i> NAAC A++</span>
+                <span>•</span>
+                <span><i class="bi bi-check-circle-fill text-success"></i> UGC Recognized</span>
+                <span>•</span>
+                <span><i class="bi bi-shield-check text-primary"></i> ISO 9001</span>
+            </div>
         </footer>
 
     </div>
@@ -673,6 +829,12 @@
         const tabRegisterBtn = document.getElementById('tab-register-btn');
         const paneLogin = document.getElementById('pane-login');
         const paneRegister = document.getElementById('pane-register');
+        const usercodeInput = document.getElementById('usercode');
+
+        function fillCode(code) {
+            usercodeInput.value = code;
+            usercodeInput.focus();
+        }
 
         // Tab Switching function
         function switchAuthTab(tab) {
@@ -691,7 +853,7 @@
                 tabLoginBtn.setAttribute('aria-selected', 'true');
                 paneRegister.classList.add('hidden');
                 paneLogin.classList.remove('hidden');
-                document.getElementById('usercode').focus();
+                usercodeInput.focus();
             }
         }
 
@@ -777,7 +939,7 @@
                     loginForm.classList.add('hidden');
                     otpForm.classList.remove('hidden');
 
-                    otpLabel.textContent = data.message || 'Enter the OTP sent to your registered email';
+                    otpLabel.innerHTML = '<span>' + (data.message || 'Enter the OTP sent to your registered email') + '</span>';
                     otpNote.textContent = 'OTP is valid for 5 minutes.';
 
                     hideAlert();
@@ -824,7 +986,7 @@
             loginForm.classList.remove('hidden');
             otpInput.value = '';
             hideAlert();
-            document.getElementById('usercode').focus();
+            usercodeInput.focus();
         });
     </script>
 </body>
