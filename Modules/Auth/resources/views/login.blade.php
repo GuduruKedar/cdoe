@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Learning Management Portal — Online MBA &amp; BBA | Vignan CDOE</title>
+    <title>Online MBA &amp; BBA Portal — VFSTR Vignan CDOE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -646,7 +646,7 @@
 
             {{-- Large Headline --}}
             <h1 class="hero-portal-title">
-                Learning Management <span class="highlight-cyan">Portal</span>
+                Online MBA &amp; BBA <span class="highlight-cyan">Portal</span>
             </h1>
 
             <p class="hero-portal-desc">
@@ -753,7 +753,7 @@
                         <span>• VFSTR • ONLINE MBA &amp; BBA (CDOE)</span>
                     </div>
                     <h2 class="auth-portal-title">
-                        Learning Management <span class="portal-blue">Portal</span>
+                        Online MBA &amp; BBA <span class="portal-blue">Portal</span>
                     </h2>
                     <p class="auth-portal-sub">Welcome Back! Please enter your credentials to continue.</p>
                 </div>
@@ -814,16 +814,6 @@
                             </div>
                         </div>
 
-                        {{-- Quick Account Shortcuts --}}
-                        <div class="quick-chips-row">
-                            <span class="chip-label">Quick fill:</span>
-                            <button type="button" class="quick-chip" onclick="fillCode('02598')">
-                                <i class="bi bi-shield-check text-primary me-1"></i>02598 (Main Admin)
-                            </button>
-                            <button type="button" class="quick-chip" onclick="fillCode('261CK01001')">
-                                <i class="bi bi-mortarboard text-secondary me-1"></i>261CK01001 (MBA Student)
-                            </button>
-                        </div>
 
                         <button type="submit" id="send-otp-btn" class="btn-portal-submit">
                             <span>Sign In</span>
