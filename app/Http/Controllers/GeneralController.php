@@ -263,8 +263,12 @@ class GeneralController extends Controller
         ]);
 
         // Validation for Regulation Code:
-        // Automatically uppercase, must be exactly 3 characters, and 1st character must be 'R'
+        // Automatically uppercase, prepend R if numeric (e.g. 22 -> R22), must be 3 characters starting with R
         $regcode = strtoupper(trim((string) $request->input('regcode')));
+        if (strlen($regcode) === 2 && ctype_digit($regcode)) {
+            $regcode = 'R'.$regcode;
+        }
+
         if (strlen($regcode) !== 3 || ! str_starts_with($regcode, 'R')) {
             return redirect()->back()
                 ->withInput()
@@ -330,6 +334,70 @@ class GeneralController extends Controller
             'Content-Type' => $mime,
             'Content-Disposition' => 'inline; filename="'.$document->filename.'"',
         ]);
+    }
+
+    /**
+     * Update an existing regulation in visa.ppr_details.
+     */
+    public function update(Request $request, PprDetail $document)
+    {
+        if (! self::canManage()) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $request->validate([
+            'prog_name' => 'required|in:MCA,BBA,BCA,MBA',
+            'regname' => 'required|string|max:255',
+            'regcode' => 'required|string',
+            'month_year' => 'nullable|string|max:100',
+            'description' => 'nullable|string|max:2000',
+            'document' => 'nullable|file|max:51200',
+        ]);
+
+        $regcode = strtoupper(trim((string) $request->input('regcode')));
+        if (strlen($regcode) === 2 && ctype_digit($regcode)) {
+            $regcode = 'R'.$regcode;
+        }
+
+        if (strlen($regcode) !== 3 || ! str_starts_with($regcode, 'R')) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['regcode' => 'Regulation code must be 3 characters starting with R (e.g. R22, R21, R24).']);
+        }
+
+        $progName = strtoupper(trim($request->input('prog_name')));
+        $progId = self::PROGRAM_MAP[$progName]['id'] ?? $document->prog_id;
+
+        $data = [
+            'prog_id' => $progId,
+            'prog_name' => $progName,
+            'regname' => trim($request->input('regname')),
+            'regcode' => $regcode,
+            'month_year' => $request->filled('month_year') ? trim($request->input('month_year')) : null,
+            'description' => $request->filled('description') ? trim($request->input('description')) : null,
+        ];
+
+        if ($request->hasFile('document')) {
+            if ($document->filepath && Storage::disk('public')->exists($document->filepath)) {
+                Storage::disk('public')->delete($document->filepath);
+            }
+
+            $file = $request->file('document');
+            $originalName = $file->getClientOriginalName();
+            $extension = strtolower($file->getClientOriginalExtension() ?: 'bin');
+            $safeName = Str::slug(pathinfo($originalName, PATHINFO_FILENAME));
+            $storedFilename = time().'_'.$safeName.'.'.$extension;
+
+            $path = $file->storeAs('general_documents', $storedFilename, 'public');
+
+            $data['filename'] = $originalName;
+            $data['filepath'] = $path;
+        }
+
+        $document->update($data);
+
+        return redirect()->back()
+            ->with('success', "Regulation '{$document->regname}' updated successfully!");
     }
 
     /**

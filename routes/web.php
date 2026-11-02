@@ -27,6 +27,7 @@ Route::middleware(['web'])->group(function () {
     Route::get('/general/pprbooksupload', [GeneralController::class, 'manage'])->name('general.pprbooksupload');
     Route::get('/general/manage', [GeneralController::class, 'manage'])->name('general.manage');
     Route::post('/general/upload', [GeneralController::class, 'store'])->name('general.store');
+    Route::put('/general/document/{document}', [GeneralController::class, 'update'])->name('general.update');
     Route::get('/general/document/{document}/download', [GeneralController::class, 'download'])->name('general.download');
     Route::get('/general/document/{document}/preview', [GeneralController::class, 'preview'])->name('general.preview');
     Route::delete('/general/document/{document}', [GeneralController::class, 'destroy'])->name('general.destroy');

@@ -340,6 +340,26 @@
         border-color: #fca5a5;
         color: #b91c1c;
     }
+    .btn-card-edit {
+        width: 36px;
+        height: 36px;
+        background: var(--bg-hover-row);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-secondary);
+        border-radius: 10px;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .btn-card-edit:hover {
+        background: var(--theme-primary);
+        border-color: var(--theme-primary);
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
 
     /* Empty state */
     .empty-state-card {
@@ -601,8 +621,23 @@
                         <span>Download</span>
                     </a>
 
-                    {{-- Delete Button (Main Admin Only) --}}
+                    {{-- Edit & Delete Buttons (Main Admin Only) --}}
                     @if ($isMainAdmin)
+                        <button type="button"
+                                class="btn-card-edit"
+                                title="Re-edit regulation details"
+                                onclick="openEditRegulationModal({{ json_encode([
+                                    's_no' => $doc->s_no,
+                                    'prog_name' => $doc->prog_name,
+                                    'prog_id' => $doc->prog_id,
+                                    'regcode' => $doc->regcode,
+                                    'month_year' => $doc->month_year,
+                                    'regname' => $doc->regname,
+                                    'description' => $doc->description,
+                                    'filename' => $doc->filename,
+                                ]) }})">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
                         <form method="POST"
                               action="{{ route('general.destroy', $doc) }}"
                               class="m-0 p-0"
@@ -812,6 +847,133 @@
         </div>
     </div>
 </div>
+
+{{-- Re-Edit Regulation Details Modal --}}
+<div class="modal fade" id="editRegulationModal" tabindex="-1" aria-labelledby="editRegulationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 18px; border: 1px solid var(--border-card); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <div class="modal-header border-bottom py-3 px-4">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="editRegulationModalLabel">
+                    <i class="bi bi-pencil-square text-primary"></i>
+                    <span>Re-Edit Regulation Details</span>
+                    <span class="badge bg-secondary ms-2" id="editModalSnoBadge">#</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form method="POST" id="editRegulationForm" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        {{-- Program Selection --}}
+                        <div class="col-12">
+                            <label class="form-label fw-bold small text-secondary">
+                                Program <span class="text-danger">*</span>
+                            </label>
+                            <div class="d-flex gap-3 flex-wrap">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="prog_name" id="editProgMCA" value="MCA">
+                                    <label class="form-check-label fw-semibold" for="editProgMCA">MCA</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="prog_name" id="editProgMBA" value="MBA">
+                                    <label class="form-check-label fw-semibold" for="editProgMBA">MBA</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="prog_name" id="editProgBCA" value="BCA">
+                                    <label class="form-check-label fw-semibold" for="editProgBCA">BCA</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="prog_name" id="editProgBBA" value="BBA">
+                                    <label class="form-check-label fw-semibold" for="editProgBBA">BBA</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Regulation Code --}}
+                        <div class="col-md-6">
+                            <label for="edit_regcode" class="form-label fw-bold small text-secondary">
+                                Regulation Code <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   name="regcode"
+                                   id="edit_regcode"
+                                   class="form-control text-uppercase fw-bold"
+                                   placeholder="R22"
+                                   maxlength="3"
+                                   required
+                                   oninput="formatRegulationCode(this)">
+                        </div>
+
+                        {{-- Month & Year --}}
+                        <div class="col-md-6">
+                            <label for="edit_month_year" class="form-label fw-bold small text-secondary">
+                                Month &amp; Year
+                            </label>
+                            <input type="text"
+                                   name="month_year"
+                                   id="edit_month_year"
+                                   class="form-control fw-semibold"
+                                   placeholder="e.g. Jan 2022, July 2022"
+                                   list="monthYearListManage">
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 11px; border-radius: 6px;" onclick="document.getElementById('edit_month_year').value='Jan 2022'">Jan 2022</button>
+                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 11px; border-radius: 6px;" onclick="document.getElementById('edit_month_year').value='July 2022'">July 2022</button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size: 11px; border-radius: 6px;" onclick="document.getElementById('edit_month_year').value='Jan 2023'">Jan 2023</button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size: 11px; border-radius: 6px;" onclick="document.getElementById('edit_month_year').value='July 2023'">July 2023</button>
+                            </div>
+                        </div>
+
+                        {{-- Regulation Name --}}
+                        <div class="col-12">
+                            <label for="edit_regname" class="form-label fw-bold small text-secondary">
+                                Regulation Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   name="regname"
+                                   id="edit_regname"
+                                   class="form-control"
+                                   required>
+                        </div>
+
+                        {{-- Description --}}
+                        <div class="col-12">
+                            <label for="edit_description" class="form-label fw-bold small text-secondary">
+                                Description
+                            </label>
+                            <textarea name="description"
+                                      id="edit_description"
+                                      rows="2"
+                                      class="form-control"></textarea>
+                        </div>
+
+                        {{-- Optional Replace File --}}
+                        <div class="col-12">
+                            <label for="edit_document" class="form-label fw-bold small text-secondary d-flex align-items-center justify-content-between">
+                                <span>Replace Document (Optional)</span>
+                                <span class="text-muted" style="font-size: 11px;">Current: <code id="editCurrentFilename">file.pdf</code></span>
+                            </label>
+                            <input type="file"
+                                   name="document"
+                                   id="edit_document"
+                                   class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top py-3 px-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 10px; font-weight: 600;">Cancel</button>
+                    <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2" style="border-radius: 10px; font-weight: 700;">
+                        <i class="bi bi-check2-circle"></i>
+                        <span>Save Changes</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endif
 
 @endsection
@@ -934,6 +1096,32 @@
             } else {
                 resetBtn.style.setProperty('display', 'none', 'important');
             }
+        }
+    }
+
+    // Open Edit Regulation Modal
+    function openEditRegulationModal(data) {
+        const badge = document.getElementById('editModalSnoBadge');
+        if (badge) badge.innerText = '#' + data.s_no;
+        const form = document.getElementById('editRegulationForm');
+        if (form) form.action = `/general/document/${data.s_no}`;
+
+        const radio = document.querySelector(`input[name="prog_name"][id="editProg${data.prog_name}"]`);
+        if (radio) radio.checked = true;
+
+        if (document.getElementById('edit_regcode')) document.getElementById('edit_regcode').value = data.regcode || '';
+        if (document.getElementById('edit_month_year')) document.getElementById('edit_month_year').value = data.month_year || '';
+        if (document.getElementById('edit_regname')) document.getElementById('edit_regname').value = data.regname || '';
+        if (document.getElementById('edit_description')) document.getElementById('edit_description').value = data.description || '';
+        if (document.getElementById('editCurrentFilename')) document.getElementById('editCurrentFilename').innerText = data.filename || 'None';
+
+        const fileInput = document.getElementById('edit_document');
+        if (fileInput) fileInput.value = '';
+
+        const modalEl = document.getElementById('editRegulationModal');
+        if (modalEl) {
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
         }
     }
 </script>
