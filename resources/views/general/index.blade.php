@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page_title', 'All Regulations — CDOE')
+@section('page_title', 'PPR Details — CDOE')
 @section('hideTitle', 'true')
 @section('hidePageSub', 'true')
 
@@ -420,20 +420,19 @@
     </div>
 @endif
 
-{{-- Header Banner: Single Line --}}
-<div class="gen-page-header">
+{{-- Single-Line Page Header --}}
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
     <div class="d-flex align-items-center gap-2">
         <h1 class="h4 fw-bold text-primary mb-0 d-flex align-items-center gap-2">
-            <i class="bi bi-folder2-open"></i>
-            <span>All Regulations — CDOE</span>
+            <i class="bi bi-journal-bookmark-fill"></i>
+            <span>PPR Details</span>
         </h1>
-        <span class="badge bg-light text-muted border small d-none d-md-inline-block">Curriculum &amp; PPR Books</span>
     </div>
 
     @if ($isMainAdmin)
         <button type="button" class="btn-upload-trigger" data-bs-toggle="modal" data-bs-target="#uploadDocModal">
             <i class="bi bi-cloud-arrow-up-fill"></i>
-            <span>Upload Regulation</span>
+            <span>Upload PPR Document</span>
         </button>
     @endif
 </div>
@@ -496,11 +495,11 @@
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
             {{-- Month Filter --}}
-            <div class="d-flex align-items-center gap-1">
-                <label for="filterMonth" class="small fw-bold text-muted me-1">
-                    <i class="bi bi-calendar-event me-1 text-primary"></i>Month:
-                </label>
-                <select name="month" id="filterMonth" class="form-select form-select-sm" style="width: auto; min-width: 120px; border-radius: 9px; font-weight: 600;" onchange="applyAllFilters()">
+            <div class="input-group input-group-sm" style="width: auto;">
+                <span class="input-group-text bg-light text-primary fw-semibold" style="border-radius: 9px 0 0 9px;">
+                    <i class="bi bi-calendar-event me-1"></i>Month
+                </span>
+                <select name="month" id="filterMonth" class="form-select form-select-sm fw-semibold" style="border-radius: 0 9px 9px 0; min-width: 120px;" onchange="applyAllFilters()">
                     <option value="ALL">All Months</option>
                     @foreach ($filterOptions['months'] ?? ['Jan', 'July'] as $m)
                         <option value="{{ $m }}" {{ ($activeMonth ?? 'ALL') === $m ? 'selected' : '' }}>{{ $m }}</option>
@@ -509,11 +508,11 @@
             </div>
 
             {{-- Year Filter --}}
-            <div class="d-flex align-items-center gap-1">
-                <label for="filterYear" class="small fw-bold text-muted me-1">
-                    <i class="bi bi-calendar3 me-1 text-primary"></i>Year:
-                </label>
-                <select name="year" id="filterYear" class="form-select form-select-sm" style="width: auto; min-width: 110px; border-radius: 9px; font-weight: 600;" onchange="applyAllFilters()">
+            <div class="input-group input-group-sm" style="width: auto;">
+                <span class="input-group-text bg-light text-primary fw-semibold" style="border-radius: 9px 0 0 9px;">
+                    <i class="bi bi-calendar3 me-1"></i>Year
+                </span>
+                <select name="year" id="filterYear" class="form-select form-select-sm fw-semibold" style="border-radius: 0 9px 9px 0; min-width: 110px;" onchange="applyAllFilters()">
                     <option value="ALL">All Years</option>
                     @foreach ($filterOptions['years'] ?? ['2026', '2025', '2024', '2023', '2022', '2021'] as $y)
                         <option value="{{ $y }}" {{ ($activeYear ?? 'ALL') === (string)$y ? 'selected' : '' }}>{{ $y }}</option>
@@ -522,7 +521,7 @@
             </div>
 
             {{-- Reset button --}}
-            <a href="{{ route('general.pprbooks') }}" id="btnResetFilters" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" style="border-radius: 9px; font-size: 12px; font-weight: 600; {{ ($activeProgram === 'ALL' && ($activeMonth ?? 'ALL') === 'ALL' && ($activeYear ?? 'ALL') === 'ALL' && empty($search)) ? 'display: none !important;' : '' }}">
+            <a href="{{ route('general.pprbooks') }}" id="btnResetFilters" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" style="border-radius: 9px; font-size: 12px; font-weight: 600; padding: 5px 12px; {{ ($activeProgram === 'ALL' && ($activeMonth ?? 'ALL') === 'ALL' && ($activeYear ?? 'ALL') === 'ALL' && empty($search)) ? 'display: none !important;' : '' }}">
                 <i class="bi bi-x-circle"></i> Reset
             </a>
         </div>
@@ -534,7 +533,7 @@
                    name="q"
                    id="searchDocsInput"
                    class="search-box-input"
-                   placeholder="Search regulations (R22, Jan 2022)..."
+                   placeholder="Search PPR details (R22, Jan 2022)..."
                    value="{{ $search }}"
                    onkeyup="applyAllFilters()">
         </div>
@@ -712,17 +711,29 @@
 
                 <div class="modal-body" style="padding: 24px;">
 
-                    {{-- 1. Program Selection: Dropdown --}}
+                    {{-- 1. Program Selection: MCA, BBA, BCA, MBA --}}
                     <div class="mb-3">
-                        <label for="modal_prog_name" class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
+                        <label class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
                             1. Select Program <span class="text-danger">*</span>
                         </label>
-                        <select name="prog_name" id="modal_prog_name" class="form-select fw-semibold" required>
-                            <option value="MCA" selected>MCA (Master of Computer Applications)</option>
-                            <option value="MBA">MBA (Master of Business Administration)</option>
-                            <option value="BCA">BCA (Bachelor of Computer Applications)</option>
-                            <option value="BBA">BBA (Bachelor of Business Administration)</option>
-                        </select>
+                        <div class="d-flex gap-3 flex-wrap">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="prog_name" id="progMCA" value="MCA" checked>
+                                <label class="form-check-label fw-semibold" for="progMCA">MCA</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="prog_name" id="progBBA" value="BBA">
+                                <label class="form-check-label fw-semibold" for="progBBA">BBA</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="prog_name" id="progBCA" value="BCA">
+                                <label class="form-check-label fw-semibold" for="progBCA">BCA</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="prog_name" id="progMBA" value="MBA">
+                                <label class="form-check-label fw-semibold" for="progMBA">MBA</label>
+                            </div>
+                        </div>
                     </div>
 
                     {{-- 2. Regulation Code with strict validation (Exactly 3 chars, 1st char R, uppercase) --}}
@@ -777,7 +788,7 @@
                             <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 11.5px; border-radius: 6px;" onclick="setModalMonthYear('July 2023')">July 2023</button>
                         </div>
                         <div class="form-text" style="font-size: 11.5px; color: var(--text-muted);">
-                            Click presets or type any month &amp; year dynamically.
+                            Click presets or type any month &amp; year dynamically (saved to <code>visa.ppr_details.month_year</code>).
                         </div>
                     </div>
 
@@ -857,17 +868,29 @@
 
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        {{-- Program Selection Dropdown --}}
+                        {{-- Program Selection --}}
                         <div class="col-12">
-                            <label for="edit_prog_name" class="form-label fw-bold small text-secondary">
+                            <label class="form-label fw-bold small text-secondary">
                                 Program <span class="text-danger">*</span>
                             </label>
-                            <select name="prog_name" id="edit_prog_name" class="form-select fw-semibold" required>
-                                <option value="MCA">MCA (Master of Computer Applications)</option>
-                                <option value="MBA">MBA (Master of Business Administration)</option>
-                                <option value="BCA">BCA (Bachelor of Computer Applications)</option>
-                                <option value="BBA">BBA (Bachelor of Business Administration)</option>
-                            </select>
+                            <div class="d-flex gap-3 flex-wrap">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="prog_name" id="editProgMCA" value="MCA">
+                                    <label class="form-check-label fw-semibold" for="editProgMCA">MCA</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="prog_name" id="editProgMBA" value="MBA">
+                                    <label class="form-check-label fw-semibold" for="editProgMBA">MBA</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="prog_name" id="editProgBCA" value="BCA">
+                                    <label class="form-check-label fw-semibold" for="editProgBCA">BCA</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="prog_name" id="editProgBBA" value="BBA">
+                                    <label class="form-check-label fw-semibold" for="editProgBBA">BBA</label>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Regulation Code --}}
@@ -1084,8 +1107,8 @@
         const form = document.getElementById('editRegulationForm');
         if (form) form.action = `/general/document/${data.s_no}`;
 
-        const select = document.getElementById('edit_prog_name');
-        if (select) select.value = data.prog_name;
+        const radio = document.querySelector(`input[name="prog_name"][id="editProg${data.prog_name}"]`);
+        if (radio) radio.checked = true;
 
         if (document.getElementById('edit_regcode')) document.getElementById('edit_regcode').value = data.regcode || '';
         if (document.getElementById('edit_month_year')) document.getElementById('edit_month_year').value = data.month_year || '';

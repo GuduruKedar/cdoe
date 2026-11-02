@@ -1,36 +1,11 @@
 @extends('layouts.app')
 
-@section('page_title', 'Manage Regulations & PPR Details — CDOE')
+@section('page_title', 'PPR Details — CDOE')
 @section('hideTitle', 'true')
 @section('hidePageSub', 'true')
 
 @push('styles')
 <style>
-    /* Manage Page Modern Styling */
-    .manage-hero-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        flex-wrap: wrap;
-        margin-bottom: 24px;
-    }
-    .manage-hero-header h1 {
-        font-size: 24px;
-        font-weight: 800;
-        color: var(--text-primary);
-        letter-spacing: -0.3px;
-        margin-bottom: 4px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .manage-hero-header p {
-        font-size: 13.5px;
-        color: var(--text-muted);
-        margin: 0;
-    }
-
     /* Modern Card Container */
     .custom-manage-card {
         background: var(--bg-card);
@@ -54,53 +29,6 @@
         margin-bottom: 18px;
         padding-bottom: 12px;
         border-bottom: 1px solid var(--border-subtle);
-    }
-
-    /* Program Segmented Radio Selector */
-    .prog-pill-radio-wrap {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
-    }
-    .prog-pill-radio-wrap input[type="radio"] {
-        display: none;
-    }
-    .prog-pill-radio-label {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 10px 6px;
-        border-radius: 12px;
-        border: 1.5px solid var(--border-subtle);
-        background: var(--bg-hover-row);
-        color: var(--text-secondary);
-        font-size: 12.5px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        text-align: center;
-        user-select: none;
-    }
-    .prog-pill-radio-label i {
-        font-size: 18px;
-        margin-bottom: 4px;
-        color: var(--text-muted);
-        transition: color 0.2s ease;
-    }
-    .prog-pill-radio-wrap input[type="radio"]:checked + .prog-pill-radio-label {
-        border-color: var(--theme-primary);
-        background: rgba(var(--theme-primary-rgb, 13, 110, 253), 0.08);
-        color: var(--theme-primary);
-        box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb, 13, 110, 253), 0.15);
-        transform: translateY(-1px);
-    }
-    .prog-pill-radio-wrap input[type="radio"]:checked + .prog-pill-radio-label i {
-        color: var(--theme-primary);
-    }
-    .prog-pill-radio-label:hover {
-        border-color: var(--theme-primary);
-        color: var(--theme-primary);
     }
 
     /* Preset Badges */
@@ -247,33 +175,33 @@
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
     <div class="d-flex align-items-center gap-2">
         <h1 class="h4 fw-bold text-primary mb-0 d-flex align-items-center gap-2">
-            <i class="bi bi-gear-wide-connected"></i>
-            <span>Manage Regulations &amp; PPR Books</span>
+            <i class="bi bi-journal-bookmark-fill"></i>
+            <span>PPR Details</span>
         </h1>
     </div>
 
     <div class="d-flex align-items-center gap-2">
         <a href="{{ route('general.pprbooks') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" style="border-radius: 10px; font-weight: 700; padding: 7px 16px; font-size: 13.5px;">
             <i class="bi bi-grid-fill text-primary"></i>
-            <span>All Regulations (Cards View)</span>
+            <span>PPR Details (Cards View)</span>
         </a>
     </div>
 </div>
 
 <div class="row g-4">
 
-    {{-- Left Column: Upload New Regulation Form --}}
+    {{-- Left Column: Upload PPR Document Form --}}
     <div class="col-12 col-xl-4 col-lg-5">
         <div class="custom-manage-card">
             <div class="custom-card-title">
                 <i class="bi bi-cloud-arrow-up-fill text-primary"></i>
-                <span>Upload New Regulation</span>
+                <span>Upload PPR Document</span>
             </div>
 
             <form method="POST" action="{{ route('general.store') }}" enctype="multipart/form-data" id="uploadRegulationForm">
                 @csrf
 
-                {{-- 1. Program Selection: Dropdown Type --}}
+                {{-- 1. Program Selection: Dropdown --}}
                 <div class="mb-3">
                     <label for="m_prog_name" class="form-label fw-bold small text-secondary d-flex align-items-center justify-content-between">
                         <span>Program <span class="text-danger">*</span></span>
@@ -319,11 +247,11 @@
                     </div>
                 </div>
 
-                {{-- 3. Month & Year (Jan 2022, July 2022, etc.) --}}
+                {{-- 3. Month & Year --}}
                 <div class="mb-3">
                     <label for="m_month_year" class="form-label fw-bold small text-secondary d-flex align-items-center justify-content-between">
                         <span>Month &amp; Year</span>
-                        <span class="text-muted" style="font-size: 11px;">Dynamic or Preset</span>
+                        <span class="text-muted" style="font-size: 11px;">Preset or Dynamic</span>
                     </label>
                     <div class="input-group">
                         <span class="input-group-text bg-light text-primary" style="border-radius: 10px 0 0 10px;">
@@ -410,14 +338,14 @@
         </div>
     </div>
 
-    {{-- Right Column: Regulations List Table --}}
+    {{-- Right Column: PPR Details Table --}}
     <div class="col-12 col-xl-8 col-lg-7">
         <div class="custom-manage-card">
             <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2">
                     <div class="custom-card-title mb-0 border-0 p-0">
                         <i class="bi bi-table text-primary"></i>
-                        <span>Regulations List</span>
+                        <span>PPR Details List</span>
                         <span class="badge bg-primary rounded-pill px-2 py-1 ms-1" style="font-size: 11.5px;">{{ $documents->total() }}</span>
                     </div>
                 </div>
