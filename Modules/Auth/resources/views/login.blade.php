@@ -35,63 +35,88 @@
             height: 100vh;
             max-height: 100vh;
             overflow: hidden;
-            background-color: #380610;
-            background-image:
-                linear-gradient(180deg, rgba(90, 10, 26, 0.60) 0%, rgba(65, 7, 18, 0.76) 50%, rgba(35, 4, 10, 0.92) 100%),
-                url('{{ asset("images/vignan-campus.jpg") }}');
-            background-size: cover;
-            background-position: center top;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+            background-color: #0b1120;
             color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 14px 24px;
+            padding: clamp(10px, 1.8vh, 20px) clamp(12px, 2vw, 32px);
             position: relative;
         }
 
-        /* Ambient subtle light spots */
-        .ambient-glow {
+        /* Animated natural background canvas (No red tint, smooth subtle Ken Burns zoom animation) */
+        .bg-animated-canvas {
             position: fixed;
-            border-radius: 50%;
-            filter: blur(120px);
-            pointer-events: none;
+            inset: 0;
+            width: 100%;
+            height: 100%;
             z-index: 0;
-            opacity: 0.38;
+            overflow: hidden;
+            pointer-events: none;
         }
-        .glow-top-left {
-            top: -120px;
-            left: -100px;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(239, 68, 68, 0.55) 0%, transparent 70%);
+        .bg-image-zoom {
+            position: absolute;
+            top: -1.5%;
+            left: -1.5%;
+            width: 103%;
+            height: 103%;
+            background-image: url('{{ asset("images/u-block.jpg") }}');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            animation: kenBurnsSmooth 24s ease-in-out infinite alternate;
+            will-change: transform;
+            transform-origin: center center;
         }
-        .glow-bottom-right {
-            bottom: -150px;
-            right: -50px;
-            width: 550px;
-            height: 550px;
-            background: radial-gradient(circle, rgba(185, 28, 28, 0.65) 0%, transparent 70%);
+        @keyframes kenBurnsSmooth {
+            0% {
+                transform: scale(1) translate(0, 0);
+            }
+            50% {
+                transform: scale(1.015) translate(-0.8%, -0.5%);
+            }
+            100% {
+                transform: scale(1.025) translate(0.6%, 0.3%);
+            }
+        }
+        .bg-overlay {
+            position: absolute;
+            inset: 0;
+            /* Natural dark vignette: preserves real colors of building & sky without any red wash */
+            background:
+                linear-gradient(180deg, rgba(15, 23, 42, 0.28) 0%, rgba(15, 23, 42, 0.46) 50%, rgba(15, 23, 42, 0.68) 100%),
+                radial-gradient(circle at center, transparent 35%, rgba(15, 23, 42, 0.45) 100%);
         }
 
         /* Main Container */
         .portal-layout-container {
             width: 100%;
-            max-width: 1180px;
-            display: grid;
-            grid-template-columns: 1.15fr 0.85fr;
+            max-width: 1380px;
+            padding: 0 clamp(16px, 2.8vw, 48px);
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 36px;
+            gap: clamp(24px, 4vw, 56px);
             position: relative;
             z-index: 2;
             margin: auto;
+            transform: translateY(clamp(-22px, -2.4vh, -8px));
         }
 
         /* ================= LEFT COLUMN: HERO & FEATURE CARDS ================= */
         .portal-hero-section {
             display: flex;
             flex-direction: column;
+            width: 100%;
+            max-width: clamp(430px, 35vw, 505px);
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-top: -6px;
+        }
+
+        .hero-header-block {
+            margin-bottom: clamp(8px, 1.2vh, 12px);
+            padding-top: 0;
         }
 
         /* Pill Badge: VFSTR • VIGNAN UNIVERSITY */
@@ -104,53 +129,53 @@
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.32);
             border-radius: 999px;
-            padding: 5px 14px 5px 8px;
+            padding: clamp(4px, 0.6vh, 6px) clamp(12px, 1.1vw, 16px);
             color: #ffffff;
-            font-size: 11.5px;
+            font-size: clamp(11px, 0.8vw, 12px);
             font-weight: 700;
             letter-spacing: 0.4px;
             width: fit-content;
-            margin-bottom: 10px;
+            margin-bottom: clamp(6px, 0.8vh, 8px);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.20);
         }
         .badge-emblem-icon {
-            width: 20px;
-            height: 20px;
+            width: clamp(18px, 1.4vw, 22px);
+            height: clamp(18px, 1.4vw, 22px);
             object-fit: contain;
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
         }
 
-        /* Hero Main Title */
+        /* Hero Main Title - Clean Light Luminous Typography */
         .hero-portal-title {
-            font-size: 30px;
+            font-size: clamp(26px, 2.1vw, 32px);
             font-weight: 800;
             line-height: 1.15;
             letter-spacing: -0.5px;
             color: #ffffff;
-            margin-bottom: 6px;
-            text-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+            margin-bottom: clamp(4px, 0.7vh, 6px);
+            text-shadow: 0 3px 14px rgba(0, 0, 0, 0.55);
         }
-        .hero-portal-title .highlight-red,
-        .hero-portal-title .highlight-cyan {
-            color: var(--brand-coral);
-            text-shadow: 0 0 25px rgba(239, 68, 68, 0.45);
+        .hero-portal-title .highlight-coral {
+            color: #fca5a5;
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.45);
         }
 
         .hero-portal-desc {
-            font-size: 12.5px;
+            font-size: clamp(11px, 0.8vw, 12px);
             line-height: 1.45;
             color: rgba(255, 255, 255, 0.92);
-            max-width: 520px;
-            margin-bottom: 12px;
+            max-width: 495px;
+            margin-bottom: clamp(8px, 1.2vh, 12px);
             text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
         }
 
-        /* Feature Cards Stack (Vertical List of 5 Boxes) */
+        /* Feature Cards Stack (Horizontal Bars - Reduced width on right) */
         .features-grid {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: clamp(5.5px, 0.82vh, 7.5px);
             width: 100%;
+            max-width: 505px;
         }
 
         .feature-card {
@@ -158,42 +183,38 @@
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
             border-radius: 12px;
-            padding: 8px 14px;
+            padding: clamp(6px, 0.82vh, 7.5px) clamp(10px, 0.9vw, 13px);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: clamp(9px, 0.8vw, 11px);
             border: 1px solid rgba(255, 255, 255, 0.95);
-            box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.14);
+            box-shadow: 0 3px 10px -2px rgba(0, 0, 0, 0.12);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .feature-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 18px -2px rgba(0, 0, 0, 0.20);
-        }
-
-        .feature-card.full-width {
-            width: 100%;
+            box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.18);
         }
 
         /* Feature Icon Box */
         .feature-icon {
-            width: 34px;
-            height: 34px;
-            min-width: 34px;
+            width: clamp(32px, 2.2vw, 35px);
+            height: clamp(32px, 2.2vw, 35px);
+            min-width: clamp(32px, 2.2vw, 35px);
             border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #ffffff;
-            font-size: 15px;
+            font-size: clamp(14px, 1vw, 16px);
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
         }
-        .bg-icon-red,
-        .bg-icon-blue { background: linear-gradient(135deg, #e63946, #c1121f); }
-        .bg-icon-cyan { background: linear-gradient(135deg, #06b6d4, #0891b2); }
-        .bg-icon-green { background: linear-gradient(135deg, #10b981, #059669); }
+        .bg-icon-red    { background: linear-gradient(135deg, #ef4444, #c1121f); }
+        .bg-icon-cyan   { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+        .bg-icon-purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+        .bg-icon-green  { background: linear-gradient(135deg, #10b981, #059669); }
         .bg-icon-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        .bg-icon-purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .bg-icon-blue   { background: linear-gradient(135deg, #0284c7, #2563eb); }
 
         .feature-body {
             flex: 1;
@@ -207,15 +228,18 @@
             margin-bottom: 2px;
         }
         .feature-name {
-            font-size: 12.5px;
+            font-size: clamp(11.5px, 0.8vw, 12.5px);
             font-weight: 700;
             color: #1e293b;
-            line-height: 1.3;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .feature-badge {
-            font-size: 10px;
+            font-size: clamp(9px, 0.65vw, 9.5px);
             font-weight: 700;
-            padding: 1px 7px;
+            padding: 1.5px 7px;
             border-radius: 999px;
             display: inline-flex;
             align-items: center;
@@ -228,61 +252,78 @@
             border-radius: 50%;
             display: inline-block;
         }
-
-        .badge-red,
-        .badge-blue { background: #fef2f2; color: #991b1b; }
-        .badge-red .dot,
-        .badge-blue .dot { background: #dc2626; }
-
-        .badge-cyan { background: #ecfeff; color: #0891b2; }
+        .badge-red    { background: #fef2f2; color: #991b1b; }
+        .badge-red .dot { background: #ef4444; }
+        .badge-cyan   { background: #ecfeff; color: #0891b2; }
         .badge-cyan .dot { background: #06b6d4; }
-
-        .badge-green { background: #ecfdf5; color: #047857; }
-        .badge-green .dot { background: #10b981; }
-
-        .badge-orange { background: #fffbeb; color: #b45309; }
-        .badge-orange .dot { background: #f59e0b; }
-
         .badge-purple { background: #f5f3ff; color: #6d28d9; }
         .badge-purple .dot { background: #8b5cf6; }
+        .badge-green  { background: #ecfdf5; color: #047857; }
+        .badge-green .dot { background: #10b981; }
+        .badge-orange { background: #fffbeb; color: #b45309; }
+        .badge-orange .dot { background: #f59e0b; }
+        .badge-blue   { background: #eff6ff; color: #1d4ed8; }
+        .badge-blue .dot { background: #3b82f6; }
 
         .feature-desc {
-            font-size: 11px;
+            font-size: clamp(10px, 0.72vw, 10.8px);
             line-height: 1.35;
             color: #64748b;
             margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* ================= RIGHT COLUMN: AUTH CARD ================= */
         .auth-card-wrapper {
             width: 100%;
-            max-width: 410px;
-            margin: 0 auto;
+            max-width: clamp(350px, 28vw, 418px);
+            margin: 0 0 0 auto;
+            padding: 6px;
+            /* Light red translucent frosted glass theme */
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.22) 0%, rgba(220, 38, 38, 0.16) 60%, rgba(255, 255, 255, 0.14) 100%);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-radius: 24px;
+            border: 1.5px solid rgba(254, 202, 202, 0.55);
+            box-shadow:
+                0 25px 60px -10px rgba(0, 0, 0, 0.60),
+                0 0 25px rgba(220, 38, 38, 0.18),
+                0 12px 25px -5px rgba(0, 0, 0, 0.35);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                        box-shadow 0.35s ease,
+                        border-color 0.35s ease,
+                        background 0.35s ease;
+            will-change: transform, box-shadow;
+        }
+
+        /* Subtle smooth growth and soft light-red glass glow when user enters or focuses the form */
+        .auth-card-wrapper:hover,
+        .auth-card-wrapper:focus-within {
+            transform: translateY(-3px) scale(1.02);
+            border-color: rgba(254, 202, 202, 0.85);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.28) 0%, rgba(220, 38, 38, 0.20) 60%, rgba(255, 255, 255, 0.18) 100%);
+            box-shadow:
+                0 32px 75px -10px rgba(0, 0, 0, 0.68),
+                0 16px 32px -6px rgba(0, 0, 0, 0.40),
+                0 0 32px rgba(239, 68, 68, 0.30);
         }
 
         .auth-card {
             background: #ffffff;
             border-radius: 20px;
-            padding: 24px 26px 18px;
-            box-shadow:
-                0 25px 60px -10px rgba(0, 0, 0, 0.45),
-                0 10px 25px -5px rgba(0, 0, 0, 0.18),
-                0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+            padding: clamp(18px, 2.4vh, 24px) clamp(18px, 1.8vw, 26px) clamp(14px, 2vh, 18px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.90);
             position: relative;
             overflow: hidden;
-            border-top: 4px solid var(--brand-red);
+            transition: box-shadow 0.35s ease;
         }
 
-        /* Prominent red line accent on the top of the right whitebox */
-        .auth-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #8b0000 0%, #c1121f 40%, #e63946 80%, #c1121f 100%);
-            z-index: 10;
+        .auth-card-wrapper:hover .auth-card,
+        .auth-card-wrapper:focus-within .auth-card {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
         }
 
         .auth-card-header {
@@ -296,23 +337,27 @@
             object-fit: contain;
             margin: 0 auto 6px;
             display: block;
-            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.08));
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
         }
 
         .auth-institution-tag {
-            font-size: 10.5px;
+            font-size: 10px;
             font-weight: 700;
-            color: var(--brand-red);
+            color: #b91c1c;
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            border-radius: 999px;
+            padding: 2.5px 10px;
             letter-spacing: 0.5px;
             text-transform: uppercase;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             display: inline-flex;
             align-items: center;
             gap: 6px;
         }
 
         .auth-portal-title {
-            font-size: 21px;
+            font-size: 20px;
             font-weight: 800;
             color: #0f172a;
             letter-spacing: -0.3px;
@@ -321,7 +366,7 @@
         }
         .auth-portal-title .portal-red,
         .auth-portal-title .portal-blue {
-            color: var(--brand-red);
+            color: #c1121f;
         }
 
         .auth-portal-sub {
@@ -338,6 +383,7 @@
             border-radius: 10px;
             padding: 3px;
             margin-bottom: 14px;
+            border: 1px solid #e2e8f0;
         }
         .auth-tab-btn {
             flex: 1;
@@ -357,10 +403,13 @@
             gap: 6px;
             outline: none;
         }
+        .auth-tab-btn:hover {
+            color: #0f172a;
+        }
         .auth-tab-btn.active {
             background: #ffffff;
-            color: var(--brand-red);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            color: #c1121f;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
         }
 
         /* Alerts */
@@ -425,12 +474,12 @@
             transition: all 0.2s ease;
         }
         .portal-input:focus {
-            border-color: var(--brand-red);
-            box-shadow: 0 0 0 3.5px rgba(193, 18, 31, 0.16);
+            border-color: #c1121f;
+            box-shadow: 0 0 0 3.5px rgba(193, 18, 31, 0.14);
         }
         .portal-input:focus ~ .field-icon,
         .input-wrap:focus-within .field-icon {
-            color: var(--brand-red);
+            color: #c1121f;
         }
         .portal-input::placeholder {
             color: #94a3b8;
@@ -445,42 +494,12 @@
             text-align: center;
             padding-left: 14px !important;
             font-weight: 700;
-            color: #0f172a;
+            color: #0f172a !important;
+            background: #ffffff !important;
+            border: 1.5px solid #cbd5e1 !important;
         }
 
-        /* Quick Account Chips */
-        .quick-chips-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
-        }
-        .chip-label {
-            font-size: 11px;
-            color: #64748b;
-            font-weight: 600;
-        }
-        .quick-chip {
-            padding: 3px 8px;
-            background: #f1f5f9;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            font-size: 11px;
-            color: #334155;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            font-family: inherit;
-        }
-        .quick-chip:hover {
-            background: #fef2f2;
-            border-color: #fecaca;
-            color: var(--brand-red);
-            transform: translateY(-1px);
-        }
-
-        /* Primary Red Button */
+        /* Primary Submit Button */
         .btn-portal-submit {
             width: 100%;
             height: 42px;
@@ -491,7 +510,7 @@
             font-size: 14px;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(193, 18, 31, 0.35);
+            box-shadow: 0 4px 14px rgba(193, 18, 31, 0.35);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
@@ -503,7 +522,7 @@
         .btn-portal-submit:hover {
             background: linear-gradient(135deg, #c1121f 0%, #8b0000 100%);
             transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(193, 18, 31, 0.45);
+            box-shadow: 0 6px 18px rgba(193, 18, 31, 0.45);
         }
         .btn-portal-submit:active {
             transform: translateY(1px);
@@ -562,7 +581,7 @@
         .register-contact-box {
             background: #fff8f8;
             border: 1px solid #fee2e2;
-            border-left: 3.5px solid var(--brand-red);
+            border-left: 3.5px solid #c1121f;
             border-radius: 10px;
             padding: 12px 14px;
             margin-bottom: 12px;
@@ -585,16 +604,16 @@
         }
         .contact-row:last-child { margin-bottom: 0; }
         .contact-row strong { color: #0f172a; }
-        .contact-row a { color: var(--brand-red); text-decoration: none; font-weight: 600; }
-        .contact-row a:hover { text-decoration: underline; }
+        .contact-row a { color: #c1121f; text-decoration: none; font-weight: 600; }
+        .contact-row a:hover { text-decoration: underline; color: #9b111e; }
 
         .btn-return-login {
             width: 100%;
             padding: 8px;
             background: #fef2f2;
             border: 1px solid #fecaca;
-            color: var(--brand-red);
-            border-radius: 9px;
+            color: #c1121f;
+            border-radius: 999px;
             font-size: 12.5px;
             font-weight: 700;
             cursor: pointer;
@@ -635,17 +654,19 @@
                 display: none !important;
             }
             .portal-layout-container {
-                grid-template-columns: 1fr;
+                display: flex;
                 justify-content: center;
                 align-items: center;
                 margin: auto;
                 padding: 0;
                 gap: 0;
                 max-width: 460px;
+                transform: none;
             }
             .auth-card-wrapper {
                 max-width: 100%;
                 width: 100%;
+                margin: 0 auto;
             }
         }
 
@@ -656,53 +677,61 @@
                 align-items: center;
                 justify-content: center;
             }
+            .auth-card-wrapper {
+                padding: 5px;
+                border-radius: 24px;
+            }
             .auth-card {
-                padding: 32px 22px 26px;
-                border-radius: 22px;
-                box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.45);
+                padding: 24px 18px 18px;
+                border-radius: 20px;
             }
             .portal-shield-img {
-                width: 50px;
-                height: 50px;
+                width: 44px;
+                height: 44px;
             }
             .auth-portal-title {
-                font-size: 22px;
+                font-size: 20px;
             }
             .auth-portal-sub {
-                font-size: 13px;
+                font-size: 12px;
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="ambient-glow glow-top-left" aria-hidden="true"></div>
-    <div class="ambient-glow glow-bottom-right" aria-hidden="true"></div>
+    {{-- Natural Animated Background (Smooth Subtle Ken Burns Zoom, No Red Tint) --}}
+    <div class="bg-animated-canvas" aria-hidden="true">
+        <div class="bg-image-zoom"></div>
+        <div class="bg-overlay"></div>
+    </div>
 
     <div class="portal-layout-container">
 
         {{-- ================= LEFT HERO & FEATURE CARDS (Online Learning) ================= --}}
         <section class="portal-hero-section">
 
-            {{-- University Pill Badge --}}
-            <div class="university-badge-pill">
-                <img src="{{ asset('images/vignan-emblem.png') }}" alt="Vignan Shield" class="badge-emblem-icon">
-                <span>VFSTR • CDOE Online Learning</span>
+            <div class="hero-header-block">
+                {{-- University Pill Badge --}}
+                <div class="university-badge-pill">
+                    <img src="{{ asset('images/vignan-emblem.png') }}" alt="Vignan Shield" class="badge-emblem-icon">
+                    <span>VFSTR • CDOE Online Learning</span>
+                </div>
+
+                {{-- Large Headline --}}
+                <h1 class="hero-portal-title">
+                    Online Learning <span class="highlight-coral">Portal</span>
+                </h1>
+
+                <p class="hero-portal-desc">
+                    A unified digital campus platform empowering Online MBA &amp; BBA &amp; MCA &amp; BCA learners with industry-aligned curriculum, interactive live lectures, case studies, and corporate mentor connectivity.
+                </p>
             </div>
 
-            {{-- Large Headline --}}
-            <h1 class="hero-portal-title">
-                Online Learning <span class="highlight-red">Portal</span>
-            </h1>
-
-            <p class="hero-portal-desc">
-                A unified digital campus platform empowering Online MBA &amp; BBA &amp; MCA &amp; BCA learners with industry-aligned curriculum, interactive live lectures, case studies, and corporate mentor connectivity.
-            </p>
-
-            {{-- Feature Cards Grid (Customized for Online MBA & BBA & MCA & BCA) --}}
+            {{-- 6 Feature Cards Stack (Horizontal Bars) --}}
             <div class="features-grid">
 
-                {{-- Card 1: Specializations & Electives --}}
+                {{-- 1. Specializations & Electives --}}
                 <div class="feature-card">
                     <div class="feature-icon bg-icon-red">
                         <i class="bi bi-briefcase-fill"></i>
@@ -714,11 +743,11 @@
                                 <span class="dot"></span> Online Learning
                             </span>
                         </div>
-                        <p class="feature-desc">Dual specializations in Finance, Marketing, HR, Operations, and Business Analytics.</p>
+                        <p class="feature-desc">Dual specializations in Finance, Marketing, HR, Operations &amp; Analytics.</p>
                     </div>
                 </div>
 
-                {{-- Card 2: Digital Study Materials --}}
+                {{-- 2. Digital Study Materials --}}
                 <div class="feature-card">
                     <div class="feature-icon bg-icon-cyan">
                         <i class="bi bi-journal-album"></i>
@@ -730,11 +759,27 @@
                                 <span class="dot"></span> 24/7 E-Learning
                             </span>
                         </div>
-                        <p class="feature-desc">Instant access to case studies, e-books, video lectures, and business journals.</p>
+                        <p class="feature-desc">Instant access to case studies, e-books, video lectures &amp; journals.</p>
                     </div>
                 </div>
 
-                {{-- Card 3: Corporate Mentors & Faculty --}}
+                {{-- 3. Live & Recorded Classes --}}
+                <div class="feature-card">
+                    <div class="feature-icon bg-icon-purple">
+                        <i class="bi bi-play-btn-fill"></i>
+                    </div>
+                    <div class="feature-body">
+                        <div class="feature-header">
+                            <span class="feature-name">Live &amp; Recorded Classes</span>
+                            <span class="feature-badge badge-purple">
+                                <span class="dot"></span> Interactive
+                            </span>
+                        </div>
+                        <p class="feature-desc">Interactive live lectures and 24/7 on-demand recorded video sessions.</p>
+                    </div>
+                </div>
+
+                {{-- 4. Corporate Mentors & Faculty --}}
                 <div class="feature-card">
                     <div class="feature-icon bg-icon-green">
                         <i class="bi bi-people-fill"></i>
@@ -746,11 +791,11 @@
                                 <span class="dot"></span> Direct Sync
                             </span>
                         </div>
-                        <p class="feature-desc">Connect with seasoned management faculty, industry CXOs, and academic advisors.</p>
+                        <p class="feature-desc">Connect with seasoned management faculty, industry CXOs &amp; mentors.</p>
                     </div>
                 </div>
 
-                {{-- Card 4: Industry Projects & Case Studies --}}
+                {{-- 5. Live Projects & Case Studies --}}
                 <div class="feature-card">
                     <div class="feature-icon bg-icon-orange">
                         <i class="bi bi-graph-up-arrow"></i>
@@ -762,23 +807,23 @@
                                 <span class="dot"></span> Practical Track
                             </span>
                         </div>
-                        <p class="feature-desc">Integrated corporate simulations, capstone projects, and real-world business case analyses.</p>
+                        <p class="feature-desc">Corporate simulations, capstone projects &amp; real-world case studies.</p>
                     </div>
                 </div>
 
-                {{-- Card 5: Academic Progress & Tracking (Full width) --}}
-                <div class="feature-card full-width">
-                    <div class="feature-icon bg-icon-purple">
+                {{-- 6. Examinations & Academic Progress --}}
+                <div class="feature-card">
+                    <div class="feature-icon bg-icon-blue">
                         <i class="bi bi-award-fill"></i>
                     </div>
                     <div class="feature-body">
                         <div class="feature-header">
                             <span class="feature-name">Examinations &amp; Academic Progress</span>
-                            <span class="feature-badge badge-purple">
+                            <span class="feature-badge badge-blue">
                                 <span class="dot"></span> Real-Time
                             </span>
                         </div>
-                        <p class="feature-desc">Track semester SGPA/CGPA, continuous internal assessments, proctored examinations, and marks memos.</p>
+                        <p class="feature-desc">Track semester SGPA/CGPA, continuous internal assessments &amp; exams.</p>
                     </div>
                 </div>
 
@@ -916,7 +961,7 @@
 
                     <div class="register-contact-box">
                         <div class="contact-box-title">
-                            <i class="bi bi-info-circle-fill" style="color: var(--brand-red);"></i>
+                            <i class="bi bi-info-circle-fill" style="color: #c1121f;"></i>
                             <span>CDOE Admissions &amp; Records Office</span>
                         </div>
 
