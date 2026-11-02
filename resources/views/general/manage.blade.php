@@ -250,7 +250,6 @@
             <i class="bi bi-gear-wide-connected"></i>
             <span>Manage Regulations &amp; PPR Books</span>
         </h1>
-        <span class="badge bg-light text-muted border small d-none d-md-inline-block">visa.ppr_details</span>
     </div>
 
     <div class="d-flex align-items-center gap-2">
@@ -355,9 +354,6 @@
                         <button type="button" class="month-preset-btn" onclick="setManageMonthYear('Jan 2024')">Jan 2024</button>
                         <button type="button" class="month-preset-btn" onclick="setManageMonthYear('July 2024')">July 2024</button>
                     </div>
-                    <div class="form-text small" style="font-size: 11px;">
-                        Stored in <code>visa.ppr_details.month_year</code>.
-                    </div>
                 </div>
 
                 {{-- 4. Regulation Name (regname) --}}
@@ -407,26 +403,23 @@
                 {{-- Submit Button --}}
                 <button type="submit" class="btn btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-2 py-2" style="border-radius: 12px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 14px rgba(13, 110, 253, 0.25);">
                     <i class="bi bi-cloud-arrow-up-fill"></i>
-                    <span>Upload &amp; Save to visa.ppr_details</span>
+                    <span>Upload &amp; Save Regulation</span>
                 </button>
 
             </form>
         </div>
     </div>
 
-    {{-- Right Column: visa.ppr_details Table --}}
+    {{-- Right Column: Regulations List Table --}}
     <div class="col-12 col-xl-8 col-lg-7">
         <div class="custom-manage-card">
             <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2">
                     <div class="custom-card-title mb-0 border-0 p-0">
                         <i class="bi bi-table text-primary"></i>
-                        <span>visa.ppr_details Table</span>
+                        <span>Regulations List</span>
                         <span class="badge bg-primary rounded-pill px-2 py-1 ms-1" style="font-size: 11.5px;">{{ $documents->total() }}</span>
                     </div>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-light text-secondary border">Database: <code>cdoe</code> &bull; Schema: <code>visa</code></span>
                 </div>
             </div>
 
@@ -573,7 +566,7 @@
                             <tr>
                                 <td colspan="8" class="text-center py-5 text-muted">
                                     <i class="bi bi-folder-x fs-1 d-block mb-2 text-secondary"></i>
-                                    <span class="fw-semibold">No records found in <code>visa.ppr_details</code>.</span>
+                                    <span class="fw-semibold">No regulations found.</span>
                                 </td>
                             </tr>
                         @endforelse

@@ -777,7 +777,7 @@
                             <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 11.5px; border-radius: 6px;" onclick="setModalMonthYear('July 2023')">July 2023</button>
                         </div>
                         <div class="form-text" style="font-size: 11.5px; color: var(--text-muted);">
-                            Click presets or type any month &amp; year dynamically (saved to <code>visa.ppr_details.month_year</code>).
+                            Click presets or type any month &amp; year dynamically.
                         </div>
                     </div>
 
