@@ -201,6 +201,20 @@
         letter-spacing: 0.5px;
     }
 
+    .doc-batch-tag {
+        font-size: 11px;
+        font-weight: 700;
+        color: #0369a1;
+        background: #e0f2fe;
+        border: 1px solid #bae6fd;
+        padding: 2.5px 8px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        letter-spacing: 0.2px;
+    }
+
     /* Main Card Content */
     .doc-main-content {
         display: flex;
@@ -467,14 +481,22 @@
         <div class="doc-card"
              data-title="{{ strtolower($doc->regname) }}"
              data-code="{{ strtolower($doc->regcode ?? '') }}"
+             data-month-year="{{ strtolower($doc->month_year ?? '') }}"
              data-program="{{ strtolower($doc->prog_name) }}">
 
             <div>
                 {{-- Tags Bar --}}
                 <div class="doc-card-tags">
-                    <span class="doc-program-badge {{ $doc->program_badge_class }}">
-                        {{ $doc->prog_name }}
-                    </span>
+                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                        <span class="doc-program-badge {{ $doc->program_badge_class }}">
+                            {{ $doc->prog_name }}
+                        </span>
+                        @if ($doc->month_year)
+                            <span class="doc-batch-tag">
+                                <i class="bi bi-calendar3"></i> {{ $doc->month_year }}
+                            </span>
+                        @endif
+                    </div>
 
                     <span class="doc-regcode-tag">
                         {{ $doc->regcode }}
@@ -655,10 +677,42 @@
                         </div>
                     </div>
 
-                    {{-- 3. Document / Regulation Title --}}
+                    {{-- 3. Month & Year (Jan 2022, July 2022, or dynamic entry) --}}
+                    <div class="mb-3">
+                        <label for="modal_month_year" class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
+                            3. Month &amp; Year
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                            <input type="text"
+                                   name="month_year"
+                                   id="modal_month_year"
+                                   class="form-control fw-semibold"
+                                   placeholder="e.g. Jan 2022, July 2022"
+                                   list="monthYearListModal"
+                                   value="{{ old('month_year') }}">
+                        </div>
+                        <datalist id="monthYearListModal">
+                            @foreach ($monthYears ?? ['Jan 2022', 'July 2022', 'Jan 2023', 'July 2023', 'Jan 2024', 'July 2024', 'Jan 2025', 'July 2025'] as $my)
+                                <option value="{{ $my }}">
+                            @endforeach
+                        </datalist>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            <span class="text-muted small me-1" style="font-size: 11.5px;">Presets:</span>
+                            <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 11.5px; border-radius: 6px;" onclick="setModalMonthYear('Jan 2022')">Jan 2022</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 11.5px; border-radius: 6px;" onclick="setModalMonthYear('July 2022')">July 2022</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 11.5px; border-radius: 6px;" onclick="setModalMonthYear('Jan 2023')">Jan 2023</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 11.5px; border-radius: 6px;" onclick="setModalMonthYear('July 2023')">July 2023</button>
+                        </div>
+                        <div class="form-text" style="font-size: 11.5px; color: var(--text-muted);">
+                            Click presets or type any month &amp; year dynamically (saved to <code>visa.ppr_details.month_year</code>).
+                        </div>
+                    </div>
+
+                    {{-- 4. Document / Regulation Title --}}
                     <div class="mb-3">
                         <label for="regname" class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
-                            3. Regulation Name / Title <span class="text-danger">*</span>
+                            4. Regulation Name / Title <span class="text-danger">*</span>
                         </label>
                         <input type="text"
                                name="regname"
@@ -669,10 +723,10 @@
                                required>
                     </div>
 
-                    {{-- 4. Description --}}
+                    {{-- 5. Description --}}
                     <div class="mb-3">
                         <label for="description" class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
-                            4. Description (Optional)
+                            5. Description (Optional)
                         </label>
                         <textarea name="description"
                                   id="description"
@@ -681,10 +735,10 @@
                                   placeholder="Summary of regulations, credits, or requirements...">{{ old('description') }}</textarea>
                     </div>
 
-                    {{-- 5. File Upload (Any document type supported) --}}
+                    {{-- 6. File Upload (Any document type supported) --}}
                     <div class="mb-2">
                         <label for="document" class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
-                            5. Attach Regulation Document (PDF, Word, Excel, ZIP, etc.) <span class="text-danger">*</span>
+                            6. Attach Regulation Document (PDF, Word, Excel, ZIP, etc.) <span class="text-danger">*</span>
                         </label>
                         <input type="file"
                                name="document"
@@ -763,6 +817,15 @@
         modal.show();
     }
 
+    // Quick preset month & year selection for upload modal
+    function setModalMonthYear(val) {
+        const input = document.getElementById('modal_month_year');
+        if (input) {
+            input.value = val;
+            input.focus();
+        }
+    }
+
     // Client-side instant filter
     function filterCardsClientSide(query) {
         const q = (query || '').toLowerCase().trim();
@@ -771,9 +834,10 @@
         cards.forEach(card => {
             const title = card.getAttribute('data-title') || '';
             const code = card.getAttribute('data-code') || '';
+            const monthYear = card.getAttribute('data-month-year') || '';
             const desc = card.querySelector('.doc-card-desc') ? card.querySelector('.doc-card-desc').textContent.toLowerCase() : '';
 
-            if (!q || title.includes(q) || code.includes(q) || desc.includes(q)) {
+            if (!q || title.includes(q) || code.includes(q) || monthYear.includes(q) || desc.includes(q)) {
                 card.style.display = 'flex';
             } else {
                 card.style.display = 'none';

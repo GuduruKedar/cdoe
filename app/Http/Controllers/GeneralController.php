@@ -63,6 +63,37 @@ class GeneralController extends Controller
     }
 
     /**
+     * Get available month & year options (combining presets with dynamically saved entries).
+     */
+    public static function getAvailableMonthYears(): array
+    {
+        $presets = [
+            'Jan 2022',
+            'July 2022',
+            'Jan 2023',
+            'July 2023',
+            'Jan 2024',
+            'July 2024',
+            'Jan 2025',
+            'July 2025',
+            'Jan 2026',
+            'July 2026',
+        ];
+
+        try {
+            $dbMonthYears = PprDetail::whereNotNull('month_year')
+                ->where('month_year', '!=', '')
+                ->distinct()
+                ->pluck('month_year')
+                ->toArray();
+
+            return array_values(array_unique(array_merge($presets, $dbMonthYears)));
+        } catch (\Throwable $e) {
+            return $presets;
+        }
+    }
+
+    /**
      * Main General Regulations Hub (Cards View).
      * Accessible by ALL roles.
      */
@@ -75,6 +106,7 @@ class GeneralController extends Controller
         $menus = MenuService::getMenusForUser($user);
 
         $activeProgram = strtoupper(trim($request->query('program', 'ALL')));
+        $activeMonthYear = trim($request->query('month_year', 'ALL'));
         $search = trim($request->query('q', ''));
 
         $query = PprDetail::query();
@@ -84,11 +116,17 @@ class GeneralController extends Controller
             $query->where('prog_name', $activeProgram);
         }
 
-        // Search in title, code, description, filename
+        // Filter by month & year (e.g. Jan 2022, July 2022)
+        if ($activeMonthYear && $activeMonthYear !== 'ALL') {
+            $query->where('month_year', $activeMonthYear);
+        }
+
+        // Search in title, code, month_year, description, filename
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('regname', 'ILIKE', "%{$search}%")
                     ->orWhere('regcode', 'ILIKE', "%{$search}%")
+                    ->orWhere('month_year', 'ILIKE', "%{$search}%")
                     ->orWhere('description', 'ILIKE', "%{$search}%")
                     ->orWhere('filename', 'ILIKE', "%{$search}%");
             });
@@ -110,21 +148,24 @@ class GeneralController extends Controller
 
         $isMainAdmin = self::canManage();
         $programMap = self::PROGRAM_MAP;
+        $monthYears = self::getAvailableMonthYears();
 
         return view('general.index', compact(
             'menus',
             'user',
             'documents',
             'activeProgram',
+            'activeMonthYear',
             'search',
             'counts',
             'isMainAdmin',
-            'programMap'
+            'programMap',
+            'monthYears'
         ));
     }
 
     /**
-     * Admin Management view (Main Admin Only).
+     * Admin Management view (Main Admin / Authorized Roles Only).
      */
     public function manage(Request $request)
     {
@@ -141,12 +182,14 @@ class GeneralController extends Controller
 
         $documents = PprDetail::orderBy('created_at', 'desc')->paginate(20);
         $programMap = self::PROGRAM_MAP;
+        $monthYears = self::getAvailableMonthYears();
 
         return view('general.manage', compact(
             'menus',
             'user',
             'documents',
-            'programMap'
+            'programMap',
+            'monthYears'
         ));
     }
 
@@ -163,6 +206,7 @@ class GeneralController extends Controller
             'prog_name' => 'required|in:MCA,BBA,BCA,MBA',
             'regname' => 'required|string|max:255',
             'regcode' => 'required|string',
+            'month_year' => 'nullable|string|max:100',
             'description' => 'nullable|string|max:2000',
             'document' => 'required|file|max:51200', // max 50MB, any file type allowed
         ]);
@@ -195,6 +239,7 @@ class GeneralController extends Controller
             'prog_name' => $progName,
             'regname' => trim($request->input('regname')),
             'regcode' => $regcode,
+            'month_year' => trim($request->input('month_year') ?: '') ?: null,
             'filename' => $originalName,
             'filepath' => $path,
             'description' => $request->input('description'),

@@ -113,7 +113,39 @@
                     </div>
                 </div>
 
-                {{-- 3. Regulation Name (regname) --}}
+                {{-- 3. Month & Year (Jan 2022, July 2022, or dynamic entry) --}}
+                <div class="mb-3">
+                    <label for="m_month_year" class="form-label fw-bold small text-secondary">
+                        Month &amp; Year
+                    </label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                        <input type="text"
+                               name="month_year"
+                               id="m_month_year"
+                               class="form-control form-control-sm fw-semibold"
+                               placeholder="e.g. Jan 2022, July 2022"
+                               list="monthYearListManage"
+                               value="{{ old('month_year') }}">
+                    </div>
+                    <datalist id="monthYearListManage">
+                        @foreach ($monthYears ?? ['Jan 2022', 'July 2022', 'Jan 2023', 'July 2023', 'Jan 2024', 'July 2024', 'Jan 2025', 'July 2025'] as $my)
+                            <option value="{{ $my }}">
+                        @endforeach
+                    </datalist>
+                    <div class="d-flex flex-wrap gap-1 mt-2">
+                        <span class="text-muted small me-1" style="font-size: 11px;">Presets:</span>
+                        <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 11px; border-radius: 6px;" onclick="setManageMonthYear('Jan 2022')">Jan 2022</button>
+                        <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 11px; border-radius: 6px;" onclick="setManageMonthYear('July 2022')">July 2022</button>
+                        <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size: 11px; border-radius: 6px;" onclick="setManageMonthYear('Jan 2023')">Jan 2023</button>
+                        <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size: 11px; border-radius: 6px;" onclick="setManageMonthYear('July 2023')">July 2023</button>
+                    </div>
+                    <div class="form-text small" style="font-size: 11px;">
+                        Select presets or type any month &amp; year dynamically (stored in <code>visa.ppr_details.month_year</code>).
+                    </div>
+                </div>
+
+                {{-- 4. Regulation Name (regname) --}}
                 <div class="mb-3">
                     <label for="m_regname" class="form-label fw-bold small text-secondary">
                         Regulation Name (regname) <span class="text-danger">*</span>
@@ -127,7 +159,7 @@
                            required>
                 </div>
 
-                {{-- 4. Description --}}
+                {{-- 5. Description --}}
                 <div class="mb-3">
                     <label for="m_description" class="form-label fw-bold small text-secondary">
                         Description
@@ -139,7 +171,7 @@
                               placeholder="Brief description / summary...">{{ old('description') }}</textarea>
                 </div>
 
-                {{-- 5. File upload --}}
+                {{-- 6. File upload --}}
                 <div class="mb-4">
                     <label for="m_document" class="form-label fw-bold small text-secondary">
                         Upload Regulation Document <span class="text-danger">*</span>
@@ -181,7 +213,8 @@
                             <th style="width: 60px;">S.no</th>
                             <th style="width: 75px;">Prog id</th>
                             <th style="width: 90px;">Prog name</th>
-                            <th style="width: 90px;">regcode</th>
+                            <th style="width: 85px;">regcode</th>
+                            <th style="width: 110px;">Month &amp; Year</th>
                             <th>regname</th>
                             <th>filename &amp; filepath</th>
                             <th>description</th>
@@ -213,6 +246,17 @@
                                     <span class="badge bg-warning text-dark fw-bold" style="letter-spacing: 0.5px;">
                                         {{ $item->regcode }}
                                     </span>
+                                </td>
+
+                                {{-- Month & Year --}}
+                                <td>
+                                    @if ($item->month_year)
+                                        <span class="badge bg-info-subtle text-info-emphasis border fw-semibold" style="font-size: 11px;">
+                                            <i class="bi bi-calendar3 me-1"></i>{{ $item->month_year }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted small">-</span>
+                                    @endif
                                 </td>
 
                                 {{-- regname --}}
@@ -264,7 +308,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">
+                                <td colspan="9" class="text-center py-4 text-muted">
                                     No records found in <code>visa.ppr_details</code>.
                                 </td>
                             </tr>
@@ -294,6 +338,14 @@
             val = val.substring(0, 3);
         }
         input.value = val;
+    }
+
+    function setManageMonthYear(val) {
+        const input = document.getElementById('m_month_year');
+        if (input) {
+            input.value = val;
+            input.focus();
+        }
     }
 </script>
 @endpush

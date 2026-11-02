@@ -23,6 +23,7 @@ class PprDetail extends Model
         'prog_name',
         'regname',
         'regcode',
+        'month_year',
         'filename',
         'filepath',
         'description',
