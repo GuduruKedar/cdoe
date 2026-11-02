@@ -159,7 +159,7 @@
 
             <div class="memo-meta">
                 <div class="pair"><div class="k">NAME</div><div>:</div><div class="v">{{ $student_info?->student_name }}</div></div>
-                <div class="pair"><div class="k">MM NO.</div><div>:</div><div class="v">{{ $basic_info['mmno'] ?? '' }}</div></div>
+                <div class="pair"><div class="k">{{ !empty($basic_info['smmno']) ? 'SMM NO.' : 'MM NO.' }}</div><div>:</div><div class="v">{{ $basic_info['smmno'] ?? ($basic_info['mmno'] ?? '') }}</div></div>
                 <div class="pair"><div class="k">PROGRAM</div><div>:</div><div class="v">{{$student_info?->program?->program_long_name}}</div></div>
                 <div class="pair"><div class="k">REGISTER NUMBER</div><div>:</div><div class="v">{{ $student_info?->register_no }}</div></div>
                 <div class="pair"><div class="k">ELECTIVE</div><div>:</div><div class="v">{{$student_info?->electives?->elective_long_name}}</div></div>

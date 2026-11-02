@@ -67,6 +67,7 @@ class ExamResultsController extends Controller
             ->leftJoin("{$sTable} as s", 'm.regno', '=', 's.register_no')
             ->select(
                 'm.mmno',
+                'm.smmno',
                 'm.regno',
                 's.student_name',
                 DB::raw('COALESCE(m.batch, s.adm_batch_code) as batch'),
@@ -81,7 +82,7 @@ class ExamResultsController extends Controller
             )
             ->distinct();
 
-        // Multi-token semantic search across reg no, student name, memo no, division, exam type, session, and batch
+        // Multi-token semantic search across reg no, student name, memo no, smmno, division, exam type, session, and batch
         if ($q !== '') {
             $tokens = preg_split('/\s+/', $q, -1, PREG_SPLIT_NO_EMPTY);
             foreach ($tokens as $token) {
@@ -90,6 +91,7 @@ class ExamResultsController extends Controller
                     $sub->where('m.regno', 'ilike', $term)
                         ->orWhere('s.student_name', 'ilike', $term)
                         ->orWhere('m.mmno', 'ilike', $term)
+                        ->orWhere('m.smmno', 'ilike', $term)
                         ->orWhere('m.division_name', 'ilike', $term)
                         ->orWhere('m.mm_type', 'ilike', $term)
                         ->orWhere('m.exam_mon_yyyy', 'ilike', $term)
@@ -178,7 +180,7 @@ class ExamResultsController extends Controller
         $types = MarksMemo::whereNotNull('mm_type')->distinct()->orderBy('mm_type')->pluck('mm_type');
         $divisions = MarksMemo::whereNotNull('division_name')->distinct()->orderBy('division_name')->pluck('division_name');
         $examMonths = MarksMemo::whereNotNull('exam_mon_yyyy')->distinct()->orderBy('exam_mon_yyyy')->pluck('exam_mon_yyyy');
-        $totalRecords = MarksMemo::distinct()->count('mmno');
+        $totalRecords = MarksMemo::query()->fromSub($query, 'sub')->count();
 
         return view('examinations::stdmarks', compact(
             'user',
@@ -222,6 +224,7 @@ class ExamResultsController extends Controller
             ->leftJoin("{$sTable} as s", 'm.regno', '=', 's.register_no')
             ->select([
                 'm.mmno',
+                'm.smmno',
                 'm.regno',
                 's.student_name',
                 DB::raw('COALESCE(m.batch, s.adm_batch_code) as batch'),
@@ -234,7 +237,8 @@ class ExamResultsController extends Controller
                 'm.cgpa_perc',
                 'm.appno',
             ])
-            ->distinct('m.mmno')
+            ->distinct()
+            ->orderBy('m.regno')
             ->orderBy('m.mmno')
             ->orderBy('m.s_year')
             ->orderBy('m.s_sem')
@@ -276,7 +280,10 @@ class ExamResultsController extends Controller
 
         try {
             $query = MarksMemo::byRegno($regno)
-                ->where('mmno', $mmno);
+                ->where(function ($q) use ($mmno) {
+                    $q->where('mmno', $mmno)
+                        ->orWhere('smmno', $mmno);
+                });
 
             if (! empty($appno)) {
                 $query->where('appno', $appno);
@@ -289,9 +296,18 @@ class ExamResultsController extends Controller
         }
 
         $student_info = StudentRegistration::select(['student_name', 'adm_batch_code', 'register_no', 'progid', 'electiveid'])->with(['program:program_id,program_long_name', 'electives:elective_id,elective_long_name'])->where('register_no', $regno)->first();
-        $results = MarksMemo::byMmno($mmno)->with('subject:subcode,subname,credits')->get();
+        $results = MarksMemo::byRegno($regno)
+            ->where(function ($q) use ($mmno) {
+                $q->where('mmno', $mmno)
+                    ->orWhere('smmno', $mmno);
+            })
+            ->when(! empty($appno), fn ($q) => $q->where('appno', $appno))
+            ->with('subject:subcode,subname,credits')
+            ->get();
+
         $basic_info = $valid->only([
             'mmno',
+            'smmno',
             's_sem',
             'exam_mon_yyyy',
             'results_mon_yyyy',
@@ -330,6 +346,7 @@ class ExamResultsController extends Controller
             ->where('m.regno', $reg_no)
             ->select([
                 'm.mmno',
+                'm.smmno',
                 'm.regno',
                 's.student_name',
                 DB::raw('COALESCE(m.batch, s.adm_batch_code) as batch'),
@@ -342,7 +359,7 @@ class ExamResultsController extends Controller
                 'm.cgpa_perc',
                 'm.appno',
             ])
-            ->distinct('m.mmno')
+            ->distinct()
             ->orderBy('m.mmno')
             ->orderBy('m.s_year')
             ->orderBy('m.s_sem')

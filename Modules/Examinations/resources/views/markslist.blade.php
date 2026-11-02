@@ -296,7 +296,10 @@
                         </td>
 
                         <td class="text-center">
-                            <a href="{{ route('examinations.results.memo', ['memo' => $memo->mmno."_".$memo->regno."_".$memo->appno]) }}"
+                            @php
+                                $memoKey = (!empty($memo->smmno) ? $memo->smmno : $memo->mmno) . '_' . $memo->regno . (!empty($memo->appno) ? '_' . $memo->appno : '');
+                            @endphp
+                            <a href="{{ route('examinations.results.memo', ['memo' => $memoKey]) }}"
                                target="_blank"
                                class="view-btn">
                                 <span>View</span>

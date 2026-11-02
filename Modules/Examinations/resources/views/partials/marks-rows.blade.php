@@ -10,7 +10,9 @@
                 </div>
                 <div>
                     <span class="ss-name">{{ $memo->student_name ?? 'Student' }}</span>
-                    @if(!empty($memo->mmno))
+                    @if(!empty($memo->smmno))
+                        <div class="ss-sub-info font-monospace text-primary" title="Supplementary Marks Memo Number">SMM: {{ $memo->smmno }}</div>
+                    @elseif(!empty($memo->mmno))
                         <div class="ss-sub-info font-monospace text-muted">{{ $memo->mmno }}</div>
                     @endif
                 </div>
@@ -61,7 +63,8 @@
         </td>
         <td class="text-center">
             @php
-                $memoParam = $memo->mmno . '_' . $memo->regno . (!empty($memo->appno) ? '_' . $memo->appno : '');
+                $activeMemo = !empty($memo->smmno) ? $memo->smmno : $memo->mmno;
+                $memoParam = $activeMemo . '_' . $memo->regno . (!empty($memo->appno) ? '_' . $memo->appno : '');
             @endphp
             <a href="{{ route('examinations.results.memo', ['memo' => $memoParam]) }}"
                target="_blank"

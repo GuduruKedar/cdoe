@@ -14,20 +14,30 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --brand-blue: #2563eb;
-            --brand-blue-hover: #1d4ed8;
-            --brand-cyan: #38bdf8;
+            --brand-red: #c1121f;
+            --brand-red-hover: #9b111e;
+            --brand-red-dark: #8b0000;
+            --brand-red-light: #fef2f2;
+            --brand-red-border: #fecaca;
+            --brand-coral: #fca5a5;
             --text-heading: #0f172a;
             --text-body: #475569;
             --text-muted: #64748b;
         }
 
+        html {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-            min-height: 100vh;
-            background-color: #0d2757;
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden;
+            background-color: #380610;
             background-image:
-                linear-gradient(180deg, rgba(16, 52, 120, 0.48) 0%, rgba(10, 36, 88, 0.65) 50%, rgba(6, 22, 58, 0.82) 100%),
+                linear-gradient(180deg, rgba(90, 10, 26, 0.60) 0%, rgba(65, 7, 18, 0.76) 50%, rgba(35, 4, 10, 0.92) 100%),
                 url('{{ asset("images/vignan-campus.jpg") }}');
             background-size: cover;
             background-position: center top;
@@ -37,9 +47,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 36px 28px;
+            padding: 14px 24px;
             position: relative;
-            overflow-x: hidden;
         }
 
         /* Ambient subtle light spots */
@@ -49,31 +58,31 @@
             filter: blur(120px);
             pointer-events: none;
             z-index: 0;
-            opacity: 0.35;
+            opacity: 0.38;
         }
         .glow-top-left {
             top: -120px;
             left: -100px;
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, #38bdf8 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.55) 0%, transparent 70%);
         }
         .glow-bottom-right {
             bottom: -150px;
             right: -50px;
             width: 550px;
             height: 550px;
-            background: radial-gradient(circle, #2563eb 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(185, 28, 28, 0.65) 0%, transparent 70%);
         }
 
         /* Main Container */
         .portal-layout-container {
             width: 100%;
-            max-width: 1220px;
+            max-width: 1180px;
             display: grid;
             grid-template-columns: 1.15fr 0.85fr;
             align-items: center;
-            gap: 52px;
+            gap: 36px;
             position: relative;
             z-index: 2;
             margin: auto;
@@ -89,56 +98,58 @@
         .university-badge-pill {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             background: rgba(255, 255, 255, 0.18);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.32);
             border-radius: 999px;
-            padding: 7px 18px 7px 10px;
+            padding: 5px 14px 5px 8px;
             color: #ffffff;
-            font-size: 13px;
+            font-size: 11.5px;
             font-weight: 700;
             letter-spacing: 0.4px;
             width: fit-content;
-            margin-bottom: 24px;
+            margin-bottom: 10px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.20);
         }
         .badge-emblem-icon {
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             object-fit: contain;
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
         }
 
         /* Hero Main Title */
         .hero-portal-title {
-            font-size: 46px;
+            font-size: 30px;
             font-weight: 800;
-            line-height: 1.12;
-            letter-spacing: -0.7px;
+            line-height: 1.15;
+            letter-spacing: -0.5px;
             color: #ffffff;
-            margin-bottom: 14px;
+            margin-bottom: 6px;
             text-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
         }
+        .hero-portal-title .highlight-red,
         .hero-portal-title .highlight-cyan {
-            color: var(--brand-cyan);
+            color: var(--brand-coral);
+            text-shadow: 0 0 25px rgba(239, 68, 68, 0.45);
         }
 
         .hero-portal-desc {
-            font-size: 15px;
-            line-height: 1.6;
-            color: rgba(255, 255, 255, 0.94);
-            max-width: 560px;
-            margin-bottom: 28px;
+            font-size: 12.5px;
+            line-height: 1.45;
+            color: rgba(255, 255, 255, 0.92);
+            max-width: 520px;
+            margin-bottom: 12px;
             text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
         }
 
-        /* Feature Cards Grid (2x2 + 1 Full Width) */
+        /* Feature Cards Stack (Vertical List of 5 Boxes) */
         .features-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             width: 100%;
         }
 
@@ -146,38 +157,39 @@
             background: rgba(255, 255, 255, 0.96);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
-            border-radius: 16px;
-            padding: 16px 18px;
+            border-radius: 12px;
+            padding: 8px 14px;
             display: flex;
-            align-items: flex-start;
-            gap: 14px;
+            align-items: center;
+            gap: 12px;
             border: 1px solid rgba(255, 255, 255, 0.95);
-            box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.16);
+            box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.14);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .feature-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 14px 30px -4px rgba(0, 0, 0, 0.22);
+            box-shadow: 0 8px 18px -2px rgba(0, 0, 0, 0.20);
         }
 
         .feature-card.full-width {
-            grid-column: 1 / -1;
+            width: 100%;
         }
 
         /* Feature Icon Box */
         .feature-icon {
-            width: 44px;
-            height: 44px;
-            min-width: 44px;
-            border-radius: 12px;
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #ffffff;
-            font-size: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            font-size: 15px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
         }
-        .bg-icon-blue { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+        .bg-icon-red,
+        .bg-icon-blue { background: linear-gradient(135deg, #e63946, #c1121f); }
         .bg-icon-cyan { background: linear-gradient(135deg, #06b6d4, #0891b2); }
         .bg-icon-green { background: linear-gradient(135deg, #10b981, #059669); }
         .bg-icon-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
@@ -192,18 +204,18 @@
             align-items: center;
             justify-content: space-between;
             gap: 8px;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         .feature-name {
-            font-size: 14px;
+            font-size: 12.5px;
             font-weight: 700;
             color: #1e293b;
             line-height: 1.3;
         }
         .feature-badge {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
-            padding: 2px 8px;
+            padding: 1px 7px;
             border-radius: 999px;
             display: inline-flex;
             align-items: center;
@@ -217,8 +229,10 @@
             display: inline-block;
         }
 
-        .badge-blue { background: #eff6ff; color: #1d4ed8; }
-        .badge-blue .dot { background: #2563eb; }
+        .badge-red,
+        .badge-blue { background: #fef2f2; color: #991b1b; }
+        .badge-red .dot,
+        .badge-blue .dot { background: #dc2626; }
 
         .badge-cyan { background: #ecfeff; color: #0891b2; }
         .badge-cyan .dot { background: #06b6d4; }
@@ -233,8 +247,8 @@
         .badge-purple .dot { background: #8b5cf6; }
 
         .feature-desc {
-            font-size: 12px;
-            line-height: 1.45;
+            font-size: 11px;
+            line-height: 1.35;
             color: #64748b;
             margin: 0;
         }
@@ -242,61 +256,76 @@
         /* ================= RIGHT COLUMN: AUTH CARD ================= */
         .auth-card-wrapper {
             width: 100%;
-            max-width: 440px;
+            max-width: 410px;
             margin: 0 auto;
         }
 
         .auth-card {
             background: #ffffff;
-            border-radius: 24px;
-            padding: 38px 32px 30px;
+            border-radius: 20px;
+            padding: 24px 26px 18px;
             box-shadow:
-                0 30px 70px -10px rgba(0, 0, 0, 0.42),
-                0 15px 35px -5px rgba(0, 0, 0, 0.16),
+                0 25px 60px -10px rgba(0, 0, 0, 0.45),
+                0 10px 25px -5px rgba(0, 0, 0, 0.18),
                 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
             position: relative;
+            overflow: hidden;
+            border-top: 4px solid var(--brand-red);
+        }
+
+        /* Prominent red line accent on the top of the right whitebox */
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #8b0000 0%, #c1121f 40%, #e63946 80%, #c1121f 100%);
+            z-index: 10;
         }
 
         .auth-card-header {
             text-align: center;
-            margin-bottom: 22px;
+            margin-bottom: 14px;
         }
 
         .portal-shield-img {
-            width: 56px;
-            height: 56px;
+            width: 44px;
+            height: 44px;
             object-fit: contain;
-            margin: 0 auto 10px;
+            margin: 0 auto 6px;
             display: block;
             filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.08));
         }
 
         .auth-institution-tag {
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: 700;
-            color: #2563eb;
-            letter-spacing: 0.6px;
+            color: var(--brand-red);
+            letter-spacing: 0.5px;
             text-transform: uppercase;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             display: inline-flex;
             align-items: center;
             gap: 6px;
         }
 
         .auth-portal-title {
-            font-size: 25px;
+            font-size: 21px;
             font-weight: 800;
             color: #0f172a;
-            letter-spacing: -0.4px;
-            margin-bottom: 5px;
+            letter-spacing: -0.3px;
+            margin-bottom: 3px;
             line-height: 1.2;
         }
+        .auth-portal-title .portal-red,
         .auth-portal-title .portal-blue {
-            color: #2563eb;
+            color: var(--brand-red);
         }
 
         .auth-portal-sub {
-            font-size: 13.5px;
+            font-size: 12px;
             color: #64748b;
             font-weight: 500;
             margin: 0;
@@ -306,15 +335,15 @@
         .auth-nav-tabs {
             display: flex;
             background: #f1f5f9;
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 20px;
+            border-radius: 10px;
+            padding: 3px;
+            margin-bottom: 14px;
         }
         .auth-tab-btn {
             flex: 1;
-            padding: 8px 16px;
-            border-radius: 9px;
-            font-size: 13.5px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12.5px;
             font-weight: 700;
             border: none;
             background: transparent;
@@ -330,7 +359,7 @@
         }
         .auth-tab-btn.active {
             background: #ffffff;
-            color: #1e293b;
+            color: var(--brand-red);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
@@ -358,16 +387,16 @@
 
         /* Form Controls */
         .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 13px;
         }
         .form-label {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             color: #334155;
-            margin-bottom: 7px;
+            margin-bottom: 5px;
         }
         .input-wrap {
             position: relative;
@@ -376,45 +405,45 @@
         }
         .input-wrap .field-icon {
             position: absolute;
-            left: 14px;
+            left: 12px;
             color: #94a3b8;
-            font-size: 17px;
+            font-size: 16px;
             pointer-events: none;
             transition: color 0.2s ease;
         }
         .portal-input {
             width: 100%;
-            height: 48px;
-            padding: 10px 14px 10px 44px;
+            height: 42px;
+            padding: 8px 12px 8px 38px;
             background: #ffffff;
             border: 1.5px solid #cbd5e1;
-            border-radius: 12px;
-            font-size: 14px;
+            border-radius: 10px;
+            font-size: 13.5px;
             color: #0f172a;
             font-family: inherit;
             outline: none;
             transition: all 0.2s ease;
         }
         .portal-input:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.14);
+            border-color: var(--brand-red);
+            box-shadow: 0 0 0 3.5px rgba(193, 18, 31, 0.16);
         }
         .portal-input:focus ~ .field-icon,
         .input-wrap:focus-within .field-icon {
-            color: #2563eb;
+            color: var(--brand-red);
         }
         .portal-input::placeholder {
             color: #94a3b8;
-            font-size: 13.5px;
+            font-size: 13px;
         }
 
         /* 6-digit OTP input */
         .otp-input-field {
-            height: 52px;
-            font-size: 24px !important;
-            letter-spacing: 10px;
+            height: 46px;
+            font-size: 22px !important;
+            letter-spacing: 8px;
             text-align: center;
-            padding-left: 18px !important;
+            padding-left: 14px !important;
             font-weight: 700;
             color: #0f172a;
         }
@@ -424,20 +453,20 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            margin-bottom: 18px;
+            margin-bottom: 14px;
             flex-wrap: wrap;
         }
         .chip-label {
-            font-size: 11.5px;
+            font-size: 11px;
             color: #64748b;
             font-weight: 600;
         }
         .quick-chip {
-            padding: 4px 10px;
+            padding: 3px 8px;
             background: #f1f5f9;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
-            font-size: 11.5px;
+            font-size: 11px;
             color: #334155;
             font-weight: 600;
             cursor: pointer;
@@ -445,24 +474,24 @@
             font-family: inherit;
         }
         .quick-chip:hover {
-            background: #eff6ff;
-            border-color: #bfdbfe;
-            color: #2563eb;
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: var(--brand-red);
             transform: translateY(-1px);
         }
 
-        /* Primary Blue Button */
+        /* Primary Red Button */
         .btn-portal-submit {
             width: 100%;
-            height: 48px;
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            height: 42px;
+            background: linear-gradient(135deg, #d90429 0%, #c1121f 55%, #9b111e 100%);
             color: #ffffff;
             border: none;
-            border-radius: 12px;
-            font-size: 15px;
+            border-radius: 10px;
+            font-size: 14px;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38);
+            box-shadow: 0 4px 12px rgba(193, 18, 31, 0.35);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
@@ -472,9 +501,9 @@
             letter-spacing: 0.2px;
         }
         .btn-portal-submit:hover {
-            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+            background: linear-gradient(135deg, #c1121f 0%, #8b0000 100%);
             transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+            box-shadow: 0 6px 16px rgba(193, 18, 31, 0.45);
         }
         .btn-portal-submit:active {
             transform: translateY(1px);
@@ -487,13 +516,13 @@
 
         .btn-back-outline {
             width: 100%;
-            margin-top: 10px;
-            height: 40px;
+            margin-top: 8px;
+            height: 38px;
             background: transparent;
             color: #475569;
             border: 1px solid #cbd5e1;
-            border-radius: 12px;
-            font-size: 13.5px;
+            border-radius: 10px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -508,10 +537,10 @@
         }
 
         .portal-helper-note {
-            font-size: 12px;
+            font-size: 11.5px;
             color: #64748b;
             text-align: center;
-            margin-top: 14px;
+            margin-top: 10px;
         }
 
         /* Register Tab Pane */
@@ -519,54 +548,54 @@
             animation: fadeIn 0.2s ease-in-out;
         }
         .register-title {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
             color: #0f172a;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
         }
         .register-text {
-            font-size: 13px;
+            font-size: 12.5px;
             color: #475569;
-            line-height: 1.5;
-            margin-bottom: 16px;
+            line-height: 1.45;
+            margin-bottom: 12px;
         }
         .register-contact-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-left: 3.5px solid #2563eb;
-            border-radius: 12px;
-            padding: 14px 16px;
-            margin-bottom: 16px;
+            background: #fff8f8;
+            border: 1px solid #fee2e2;
+            border-left: 3.5px solid var(--brand-red);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
         }
         .contact-box-title {
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 10px;
+            color: #991b1b;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
         .contact-row {
-            font-size: 13px;
+            font-size: 12px;
             color: #334155;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             display: flex;
             gap: 6px;
         }
         .contact-row:last-child { margin-bottom: 0; }
         .contact-row strong { color: #0f172a; }
-        .contact-row a { color: #2563eb; text-decoration: none; font-weight: 600; }
+        .contact-row a { color: var(--brand-red); text-decoration: none; font-weight: 600; }
         .contact-row a:hover { text-decoration: underline; }
 
         .btn-return-login {
             width: 100%;
-            padding: 10px;
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            color: #2563eb;
-            border-radius: 10px;
-            font-size: 13px;
+            padding: 8px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: var(--brand-red);
+            border-radius: 9px;
+            font-size: 12.5px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -576,19 +605,19 @@
             gap: 6px;
         }
         .btn-return-login:hover {
-            background: #dbeafe;
+            background: #fee2e2;
         }
 
         /* Card Bottom Copyright */
         .auth-card-footer {
-            margin-top: 22px;
+            margin-top: 14px;
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             color: #64748b;
-            line-height: 1.5;
+            line-height: 1.4;
         }
         .auth-card-footer .powered-by {
-            font-size: 11.5px;
+            font-size: 10.5px;
             color: #94a3b8;
             margin-top: 2px;
         }
@@ -663,7 +692,7 @@
 
             {{-- Large Headline --}}
             <h1 class="hero-portal-title">
-                Online Learning <span class="highlight-cyan">Portal</span>
+                Online Learning <span class="highlight-red">Portal</span>
             </h1>
 
             <p class="hero-portal-desc">
@@ -675,13 +704,13 @@
 
                 {{-- Card 1: Specializations & Electives --}}
                 <div class="feature-card">
-                    <div class="feature-icon bg-icon-blue">
+                    <div class="feature-icon bg-icon-red">
                         <i class="bi bi-briefcase-fill"></i>
                     </div>
                     <div class="feature-body">
                         <div class="feature-header">
                             <span class="feature-name">Specializations &amp; Electives</span>
-                            <span class="feature-badge badge-blue">
+                            <span class="feature-badge badge-red">
                                 <span class="dot"></span> Online Learning
                             </span>
                         </div>
@@ -770,7 +799,7 @@
                         <span>• VFSTR • ONLINE LEARNING (CDOE)</span>
                     </div>
                     <h2 class="auth-portal-title">
-                        Online Learning <span class="portal-blue">Portal</span>
+                        Online Learning <span class="portal-red">Portal</span>
                     </h2>
                     <p class="auth-portal-sub">Welcome Back! Please enter your credentials to continue.</p>
                 </div>
@@ -887,7 +916,7 @@
 
                     <div class="register-contact-box">
                         <div class="contact-box-title">
-                            <i class="bi bi-info-circle-fill text-primary"></i>
+                            <i class="bi bi-info-circle-fill" style="color: var(--brand-red);"></i>
                             <span>CDOE Admissions &amp; Records Office</span>
                         </div>
 

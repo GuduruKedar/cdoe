@@ -43,6 +43,11 @@ class MarksMemo extends Model
         return $query->where('mmno', $mmno);
     }
 
+    public function scopeBySmmno($query, string $smmno)
+    {
+        return $query->where('smmno', $smmno);
+    }
+
     public function subject(): BelongsTo
     {
         return $this->belongsTo(Subject::class, 'subcode', 'subcode');
