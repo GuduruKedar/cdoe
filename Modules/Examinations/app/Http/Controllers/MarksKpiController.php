@@ -60,7 +60,7 @@ class MarksKpiController extends Controller
     /** @return array{0: array, 1: bool} rows as arrays, and whether the row limit was hit */
     private function fetchRows(array $f): array
     {
-        $sql = 'SELECT mc.appno, mc.regno, mc.exam_mon_yyyy, mc.mmno, mc.subcode, mc.mm_type,
+        $sql = 'SELECT mc.appno, mc.regno, sr.student_name, mc.exam_mon_yyyy, mc.mmno, mc.subcode, mc.mm_type,
                        mc.fa_conducted, mc.sa_conducted, mc.fa_earned, mc.sa_earned,
                        mc.total_conducted, mc.total_earned, mc.grade_points, mc.letter_grade,
                        mc.sgpa_perc, mc.cgpa_perc, mc.division_name, mc.results_mon_yyyy,

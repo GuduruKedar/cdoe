@@ -505,6 +505,9 @@
     .badge.risk { background: var(--risk-soft); color: var(--risk); }
     .badge.info { background: var(--info-soft); color: var(--info); }
     .badge.muted { background: var(--line-2); color: var(--ink-2); }
+    .badge.reappear { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .badge.regular { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .badge.warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
     .tbl-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
     .tbl-tools input, .tbl-tools select {
         padding: 6px 10px;
@@ -755,6 +758,12 @@
                     <i class="bi bi-table"></i> Detailed View
                     <span class="view-btn-count">{{ number_format($kpi['summary']['students'] ?? 0) }}</span>
                 </button>
+                <button type="button" class="view-btn" id="btn-report" role="tab" aria-selected="false">
+                    <i class="bi bi-file-earmark-medical"></i> Report
+                    @if (!empty($kpi['reappear_report']))
+                        <span class="view-btn-count" style="background:#dc2626;color:#fff">{{ number_format(count($kpi['reappear_report'])) }}</span>
+                    @endif
+                </button>
                 <button type="button" class="view-btn" id="btn-ai" role="tab" aria-selected="false">
                     <i class="bi bi-stars"></i> AI Perceptions
                     @if (!empty($kpi['summary']['quality_issues']))
@@ -763,6 +772,8 @@
                 </button>
             </div>
             <div class="view-actions">
+                <button type="button" class="btn" id="btn-reappear-csv" title="Export Active Reappear/Backlog CSV"><i class="bi bi-file-earmark-arrow-down text-danger"></i> Reappear CSV</button>
+                <button type="button" class="btn text-danger fw-bold" id="btn-reappear-pdf" title="Download Active Reappear/Backlog PDF"><i class="bi bi-file-earmark-pdf-fill"></i> Reappear PDF</button>
                 <button type="button" class="btn" id="btn-csv"><i class="bi bi-download"></i> Records CSV</button>
                 <button type="button" class="btn" id="btn-subcsv"><i class="bi bi-file-earmark-spreadsheet"></i> Subjects CSV</button>
                 <button type="button" class="btn" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
@@ -929,7 +940,57 @@
             </div>
         </section>
 
-        {{-- ================= 6. VIEW 3: AI ANALYTICS & AUDIT ================= --}}
+        {{-- ================= 6. VIEW: REAPPEAR REPORT ================= --}}
+        <section id="panel-report" hidden>
+            <div class="detailed-section mb-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h2 class="h5 fw-bold mb-1" style="color: #c1121f;">
+                            <i class="bi bi-file-earmark-medical-fill me-2"></i>REAPPEAR Report
+                        </h2>
+                        <p class="small text-muted mb-0">
+                            Active backlogs requiring reappear examinations. Students who previously failed but subsequently passed the subject are automatically resolved and excluded.
+                        </p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnExportReapCsv">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger text-white" id="btnExportReapPdf" style="background: #c1121f; border-color: #c1121f;">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Download PDF
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="btnPrintReap">
+                            <i class="bi bi-printer me-1"></i> Print / Preview
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Filter & Search Toolbar --}}
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 p-2 bg-light dark:bg-slate-800 rounded border">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <input type="search" id="reapSearch" class="form-control form-control-sm" placeholder="Search Register No, Student Name, Subject Code..." style="min-width: 270px;">
+                        <select id="reapTypeFilter" class="form-select form-select-sm" style="width: auto;">
+                            <option value="">All Types</option>
+                            <option value="REGULAR">REGULAR</option>
+                            <option value="REAPPEAR">REAPPEAR</option>
+                        </select>
+                        <select id="reapSessionFilter" class="form-select form-select-sm" style="width: auto;">
+                            <option value="">All Exam Sessions</option>
+                        </select>
+                    </div>
+                    <div class="small fw-bold text-muted" id="reapCountBadge">
+                        Loading report...
+                    </div>
+                </div>
+
+                {{-- Reappear Report Table --}}
+                <div class="tbl-wrap">
+                    <table id="tReappearReport"></table>
+                </div>
+            </div>
+        </section>
+
+        {{-- ================= 7. VIEW 3: AI ANALYTICS & AUDIT ================= --}}
         <section id="panel-ai" hidden>
             <div class="ai-head">
                 <div>
@@ -969,6 +1030,8 @@
 
 @if ($kpi && empty($kpi['empty']))
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
     <script>window.MARKS_KPI = @json($kpi);</script>
     @verbatim
         <script>
@@ -976,6 +1039,7 @@
                 'use strict';
                 const K = window.MARKS_KPI;
                 if (!K || K.empty) return;
+                let renderReap = () => {};
 
                 // ---------- helpers ----------
                 const $ = (s) => document.querySelector(s);
@@ -1247,7 +1311,17 @@
                     // Raw Records Table
                     const recCols = [
                         { k: 'regno', t: 'Register No' }, { k: 'sem', t: 'Sem' }, { k: 'exam', t: 'Exam' },
-                        { k: 'type', t: 'Type' }, { k: 'subcode', t: 'Subject' },
+                        {
+                            k: 'type',
+                            t: 'Type',
+                            f: (v) => {
+                                const val = String(v || '').trim().toUpperCase();
+                                return val === 'REGULAR'
+                                    ? `<span class="badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700">REGULAR</span>`
+                                    : `<span class="badge" style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;font-weight:700">${esc(val || 'REAPPEAR')}</span>`;
+                            }
+                        },
+                        { k: 'subcode', t: 'Subject' },
                         { k: 'fa', t: 'FA', num: 1, f: (v, r) => `${v}/${r.fa_c}` },
                         { k: 'sa', t: 'SA', num: 1, f: (v, r) => `${v}/${r.sa_c}` },
                         { k: 'pct', t: 'Marks %', num: 1, f: (v) => pc(v) },
@@ -1270,6 +1344,59 @@
                     renderRec();
                     $('#recSearch').addEventListener('input', renderRec);
                     $('#recType').addEventListener('change', renderRec);
+
+                    // ================= REAPPEAR REPORT TABLE =================
+                    const repCols = [
+                        { k: 'regno', t: 'Register No', f: (v) => `<a href="${location.pathname}?regno=${encodeURIComponent(v)}" class="fw-bold text-decoration-none">${esc(v)}</a>` },
+                        { k: 'student_name', t: 'Student Name', f: (v) => `<span class="fw-semibold">${esc(v || 'N/A')}</span>` },
+                        { k: 'exam_session', t: 'Exam Session', f: (v) => `<span class="badge" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1">${esc(v)}</span>` },
+                        { k: 'subcode', t: 'Subject Code', f: (v) => `<span class="badge font-monospace" style="background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;font-weight:700">${esc(v)}</span>` },
+                        {
+                            k: 'type',
+                            t: 'Type',
+                            f: (v) => {
+                                const val = String(v || '').trim().toUpperCase();
+                                return val === 'REGULAR'
+                                    ? `<span class="badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700">REGULAR</span>`
+                                    : `<span class="badge" style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;font-weight:700">${esc(val || 'REAPPEAR')}</span>`;
+                            }
+                        },
+                        { k: 'grade_points', t: 'Grade Points', num: 1, f: (v, r) => `<span class="badge" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;font-weight:700">${v ?? 0} (${esc(r.grade || 'F')})</span>` },
+                    ];
+
+                    let repR = K.reappear_report || [];
+                    const sessSelect = $('#reapSessionFilter');
+                    if (sessSelect && repR.length) {
+                        const sessions = [...new Set(repR.map(x => x.exam_session).filter(Boolean))].sort();
+                        sessions.forEach(s => {
+                            const opt = document.createElement('option');
+                            opt.value = s;
+                            opt.textContent = s;
+                            sessSelect.appendChild(opt);
+                        });
+                    }
+
+                    renderReap = () => {
+                        const q = ($('#reapSearch') ? $('#reapSearch').value : '').toLowerCase().trim();
+                        const ty = $('#reapTypeFilter') ? $('#reapTypeFilter').value : '';
+                        const se = $('#reapSessionFilter') ? $('#reapSessionFilter').value : '';
+
+                        let r = repR;
+                        if (ty) r = r.filter(x => x.type === ty);
+                        if (se) r = r.filter(x => x.exam_session === se);
+                        if (q) r = r.filter(x => (x.regno + ' ' + x.student_name + ' ' + x.subcode + ' ' + x.exam_session).toLowerCase().includes(q));
+
+                        if ($('#reapCountBadge')) {
+                            $('#reapCountBadge').textContent = `Showing ${r.length} of ${repR.length} active backlogs`;
+                        }
+
+                        table('tReappearReport', repCols, r, { sortKey: 'regno', dir: 1 });
+                    };
+
+                    renderReap();
+                    if ($('#reapSearch')) $('#reapSearch').addEventListener('input', renderReap);
+                    if ($('#reapTypeFilter')) $('#reapTypeFilter').addEventListener('change', renderReap);
+                    if ($('#reapSessionFilter')) $('#reapSessionFilter').addEventListener('change', renderReap);
                 }
 
                 function table(id, cols, rows, opts = {}) {
@@ -1349,16 +1476,21 @@
                     currentView = which;
                     $('#panel-overview').hidden = which !== 'overview';
                     $('#panel-detailed').hidden = which !== 'detailed';
+                    if ($('#panel-report')) $('#panel-report').hidden = which !== 'report';
                     $('#panel-ai').hidden = which !== 'ai';
 
                     $('#btn-overview').classList.toggle('is-active', which === 'overview');
                     $('#btn-detailed').classList.toggle('is-active', which === 'detailed');
+                    if ($('#btn-report')) $('#btn-report').classList.toggle('is-active', which === 'report');
                     $('#btn-ai').classList.toggle('is-active', which === 'ai');
 
                     if (which === 'overview') {
                         setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
                     } else if (which === 'detailed') {
                         initDetailedCharts();
+                        setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+                    } else if (which === 'report') {
+                        renderReap();
                         setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
                     } else if (which === 'ai') {
                         aiPanel();
@@ -1367,6 +1499,7 @@
 
                 $('#btn-overview').addEventListener('click', () => switchView('overview'));
                 $('#btn-detailed').addEventListener('click', () => switchView('detailed'));
+                if ($('#btn-report')) $('#btn-report').addEventListener('click', () => switchView('report'));
                 $('#btn-ai').addEventListener('click', () => switchView('ai'));
                 $('#btnGoDetailed').addEventListener('click', () => switchView('detailed'));
 
@@ -1418,6 +1551,262 @@
                 const stamp = (isStudent ? M.student.regno : 'cohort') + '_' + new Date().toISOString().slice(0, 10);
                 $('#btn-csv').addEventListener('click', () => csv(`marks_records_${stamp}.csv`, K.records, ['regno', 'program', 'sem', 'exam', 'type', 'mmno', 'subcode', 'fa', 'fa_c', 'sa', 'sa_c', 'total', 'total_c', 'pct', 'grade', 'gp', 'credits', 'sgpa', 'division', 'passed', 'counted']));
                 $('#btn-subcsv').addEventListener('click', () => csv(`marks_subjects_${stamp}.csv`, K.subjects, ['subcode', 'semesters', 'results', 'attempts', 'reappears', 'credits', 'avg_pct', 'min_pct', 'max_pct', 'std_pct', 'fa_pct', 'sa_pct', 'gap', 'avg_gp', 'pass_pct']));
+                const getReapRows = () => {
+                    const q = ($('#reapSearch') ? $('#reapSearch').value : '').toLowerCase().trim();
+                    const ty = $('#reapTypeFilter') ? $('#reapTypeFilter').value : '';
+                    const se = $('#reapSessionFilter') ? $('#reapSessionFilter').value : '';
+                    let r = K.reappear_report || [];
+                    if (ty) r = r.filter(x => x.type === ty);
+                    if (se) r = r.filter(x => x.exam_session === se);
+                    if (q) r = r.filter(x => (x.regno + ' ' + x.student_name + ' ' + x.subcode + ' ' + x.exam_session).toLowerCase().includes(q));
+                    return r;
+                };
+
+                const exportReapCsv = () => {
+                    const rows = getReapRows();
+                    if (!rows.length) {
+                        alert('No active backlogs to export.');
+                        return;
+                    }
+                    csv(`reappear_report_${stamp}.csv`, rows, ['regno', 'student_name', 'exam_session', 'subcode', 'type', 'grade_points']);
+                };
+
+                const printReapFormatted = (rowsToPrint) => {
+                    const rows = rowsToPrint || getReapRows();
+                    if (!rows.length) {
+                        alert('No active backlogs to print.');
+                        return;
+                    }
+                    const win = window.open('', '_blank');
+                    if (!win) {
+                        window.print();
+                        return;
+                    }
+                    const now = new Date();
+                    const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                    let html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>REAPPEAR REPORT — VFSTR CDOE</title>
+    <style>
+        @page { size: A4 landscape; margin: 12mm 15mm; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-size: 11px; color: #0f172a; margin: 0; padding: 15px; }
+        .hdr { border-bottom: 2px solid #c1121f; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .hdr h1 { margin: 0 0 2px 0; font-size: 15px; color: #c1121f; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .hdr p { margin: 0; font-size: 10px; color: #475569; }
+        .meta { font-size: 10px; text-align: right; color: #64748b; line-height: 1.4; }
+        .rep-title { font-size: 12.5px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 5px; }
+        th { background: #c1121f; color: #ffffff; padding: 6px 8px; text-align: left; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+        td { padding: 5px 8px; border-bottom: 1px solid #e2e8f0; font-size: 10px; }
+        tr:nth-child(even) td { background: #f8fafc; }
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 9.5px; font-weight: 700; }
+        .badge-reg { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .badge-reap { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .badge-fail { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; font-weight: 700; }
+        .mono { font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+        .ftr { margin-top: 15px; font-size: 9px; color: #94a3b8; display: flex; justify-content: space-between; border-top: 1px solid #e2e8f0; padding-top: 6px; }
+        @media print {
+            body { padding: 0; }
+            th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            tr:nth-child(even) td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+    <div class="hdr">
+        <div>
+            <h1>Vignan's Foundation for Science, Technology and Research (VFSTR)</h1>
+            <p>Directorate of Centre for Distance and Online Education (CDOE) — Examination Cell</p>
+        </div>
+        <div class="meta">
+            <div><strong>Generated:</strong> ${dateStr}</div>
+            <div><strong>Total Active Backlogs:</strong> ${rows.length}</div>
+        </div>
+    </div>
+    <div class="rep-title">
+        <span>ACTIVE REAPPEAR & PENDING BACKLOGS REPORT</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 35px; text-align: center;">#</th>
+                <th style="width: 95px;">Register No</th>
+                <th>Student Name</th>
+                <th style="width: 120px; text-align: center;">Exam Session</th>
+                <th style="width: 100px; text-align: center;">Subject Code</th>
+                <th style="width: 85px; text-align: center;">Type</th>
+                <th style="width: 90px; text-align: center;">Grade Points</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+                    rows.forEach((r, idx) => {
+                        const isReg = String(r.type || '').toUpperCase() === 'REGULAR';
+                        const typeBadge = isReg
+                            ? '<span class="badge badge-reg">REGULAR</span>'
+                            : '<span class="badge badge-reap">' + (r.type || 'REAPPEAR') + '</span>';
+                        html += `
+            <tr>
+                <td style="text-align: center;" class="mono">${idx + 1}</td>
+                <td class="mono"><strong>${esc(r.regno)}</strong></td>
+                <td><strong>${esc(r.student_name || 'N/A')}</strong></td>
+                <td style="text-align: center;">${esc(r.exam_session || '—')}</td>
+                <td style="text-align: center;" class="mono"><strong>${esc(r.subcode)}</strong></td>
+                <td style="text-align: center;">${typeBadge}</td>
+                <td style="text-align: center;"><span class="badge badge-fail">${r.grade_points ?? 0} (${esc(r.grade || 'F')})</span></td>
+            </tr>`;
+                    });
+
+                    html += `
+        </tbody>
+    </table>
+    <div class="ftr">
+        <span>VFSTR CDOE Examination Management System — Official Academic Report</span>
+        <span>Total Records: ${rows.length}</span>
+    </div>
+    <script>
+        window.addEventListener('load', () => { setTimeout(() => { window.print(); }, 250); });
+    <\/script>
+</body>
+</html>`;
+
+                    win.document.open();
+                    win.document.write(html);
+                    win.document.close();
+                };
+
+                const exportReapPdf = () => {
+                    const rows = getReapRows();
+                    if (!rows.length) {
+                        alert('No active backlogs to export.');
+                        return;
+                    }
+
+                    if (window.jspdf && window.jspdf.jsPDF) {
+                        try {
+                            const { jsPDF } = window.jspdf;
+                            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+                            const W = doc.internal.pageSize.getWidth();
+                            const H = doc.internal.pageSize.getHeight();
+
+                            // 1. Header Banner
+                            doc.setFillColor(193, 18, 31); // #c1121f (Vignan red)
+                            doc.rect(0, 0, W, 56, 'F');
+
+                            doc.setFont('helvetica', 'bold');
+                            doc.setFontSize(13);
+                            doc.setTextColor(255, 255, 255);
+                            doc.text("VIGNAN'S FOUNDATION FOR SCIENCE, TECHNOLOGY AND RESEARCH (VFSTR)", 40, 24);
+
+                            doc.setFont('helvetica', 'normal');
+                            doc.setFontSize(9);
+                            doc.setTextColor(254, 226, 226);
+                            doc.text('Directorate of Centre for Distance and Online Education (CDOE) — Examination Cell', 40, 42);
+
+                            // 2. Report Subheading
+                            doc.setFont('helvetica', 'bold');
+                            doc.setFontSize(13);
+                            doc.setTextColor(15, 23, 42);
+                            doc.text('ACTIVE REAPPEAR & PENDING BACKLOGS REPORT', 40, 80);
+
+                            doc.setFont('helvetica', 'normal');
+                            doc.setFontSize(8.5);
+                            doc.setTextColor(100, 116, 139);
+
+                            const now = new Date();
+                            const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            const ty = $('#reapTypeFilter') ? $('#reapTypeFilter').value : '';
+                            const se = $('#reapSessionFilter') ? $('#reapSessionFilter').value : '';
+                            const filterStr = [ty ? `Type: ${ty}` : null, se ? `Session: ${se}` : null].filter(Boolean).join(' | ');
+
+                            doc.text(`Generated: ${dateStr}   •   Total Active Backlogs: ${rows.length}${filterStr ? '   •   ' + filterStr : ''}`, 40, 95);
+
+                            // 3. Table Data
+                            const head = [['#', 'Register No', 'Student Name', 'Exam Session', 'Subject Code', 'Type', 'Grade Points', 'Grade']];
+                            const body = rows.map((r, i) => [
+                                i + 1,
+                                r.regno,
+                                r.student_name || 'N/A',
+                                r.exam_session || '—',
+                                r.subcode,
+                                r.type || 'REAPPEAR',
+                                r.grade_points ?? 0,
+                                r.grade || 'F',
+                            ]);
+
+                            doc.autoTable({
+                                head: head,
+                                body: body,
+                                startY: 108,
+                                theme: 'grid',
+                                headStyles: {
+                                    fillColor: [193, 18, 31],
+                                    textColor: [255, 255, 255],
+                                    fontStyle: 'bold',
+                                    fontSize: 8.5,
+                                    cellPadding: 5,
+                                    halign: 'left',
+                                },
+                                alternateRowStyles: {
+                                    fillColor: [248, 250, 252],
+                                },
+                                styles: {
+                                    fontSize: 8,
+                                    textColor: [15, 23, 42],
+                                    cellPadding: 4.5,
+                                    lineColor: [226, 232, 240],
+                                    lineWidth: 0.5,
+                                    font: 'helvetica',
+                                },
+                                columnStyles: {
+                                    0: { cellWidth: 30, halign: 'center' },
+                                    1: { cellWidth: 85, fontStyle: 'bold' },
+                                    2: { cellWidth: 195 },
+                                    3: { cellWidth: 110, halign: 'center' },
+                                    4: { cellWidth: 90, halign: 'center', fontStyle: 'bold' },
+                                    5: { cellWidth: 80, halign: 'center' },
+                                    6: { cellWidth: 65, halign: 'center' },
+                                    7: { cellWidth: 45, halign: 'center', fontStyle: 'bold', textColor: [185, 28, 28] },
+                                },
+                                didParseCell: function (data) {
+                                    if (data.section === 'body' && data.column.index === 5) {
+                                        if (data.cell.raw === 'REGULAR') {
+                                            data.cell.styles.textColor = [3, 105, 161];
+                                            data.cell.styles.fontStyle = 'bold';
+                                        } else {
+                                            data.cell.styles.textColor = [185, 28, 28];
+                                            data.cell.styles.fontStyle = 'bold';
+                                        }
+                                    }
+                                },
+                                didDrawPage: function (data) {
+                                    const pageNum = doc.internal.getNumberOfPages();
+                                    doc.setFontSize(8);
+                                    doc.setTextColor(148, 163, 184);
+                                    doc.text(`Page ${pageNum}`, W - 60, H - 15);
+                                    doc.text('VFSTR CDOE Examination Management System — Strictly Confidential', 40, H - 15);
+                                },
+                                margin: { left: 40, right: 40, bottom: 28 },
+                            });
+
+                            doc.save(`reappear_report_${stamp}.pdf`);
+                            return;
+                        } catch (err) {
+                            console.error('jsPDF generation failed, using print preview fallback:', err);
+                        }
+                    }
+                    printReapFormatted(rows);
+                };
+
+                if ($('#btn-reappear-csv')) $('#btn-reappear-csv').addEventListener('click', exportReapCsv);
+                if ($('#btnExportReapCsv')) $('#btnExportReapCsv').addEventListener('click', exportReapCsv);
+                if ($('#btn-reappear-pdf')) $('#btn-reappear-pdf').addEventListener('click', exportReapPdf);
+                if ($('#btnExportReapPdf')) $('#btnExportReapPdf').addEventListener('click', exportReapPdf);
+                if ($('#btnPrintReap')) $('#btnPrintReap').addEventListener('click', () => printReapFormatted());
 
                 // Initialize
                 initOverviewCharts();

@@ -91,6 +91,7 @@ class MarksKpiService
         $semesters = self::semesterSeries($effective, $students);
         $subjects = self::subjectTable($effective, $recs);
         $reappear = self::reappearAnalysis($attemptsByKey);
+        $reappearReport = self::buildReappearReport($recs);
         $sessions = self::sessionSeries($recs);
         $quality = self::qualityChecks($recs, $attemptsByKey, $reappear);
         $summary = self::summary($recs, $effective, $students, $reappear, $quality);
@@ -116,6 +117,7 @@ class MarksKpiService
             'sessions' => $sessions,
             'subjects' => $subjects,
             'reappear' => $reappear,
+            'reappear_report' => $reappearReport,
             'groups' => [
                 'program' => self::groupCompare($students, 'program'),
                 'gender' => self::groupCompare($students, 'gender'),
@@ -160,6 +162,7 @@ class MarksKpiService
             'idx' => $i,
             'appno' => trim((string) ($r['appno'] ?? '')),
             'regno' => strtoupper(trim((string) ($r['regno'] ?? ''))),
+            'student_name' => trim((string) ($r['student_name'] ?? '')),
             'mmno' => trim((string) ($r['mmno'] ?? '')),
             'subcode' => strtoupper(trim((string) ($r['subcode'] ?? ''))),
             'mm_type' => $type ?: 'UNKNOWN',
@@ -639,6 +642,61 @@ class MarksKpiService
                 'identical' => count(array_filter($rows, fn ($r) => $r['identical'])),
             ],
         ];
+    }
+
+    /**
+     * Active REAPPEAR report.
+     * Contains only student + subject pairs where the student has failed and has NOT yet passed
+     * in any subsequent or prior attempt.
+     *
+     * @param  array  $recs  normalized records
+     * @return array list of pending reappear rows
+     */
+    private static function buildReappearReport(array $recs): array
+    {
+        $byStudentSubject = [];
+        foreach ($recs as $r) {
+            $key = $r['regno'].'|'.$r['subcode'];
+            $byStudentSubject[$key][] = $r;
+        }
+
+        $report = [];
+        foreach ($byStudentSubject as $key => $attempts) {
+            usort($attempts, fn ($a, $b) => $a['order'] <=> $b['order']);
+
+            $hasPassed = false;
+            foreach ($attempts as $a) {
+                if ($a['passed']) {
+                    $hasPassed = true;
+                    break;
+                }
+            }
+
+            // Exclude students who cleared/passed this subject
+            if ($hasPassed) {
+                continue;
+            }
+
+            // Take the latest attempt for this pending subject
+            $latest = end($attempts);
+
+            $report[] = [
+                'regno' => $latest['regno'],
+                'student_name' => $latest['student_name'] ?: 'N/A',
+                'exam_session' => $latest['exam'],
+                'subcode' => $latest['subcode'],
+                'type' => $latest['mm_type'],
+                'grade_points' => $latest['gp'],
+                'grade' => $latest['grade'],
+                'semester' => $latest['sem_label'],
+                'attempts' => count($attempts),
+                'program' => $latest['program'],
+            ];
+        }
+
+        usort($report, fn ($a, $b) => [$a['regno'], $a['subcode']] <=> [$b['regno'], $b['subcode']]);
+
+        return $report;
     }
 
     private static function groupCompare(array $students, string $field): array
