@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Common\Services\MenuService;
+use App\Models\MenuAccessRole;
 use App\Models\PprDetail;
 use App\Models\Role;
 use Illuminate\Http\Request;
@@ -41,6 +42,24 @@ class GeneralController extends Controller
         }
 
         return false;
+    }
+
+    /**
+     * Check if the current user can manage (upload/delete) PPR Books / Regulations.
+     * Allowed if user is Main Admin OR role has menu 143 (PPR Books upload).
+     */
+    public static function canManage(): bool
+    {
+        if (self::isMainAdmin()) {
+            return true;
+        }
+
+        $roleId = (int) session('user.role_id');
+        if (! $roleId) {
+            return false;
+        }
+
+        return MenuAccessRole::where('role_id', $roleId)->where('menu_id', 143)->exists();
     }
 
     /**
@@ -89,7 +108,7 @@ class GeneralController extends Controller
             'BBA' => PprDetail::where('prog_name', 'BBA')->count(),
         ];
 
-        $isMainAdmin = self::isMainAdmin();
+        $isMainAdmin = self::canManage();
         $programMap = self::PROGRAM_MAP;
 
         return view('general.index', compact(
@@ -109,9 +128,9 @@ class GeneralController extends Controller
      */
     public function manage(Request $request)
     {
-        if (! self::isMainAdmin()) {
-            return redirect()->route('general.index')
-                ->with('error', 'Unauthorized access. Only Main Admin can manage regulations.');
+        if (! self::canManage()) {
+            return redirect()->route('general.pprbooks')
+                ->with('error', 'Unauthorized access. Only authorized roles can manage PPR Books.');
         }
 
         $user = (object) [
@@ -132,11 +151,11 @@ class GeneralController extends Controller
     }
 
     /**
-     * Upload a new regulation into visa.ppr_details (Main Admin Only).
+     * Upload a new regulation into visa.ppr_details (Main Admin / Authorized Roles Only).
      */
     public function store(Request $request)
     {
-        if (! self::isMainAdmin()) {
+        if (! self::canManage()) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -218,11 +237,11 @@ class GeneralController extends Controller
     }
 
     /**
-     * Delete document (Main Admin Only).
+     * Delete document (Main Admin / Authorized Roles Only).
      */
     public function destroy(PprDetail $document)
     {
-        if (! self::isMainAdmin()) {
+        if (! self::canManage()) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -237,10 +256,10 @@ class GeneralController extends Controller
     }
 
     /**
-     * Legacy PPR Books alias.
+     * Direct alias for PPR Books view.
      */
     public function pprBooks(Request $request)
     {
-        return redirect()->route('general.index');
+        return $this->index($request);
     }
 }

@@ -19,14 +19,15 @@ Route::post('/switch-role/{roleId}',
     [RoleSwitchController::class, 'switch']
 )->name('switch.role');
 
-// General Regulations & Academic Documents Hub (Accessible by ALL roles, managed by Main Admin)
+// General / PPR Books (Dynamic database-driven menus: general/pprbooks, general/pprbooksupload, general/index)
 Route::middleware(['web'])->group(function () {
     Route::get('/general', [GeneralController::class, 'index'])->name('general.index');
     Route::get('/general/index', [GeneralController::class, 'index']);
+    Route::get('/general/pprbooks', [GeneralController::class, 'index'])->name('general.pprbooks');
+    Route::get('/general/pprbooksupload', [GeneralController::class, 'manage'])->name('general.pprbooksupload');
     Route::get('/general/manage', [GeneralController::class, 'manage'])->name('general.manage');
     Route::post('/general/upload', [GeneralController::class, 'store'])->name('general.store');
     Route::get('/general/document/{document}/download', [GeneralController::class, 'download'])->name('general.download');
     Route::get('/general/document/{document}/preview', [GeneralController::class, 'preview'])->name('general.preview');
     Route::delete('/general/document/{document}', [GeneralController::class, 'destroy'])->name('general.destroy');
-    Route::get('/general/pprbooks', [GeneralController::class, 'pprBooks'])->name('general.pprbooks');
 });

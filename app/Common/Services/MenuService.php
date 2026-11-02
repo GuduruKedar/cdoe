@@ -2,7 +2,6 @@
 
 namespace App\Common\Services;
 
-use App\Http\Controllers\GeneralController;
 use App\Models\Menu;
 use App\Models\MenuAccessRole;
 use App\Models\Role;
@@ -80,65 +79,7 @@ class MenuService
             ];
         }
 
-        $tree = self::buildTree($menuRecords, $meta);
-
-        return self::enhanceGeneralMenu($tree, $user);
-    }
-
-    /**
-     * Ensure General menu is present for EVERY role with dynamic MBA/BBA sub-sections.
-     */
-    private static function enhanceGeneralMenu(array $tree, $user): array
-    {
-        $isMainAdmin = GeneralController::isMainAdmin();
-
-        $generalChildren = [
-            [
-                'menu_id' => 'gen-all',
-                'menu_code' => 'GENE_ALL',
-                'menu_name' => 'All Regulations',
-                'controller_ref' => 'general',
-                'icon_name' => 'bi bi-file-earmark-text-fill',
-                'is_collapsible' => false,
-                'mposition' => 1,
-                'morder' => 1,
-                'url' => '/general',
-                'children' => [],
-            ],
-        ];
-
-        $found = false;
-        foreach ($tree as &$node) {
-            if (
-                ($node['menu_id'] ?? null) == 140
-                || strtolower($node['menu_name'] ?? '') === 'general'
-                || strtolower($node['controller_ref'] ?? '') === 'general/index'
-            ) {
-                $node['is_collapsible'] = true;
-                $node['icon_name'] = 'bi bi-folder2-open';
-                $node['children'] = $generalChildren;
-                $found = true;
-                break;
-            }
-        }
-        unset($node);
-
-        if (! $found) {
-            $tree[] = [
-                'menu_id' => 140,
-                'menu_code' => 'GENE0001',
-                'menu_name' => 'General',
-                'controller_ref' => 'general/index',
-                'icon_name' => 'bi bi-folder2-open',
-                'is_collapsible' => true,
-                'mposition' => 1,
-                'morder' => 99,
-                'url' => '/general',
-                'children' => $generalChildren,
-            ];
-        }
-
-        return $tree;
+        return self::buildTree($menuRecords, $meta);
     }
 
     private static function buildTree($menuRecords, $meta, $parentId = null): array
