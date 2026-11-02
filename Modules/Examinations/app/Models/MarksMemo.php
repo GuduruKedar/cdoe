@@ -48,6 +48,15 @@ class MarksMemo extends Model
         return $query->where('smmno', $smmno);
     }
 
+    public function scopeByRegnoMmno($query, string $regno, string $mmno)
+    {
+        return $query->where('regno', $regno)
+            ->where(function ($q) use ($mmno) {
+                $q->where('mmno', $mmno)
+                    ->orWhere('smmno', $mmno);
+            });
+    }
+
     public function subject(): BelongsTo
     {
         return $this->belongsTo(Subject::class, 'subcode', 'subcode');

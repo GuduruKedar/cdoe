@@ -63,7 +63,7 @@
         </td>
         <td class="text-center">
             @php
-                $activeMemo = !empty($memo->smmno) ? $memo->smmno : $memo->mmno;
+                $activeMemo = !empty($memo->mmno) ? $memo->mmno : $memo->smmno;
                 $memoParam = $activeMemo . '_' . $memo->regno . (!empty($memo->appno) ? '_' . $memo->appno : '');
             @endphp
             <a href="{{ route('examinations.results.memo', ['memo' => $memoParam]) }}"

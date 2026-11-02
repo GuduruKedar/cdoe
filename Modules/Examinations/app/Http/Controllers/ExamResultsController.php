@@ -296,11 +296,7 @@ class ExamResultsController extends Controller
         }
 
         $student_info = StudentRegistration::select(['student_name', 'adm_batch_code', 'register_no', 'progid', 'electiveid'])->with(['program:program_id,program_long_name', 'electives:elective_id,elective_long_name'])->where('register_no', $regno)->first();
-        $results = MarksMemo::byRegno($regno)
-            ->where(function ($q) use ($mmno) {
-                $q->where('mmno', $mmno)
-                    ->orWhere('smmno', $mmno);
-            })
+        $results = MarksMemo::byRegnoMmno($regno, $mmno)
             ->when(! empty($appno), fn ($q) => $q->where('appno', $appno))
             ->with('subject:subcode,subname,credits')
             ->get();
@@ -322,7 +318,11 @@ class ExamResultsController extends Controller
 
         return view('examinations::marksmemo', compact(
             'basic_info',
-            'results', 'student_info', 'totalMarks', 'examMarks', 'maxMarks', 'totalMarks'
+            'results',
+            'student_info',
+            'totalMarks',
+            'examMarks',
+            'maxMarks'
         ));
     }
 

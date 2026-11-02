@@ -297,7 +297,8 @@
 
                         <td class="text-center">
                             @php
-                                $memoKey = (!empty($memo->smmno) ? $memo->smmno : $memo->mmno) . '_' . $memo->regno . (!empty($memo->appno) ? '_' . $memo->appno : '');
+                                $activeMemo = !empty($memo->mmno) ? $memo->mmno : $memo->smmno;
+                                $memoKey = $activeMemo . '_' . $memo->regno . (!empty($memo->appno) ? '_' . $memo->appno : '');
                             @endphp
                             <a href="{{ route('examinations.results.memo', ['memo' => $memoKey]) }}"
                                target="_blank"
