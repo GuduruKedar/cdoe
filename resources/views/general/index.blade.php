@@ -53,12 +53,12 @@
         box-shadow: 0 6px 18px var(--theme-glow);
     }
 
-    /* Program Filter Toolbar */
+    /* Filter Controls Card */
     .filter-controls-card {
         background: var(--bg-card);
         border: 1px solid var(--border-card);
         border-radius: 18px;
-        padding: 12px 18px;
+        padding: 16px 20px;
         margin-bottom: 24px;
         box-shadow: var(--card-shadow);
         transition: box-shadow 0.2s ease;
@@ -66,12 +66,16 @@
     .filter-controls-card:hover {
         box-shadow: var(--card-shadow-hover);
     }
-    .filter-toolbar-row {
+
+    /* Row 1: Programs (Left) + Search (Right) */
+    .filter-row-top {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 16px;
         flex-wrap: wrap;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--border-subtle);
     }
     .program-pills-wrap {
         display: flex;
@@ -92,7 +96,7 @@
         display: inline-flex;
         align-items: center;
         gap: 7px;
-        transition: all 0.2s ease;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .program-tab-btn:hover {
         background: var(--bg-card);
@@ -117,17 +121,61 @@
         color: #ffffff;
     }
 
-    /* Right Controls */
-    .filter-right-controls-wrap {
+    /* Search Input on Top Right */
+    .filter-search-box-wrap {
+        position: relative;
+        min-width: 250px;
+        max-width: 320px;
+        flex: 1;
+    }
+    @media (max-width: 768px) {
+        .filter-search-box-wrap {
+            max-width: 100%;
+            min-width: 100%;
+        }
+    }
+    .filter-search-box-wrap i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 13.5px;
+        pointer-events: none;
+    }
+    .filter-search-input {
+        width: 100%;
+        height: 38px;
+        padding: 0 14px 0 38px;
+        background: var(--bg-hover-row);
+        border: 1px solid var(--border-subtle);
+        border-radius: 999px;
+        font-size: 13px;
+        color: var(--text-primary);
+        outline: none;
+        transition: all 0.2s ease;
+    }
+    .filter-search-input:hover, .filter-search-input:focus {
+        background: var(--bg-card);
+        border-color: var(--theme-primary);
+        box-shadow: 0 0 0 3px var(--theme-glow);
+    }
+
+    /* Row 2: Secondary Dropdown Filters (Left) + Document Counter (Right) */
+    .filter-row-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding-top: 14px;
+    }
+    .filter-selects-group {
         display: flex;
         align-items: center;
         gap: 10px;
         flex-wrap: wrap;
-        margin: 0;
-        padding: 0;
     }
-
-    /* Dropdown Pills */
     .filter-pill-select-wrap {
         position: relative;
         display: inline-flex;
@@ -142,10 +190,10 @@
         z-index: 2;
     }
     .filter-pill-select {
-        height: 38px;
+        height: 36px;
         appearance: none;
         -webkit-appearance: none;
-        padding: 0 28px 0 32px;
+        padding: 0 30px 0 34px;
         border-radius: 999px;
         border: 1px solid var(--border-subtle);
         background-color: var(--bg-hover-row);
@@ -154,7 +202,7 @@
         background-position: right 11px center;
         background-size: 10px 10px;
         color: var(--text-primary);
-        font-size: 13px;
+        font-size: 12.5px;
         font-weight: 600;
         cursor: pointer;
         outline: none;
@@ -166,45 +214,12 @@
         box-shadow: 0 0 0 3px var(--theme-glow);
     }
 
-    /* Search Pill */
-    .filter-pill-search-wrap {
-        position: relative;
-        min-width: 220px;
-        max-width: 280px;
-    }
-    .filter-pill-search-wrap i {
-        position: absolute;
-        left: 13px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-muted);
-        font-size: 13.5px;
-        pointer-events: none;
-    }
-    .filter-pill-search-input {
-        width: 100%;
-        height: 38px;
-        padding: 0 14px 0 36px;
-        background: var(--bg-hover-row);
-        border: 1px solid var(--border-subtle);
-        border-radius: 999px;
-        font-size: 13px;
-        color: var(--text-primary);
-        outline: none;
-        transition: all 0.2s ease;
-    }
-    .filter-pill-search-input:hover, .filter-pill-search-input:focus {
-        background: var(--bg-card);
-        border-color: var(--theme-primary);
-        box-shadow: 0 0 0 3px var(--theme-glow);
-    }
-
     /* Reset Pill Button */
     .filter-pill-reset-btn {
-        height: 38px;
+        height: 36px;
         padding: 0 14px;
         border-radius: 999px;
-        font-size: 12.5px;
+        font-size: 12px;
         font-weight: 700;
         border: 1px solid rgba(239, 68, 68, 0.25);
         background: #fef2f2;
@@ -221,6 +236,20 @@
         border-color: #ef4444;
         color: #dc2626;
         transform: translateY(-1px);
+    }
+
+    /* Results Counter Pill */
+    .filter-counter-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--text-muted);
+        background: var(--bg-hover-row);
+        padding: 6px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--border-subtle);
     }
 
     /* ================= CARDS GRID ================= */
@@ -517,8 +546,8 @@
 
 {{-- Filter & Control Card --}}
 <div class="filter-controls-card">
-    <div class="filter-toolbar-row">
-        {{-- Program Selection Tabs (All / MCA / MBA / BCA / BBA) --}}
+    {{-- Row 1: Program Tabs (Left) + Search Box (Right) --}}
+    <div class="filter-row-top">
         <div class="program-pills-wrap">
             <a href="{{ route('general.pprbooks', array_merge(request()->query(), ['program' => 'ALL'])) }}"
                data-prog="ALL"
@@ -560,15 +589,34 @@
                data-prog="BBA"
                class="program-tab-btn {{ $activeProgram === 'BBA' ? 'active' : '' }}"
                onclick="selectProgramFilter('BBA', event)">
-                <i class="bi bi-book-fill"></i>
+                <i class="bi bi-briefcase-fill"></i>
                 <span>BBA</span>
                 <span class="badge-count">{{ $counts['BBA'] ?? 0 }}</span>
             </a>
         </div>
 
-        {{-- Right Controls: Month, Year, Search, Reset --}}
-        <form method="GET" action="{{ route('general.pprbooks') }}" id="regulationFilterForm" class="filter-right-controls-wrap">
-            <input type="hidden" name="program" id="hiddenProgramInput" value="{{ $activeProgram }}">
+        {{-- Live Search Pill Input (Top Right) --}}
+        <div class="filter-search-box-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text"
+                   name="q"
+                   id="searchDocsInput"
+                   class="filter-search-input"
+                   placeholder="Search PPR details (R22, Jan 2022)..."
+                   value="{{ $search }}"
+                   onkeyup="applyAllFilters()">
+        </div>
+    </div>
+
+    {{-- Row 2: Secondary Dropdowns (Left) + Document Counter (Right) --}}
+    <form method="GET" action="{{ route('general.pprbooks') }}" id="regulationFilterForm" class="filter-row-bottom m-0 p-0">
+        <input type="hidden" name="program" id="hiddenProgramInput" value="{{ $activeProgram }}">
+
+        <div class="filter-selects-group">
+            <span class="small fw-bold text-muted d-flex align-items-center gap-1">
+                <i class="bi bi-funnel-fill text-primary"></i>
+                <span>Filter by:</span>
+            </span>
 
             {{-- Month Filter Pill --}}
             <div class="filter-pill-select-wrap">
@@ -592,25 +640,19 @@
                 </select>
             </div>
 
-            {{-- Live Search Pill Input --}}
-            <div class="filter-pill-search-wrap">
-                <i class="bi bi-search"></i>
-                <input type="text"
-                       name="q"
-                       id="searchDocsInput"
-                       class="filter-pill-search-input"
-                       placeholder="Search PPR details..."
-                       value="{{ $search }}"
-                       onkeyup="applyAllFilters()">
-            </div>
-
             {{-- Reset Pill Button --}}
             <a href="{{ route('general.pprbooks') }}" id="btnResetFilters" class="filter-pill-reset-btn" style="{{ ($activeProgram === 'ALL' && ($activeMonth ?? 'ALL') === 'ALL' && ($activeYear ?? 'ALL') === 'ALL' && empty($search)) ? 'display: none !important;' : '' }}" title="Clear all filters">
                 <i class="bi bi-x-circle-fill"></i>
                 <span>Reset</span>
             </a>
-        </form>
-    </div>
+        </div>
+
+        {{-- Results Counter (Bottom Right) --}}
+        <div class="filter-counter-pill">
+            <i class="bi bi-collection-fill text-primary"></i>
+            <span>Showing <strong id="countVisible" class="text-dark">{{ count($documents) }}</strong> of {{ $counts['ALL'] ?? count($documents) }} documents</span>
+        </div>
+    </form>
 </div>
 
 {{-- Cards Grid --}}
@@ -667,11 +709,13 @@
                         <i class="bi bi-calendar3"></i>
                         {{ $doc->created_at ? $doc->created_at->format('d M Y') : 'Recent' }}
                     </span>
-                    <span>•</span>
-                    <span>
-                        <i class="bi bi-hdd-network"></i>
-                        {{ $doc->formatted_size }}
-                    </span>
+                    @if ($doc->formatted_size)
+                        <span>•</span>
+                        <span>
+                            <i class="bi bi-hdd-network"></i>
+                            {{ $doc->formatted_size }}
+                        </span>
+                    @endif
                     <span>•</span>
                     <span>
                         <i class="bi bi-file-earmark-check"></i>
@@ -1161,6 +1205,12 @@
                 card.style.display = 'none';
             }
         });
+
+        // Update results counter
+        const counterEl = document.getElementById('countVisible');
+        if (counterEl) {
+            counterEl.textContent = visibleCount;
+        }
 
         // Toggle reset button
         const resetBtn = document.getElementById('btnResetFilters');

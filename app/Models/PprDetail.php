@@ -101,7 +101,7 @@ class PprDetail extends Model
         } catch (\Throwable $e) {
         }
 
-        return 'PDF';
+        return '';
     }
 
     /**
