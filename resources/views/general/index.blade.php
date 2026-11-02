@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('page_title', 'All Regulations — CDOE')
+@section('hideTitle', 'true')
+@section('hidePageSub', 'true')
 
 @push('styles')
 <style>
@@ -418,14 +420,14 @@
     </div>
 @endif
 
-{{-- Header Banner --}}
+{{-- Header Banner: Single Line --}}
 <div class="gen-page-header">
-    <div class="gen-page-header-text">
-        <h1>
-            <i class="bi bi-folder2-open text-primary"></i>
-            <span>All Regulations</span>
+    <div class="d-flex align-items-center gap-2">
+        <h1 class="h4 fw-bold text-primary mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-folder2-open"></i>
+            <span>All Regulations — CDOE</span>
         </h1>
-        <p>Curriculum regulations and academic guidelines for MCA, MBA, BCA, and BBA programs.</p>
+        <span class="badge bg-light text-muted border small d-none d-md-inline-block">Curriculum &amp; PPR Books</span>
     </div>
 
     @if ($isMainAdmin)
@@ -710,29 +712,17 @@
 
                 <div class="modal-body" style="padding: 24px;">
 
-                    {{-- 1. Program Selection: MCA, BBA, BCA, MBA --}}
+                    {{-- 1. Program Selection: Dropdown --}}
                     <div class="mb-3">
-                        <label class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
+                        <label for="modal_prog_name" class="form-label fw-bold" style="font-size: 13.5px; color: var(--text-primary);">
                             1. Select Program <span class="text-danger">*</span>
                         </label>
-                        <div class="d-flex gap-3 flex-wrap">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="prog_name" id="progMCA" value="MCA" checked>
-                                <label class="form-check-label fw-semibold" for="progMCA">MCA</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="prog_name" id="progBBA" value="BBA">
-                                <label class="form-check-label fw-semibold" for="progBBA">BBA</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="prog_name" id="progBCA" value="BCA">
-                                <label class="form-check-label fw-semibold" for="progBCA">BCA</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="prog_name" id="progMBA" value="MBA">
-                                <label class="form-check-label fw-semibold" for="progMBA">MBA</label>
-                            </div>
-                        </div>
+                        <select name="prog_name" id="modal_prog_name" class="form-select fw-semibold" required>
+                            <option value="MCA" selected>MCA (Master of Computer Applications)</option>
+                            <option value="MBA">MBA (Master of Business Administration)</option>
+                            <option value="BCA">BCA (Bachelor of Computer Applications)</option>
+                            <option value="BBA">BBA (Bachelor of Business Administration)</option>
+                        </select>
                     </div>
 
                     {{-- 2. Regulation Code with strict validation (Exactly 3 chars, 1st char R, uppercase) --}}
@@ -867,29 +857,17 @@
 
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        {{-- Program Selection --}}
+                        {{-- Program Selection Dropdown --}}
                         <div class="col-12">
-                            <label class="form-label fw-bold small text-secondary">
+                            <label for="edit_prog_name" class="form-label fw-bold small text-secondary">
                                 Program <span class="text-danger">*</span>
                             </label>
-                            <div class="d-flex gap-3 flex-wrap">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="prog_name" id="editProgMCA" value="MCA">
-                                    <label class="form-check-label fw-semibold" for="editProgMCA">MCA</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="prog_name" id="editProgMBA" value="MBA">
-                                    <label class="form-check-label fw-semibold" for="editProgMBA">MBA</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="prog_name" id="editProgBCA" value="BCA">
-                                    <label class="form-check-label fw-semibold" for="editProgBCA">BCA</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="prog_name" id="editProgBBA" value="BBA">
-                                    <label class="form-check-label fw-semibold" for="editProgBBA">BBA</label>
-                                </div>
-                            </div>
+                            <select name="prog_name" id="edit_prog_name" class="form-select fw-semibold" required>
+                                <option value="MCA">MCA (Master of Computer Applications)</option>
+                                <option value="MBA">MBA (Master of Business Administration)</option>
+                                <option value="BCA">BCA (Bachelor of Computer Applications)</option>
+                                <option value="BBA">BBA (Bachelor of Business Administration)</option>
+                            </select>
                         </div>
 
                         {{-- Regulation Code --}}
@@ -1106,8 +1084,8 @@
         const form = document.getElementById('editRegulationForm');
         if (form) form.action = `/general/document/${data.s_no}`;
 
-        const radio = document.querySelector(`input[name="prog_name"][id="editProg${data.prog_name}"]`);
-        if (radio) radio.checked = true;
+        const select = document.getElementById('edit_prog_name');
+        if (select) select.value = data.prog_name;
 
         if (document.getElementById('edit_regcode')) document.getElementById('edit_regcode').value = data.regcode || '';
         if (document.getElementById('edit_month_year')) document.getElementById('edit_month_year').value = data.month_year || '';

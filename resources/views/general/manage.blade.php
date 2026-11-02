@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('page_title', 'Manage Regulations & PPR Details — CDOE')
+@section('hideTitle', 'true')
+@section('hidePageSub', 'true')
 
 @push('styles')
 <style>
@@ -241,18 +243,18 @@
     </div>
 @endif
 
-{{-- Page Header --}}
-<div class="manage-hero-header">
-    <div>
-        <h1>
-            <i class="bi bi-gear-wide-connected text-primary"></i>
+{{-- Single-Line Page Header --}}
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+    <div class="d-flex align-items-center gap-2">
+        <h1 class="h4 fw-bold text-primary mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-gear-wide-connected"></i>
             <span>Manage Regulations &amp; PPR Books</span>
         </h1>
-        <p>Upload new curriculum documents, re-edit regulation details, and manage records in <code>visa.ppr_details</code>.</p>
+        <span class="badge bg-light text-muted border small d-none d-md-inline-block">visa.ppr_details</span>
     </div>
 
     <div class="d-flex align-items-center gap-2">
-        <a href="{{ route('general.pprbooks') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" style="border-radius: 10px; font-weight: 700; padding: 9px 18px;">
+        <a href="{{ route('general.pprbooks') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" style="border-radius: 10px; font-weight: 700; padding: 7px 16px; font-size: 13.5px;">
             <i class="bi bi-grid-fill text-primary"></i>
             <span>All Regulations (Cards View)</span>
         </a>
@@ -272,41 +274,23 @@
             <form method="POST" action="{{ route('general.store') }}" enctype="multipart/form-data" id="uploadRegulationForm">
                 @csrf
 
-                {{-- 1. Program Selection: Segmented Radio Buttons --}}
+                {{-- 1. Program Selection: Dropdown Type --}}
                 <div class="mb-3">
-                    <label class="form-label fw-bold small text-secondary d-flex align-items-center justify-content-between">
+                    <label for="m_prog_name" class="form-label fw-bold small text-secondary d-flex align-items-center justify-content-between">
                         <span>Program <span class="text-danger">*</span></span>
                         <span class="text-muted" style="font-size: 11px;">Select Degree</span>
                     </label>
-                    <div class="prog-pill-radio-wrap">
-                        <div>
-                            <input type="radio" name="prog_name" id="mProgMCA" value="MCA" {{ old('prog_name', 'MCA') === 'MCA' ? 'checked' : '' }} onchange="syncRegnameSuggestion()">
-                            <label class="prog-pill-radio-label" for="mProgMCA">
-                                <i class="bi bi-laptop"></i>
-                                <span>MCA</span>
-                            </label>
-                        </div>
-                        <div>
-                            <input type="radio" name="prog_name" id="mProgMBA" value="MBA" {{ old('prog_name') === 'MBA' ? 'checked' : '' }} onchange="syncRegnameSuggestion()">
-                            <label class="prog-pill-radio-label" for="mProgMBA">
-                                <i class="bi bi-mortarboard-fill"></i>
-                                <span>MBA</span>
-                            </label>
-                        </div>
-                        <div>
-                            <input type="radio" name="prog_name" id="mProgBCA" value="BCA" {{ old('prog_name') === 'BCA' ? 'checked' : '' }} onchange="syncRegnameSuggestion()">
-                            <label class="prog-pill-radio-label" for="mProgBCA">
-                                <i class="bi bi-code-square"></i>
-                                <span>BCA</span>
-                            </label>
-                        </div>
-                        <div>
-                            <input type="radio" name="prog_name" id="mProgBBA" value="BBA" {{ old('prog_name') === 'BBA' ? 'checked' : '' }} onchange="syncRegnameSuggestion()">
-                            <label class="prog-pill-radio-label" for="mProgBBA">
-                                <i class="bi bi-briefcase-fill"></i>
-                                <span>BBA</span>
-                            </label>
-                        </div>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-primary" style="border-radius: 10px 0 0 10px;">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </span>
+                        <select name="prog_name" id="m_prog_name" class="form-select fw-semibold" style="border-radius: 0 10px 10px 0;" required onchange="syncRegnameSuggestion()">
+                            <option value="" disabled {{ old('prog_name') ? '' : 'selected' }}>-- Select Program --</option>
+                            <option value="MCA" {{ old('prog_name', 'MCA') === 'MCA' ? 'selected' : '' }}>MCA (Master of Computer Applications)</option>
+                            <option value="MBA" {{ old('prog_name') === 'MBA' ? 'selected' : '' }}>MBA (Master of Business Administration)</option>
+                            <option value="BCA" {{ old('prog_name') === 'BCA' ? 'selected' : '' }}>BCA (Bachelor of Computer Applications)</option>
+                            <option value="BBA" {{ old('prog_name') === 'BBA' ? 'selected' : '' }}>BBA (Bachelor of Business Administration)</option>
+                        </select>
                     </div>
                 </div>
 
@@ -625,40 +609,21 @@
 
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        {{-- Program Selection --}}
+                        {{-- Program Selection Dropdown --}}
                         <div class="col-12">
-                            <label class="form-label fw-bold small text-secondary">
+                            <label for="edit_prog_name" class="form-label fw-bold small text-secondary">
                                 Program <span class="text-danger">*</span>
                             </label>
-                            <div class="prog-pill-radio-wrap">
-                                <div>
-                                    <input type="radio" name="prog_name" id="editProgMCA" value="MCA">
-                                    <label class="prog-pill-radio-label" for="editProgMCA">
-                                        <i class="bi bi-laptop"></i>
-                                        <span>MCA</span>
-                                    </label>
-                                </div>
-                                <div>
-                                    <input type="radio" name="prog_name" id="editProgMBA" value="MBA">
-                                    <label class="prog-pill-radio-label" for="editProgMBA">
-                                        <i class="bi bi-mortarboard-fill"></i>
-                                        <span>MBA</span>
-                                    </label>
-                                </div>
-                                <div>
-                                    <input type="radio" name="prog_name" id="editProgBCA" value="BCA">
-                                    <label class="prog-pill-radio-label" for="editProgBCA">
-                                        <i class="bi bi-code-square"></i>
-                                        <span>BCA</span>
-                                    </label>
-                                </div>
-                                <div>
-                                    <input type="radio" name="prog_name" id="editProgBBA" value="BBA">
-                                    <label class="prog-pill-radio-label" for="editProgBBA">
-                                        <i class="bi bi-briefcase-fill"></i>
-                                        <span>BBA</span>
-                                    </label>
-                                </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-primary">
+                                    <i class="bi bi-mortarboard-fill"></i>
+                                </span>
+                                <select name="prog_name" id="edit_prog_name" class="form-select fw-semibold" required>
+                                    <option value="MCA">MCA (Master of Computer Applications)</option>
+                                    <option value="MBA">MBA (Master of Business Administration)</option>
+                                    <option value="BCA">BCA (Bachelor of Computer Applications)</option>
+                                    <option value="BBA">BBA (Bachelor of Business Administration)</option>
+                                </select>
                             </div>
                         </div>
 
@@ -792,7 +757,7 @@
 
     function syncRegnameSuggestion() {
         const regcode = document.getElementById('m_regcode').value.trim() || 'R22';
-        const prog = document.querySelector('input[name="prog_name"]:checked')?.value || 'MCA';
+        const prog = document.getElementById('m_prog_name')?.value || 'MCA';
         const regnameInput = document.getElementById('m_regname');
         if (!regnameInput.value || regnameInput.dataset.touched !== 'true') {
             regnameInput.placeholder = `e.g. ${regcode}_${prog} - ACADEMIC REGULATIONS`;
@@ -804,10 +769,10 @@
         const form = document.getElementById('editRegulationForm');
         form.action = `/general/document/${data.s_no}`;
 
-        // Select program
-        const radio = document.querySelector(`input[name="prog_name"][id="editProg${data.prog_name}"]`);
-        if (radio) {
-            radio.checked = true;
+        // Select program dropdown
+        const select = document.getElementById('edit_prog_name');
+        if (select) {
+            select.value = data.prog_name;
         }
 
         // Fill fields
