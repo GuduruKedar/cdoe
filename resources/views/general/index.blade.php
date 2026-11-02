@@ -418,60 +418,105 @@
 
 {{-- Filter & Control Card --}}
 <div class="filter-controls-card">
-    <div class="program-tabs-bar">
-
-        {{-- Program Selection Tabs (All / MCA / MBA / BCA / BBA) --}}
+    {{-- Program Selection Tabs (All / MCA / MBA / BCA / BBA) --}}
+    <div class="program-tabs-bar mb-3">
         <div class="program-pills-wrap">
-            <a href="{{ route('general.index', ['program' => 'ALL']) }}"
-               class="program-tab-btn {{ $activeProgram === 'ALL' ? 'active' : '' }}">
+            <a href="{{ route('general.pprbooks', array_merge(request()->query(), ['program' => 'ALL'])) }}"
+               data-prog="ALL"
+               class="program-tab-btn {{ $activeProgram === 'ALL' ? 'active' : '' }}"
+               onclick="selectProgramFilter('ALL', event)">
                 <i class="bi bi-grid-fill"></i>
                 <span>All Programs</span>
                 <span class="badge-count">{{ $counts['ALL'] ?? 0 }}</span>
             </a>
 
-            <a href="{{ route('general.index', ['program' => 'MCA']) }}"
-               class="program-tab-btn {{ $activeProgram === 'MCA' ? 'active' : '' }}">
+            <a href="{{ route('general.pprbooks', array_merge(request()->query(), ['program' => 'MCA'])) }}"
+               data-prog="MCA"
+               class="program-tab-btn {{ $activeProgram === 'MCA' ? 'active' : '' }}"
+               onclick="selectProgramFilter('MCA', event)">
                 <i class="bi bi-laptop"></i>
                 <span>MCA</span>
                 <span class="badge-count">{{ $counts['MCA'] ?? 0 }}</span>
             </a>
 
-            <a href="{{ route('general.index', ['program' => 'MBA']) }}"
-               class="program-tab-btn {{ $activeProgram === 'MBA' ? 'active' : '' }}">
+            <a href="{{ route('general.pprbooks', array_merge(request()->query(), ['program' => 'MBA'])) }}"
+               data-prog="MBA"
+               class="program-tab-btn {{ $activeProgram === 'MBA' ? 'active' : '' }}"
+               onclick="selectProgramFilter('MBA', event)">
                 <i class="bi bi-mortarboard-fill"></i>
                 <span>MBA</span>
                 <span class="badge-count">{{ $counts['MBA'] ?? 0 }}</span>
             </a>
 
-            <a href="{{ route('general.index', ['program' => 'BCA']) }}"
-               class="program-tab-btn {{ $activeProgram === 'BCA' ? 'active' : '' }}">
+            <a href="{{ route('general.pprbooks', array_merge(request()->query(), ['program' => 'BCA'])) }}"
+               data-prog="BCA"
+               class="program-tab-btn {{ $activeProgram === 'BCA' ? 'active' : '' }}"
+               onclick="selectProgramFilter('BCA', event)">
                 <i class="bi bi-code-square"></i>
                 <span>BCA</span>
                 <span class="badge-count">{{ $counts['BCA'] ?? 0 }}</span>
             </a>
 
-            <a href="{{ route('general.index', ['program' => 'BBA']) }}"
-               class="program-tab-btn {{ $activeProgram === 'BBA' ? 'active' : '' }}">
+            <a href="{{ route('general.pprbooks', array_merge(request()->query(), ['program' => 'BBA'])) }}"
+               data-prog="BBA"
+               class="program-tab-btn {{ $activeProgram === 'BBA' ? 'active' : '' }}"
+               onclick="selectProgramFilter('BBA', event)">
                 <i class="bi bi-book-fill"></i>
                 <span>BBA</span>
                 <span class="badge-count">{{ $counts['BBA'] ?? 0 }}</span>
             </a>
         </div>
+    </div>
+
+    {{-- Month & Year Filters & Live Search --}}
+    <form method="GET" action="{{ route('general.pprbooks') }}" id="regulationFilterForm" class="d-flex align-items-center justify-content-between gap-3 flex-wrap m-0 p-0">
+        <input type="hidden" name="program" id="hiddenProgramInput" value="{{ $activeProgram }}">
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            {{-- Month Filter --}}
+            <div class="d-flex align-items-center gap-1">
+                <label for="filterMonth" class="small fw-bold text-muted me-1">
+                    <i class="bi bi-calendar-event me-1 text-primary"></i>Month:
+                </label>
+                <select name="month" id="filterMonth" class="form-select form-select-sm" style="width: auto; min-width: 120px; border-radius: 9px; font-weight: 600;" onchange="applyAllFilters()">
+                    <option value="ALL">All Months</option>
+                    @foreach ($filterOptions['months'] ?? ['Jan', 'July'] as $m)
+                        <option value="{{ $m }}" {{ ($activeMonth ?? 'ALL') === $m ? 'selected' : '' }}>{{ $m }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Year Filter --}}
+            <div class="d-flex align-items-center gap-1">
+                <label for="filterYear" class="small fw-bold text-muted me-1">
+                    <i class="bi bi-calendar3 me-1 text-primary"></i>Year:
+                </label>
+                <select name="year" id="filterYear" class="form-select form-select-sm" style="width: auto; min-width: 110px; border-radius: 9px; font-weight: 600;" onchange="applyAllFilters()">
+                    <option value="ALL">All Years</option>
+                    @foreach ($filterOptions['years'] ?? ['2026', '2025', '2024', '2023', '2022', '2021'] as $y)
+                        <option value="{{ $y }}" {{ ($activeYear ?? 'ALL') === (string)$y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Reset button --}}
+            <a href="{{ route('general.pprbooks') }}" id="btnResetFilters" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" style="border-radius: 9px; font-size: 12px; font-weight: 600; {{ ($activeProgram === 'ALL' && ($activeMonth ?? 'ALL') === 'ALL' && ($activeYear ?? 'ALL') === 'ALL' && empty($search)) ? 'display: none !important;' : '' }}">
+                <i class="bi bi-x-circle"></i> Reset
+            </a>
+        </div>
 
         {{-- Live Search Input --}}
-        <form method="GET" action="{{ route('general.index') }}" class="search-box-wrap m-0 p-0">
-            <input type="hidden" name="program" value="{{ $activeProgram }}">
+        <div class="search-box-wrap m-0 p-0">
             <i class="bi bi-search"></i>
             <input type="text"
                    name="q"
                    id="searchDocsInput"
                    class="search-box-input"
-                   placeholder="Search regulations (R22)..."
+                   placeholder="Search regulations (R22, Jan 2022)..."
                    value="{{ $search }}"
-                   onkeyup="filterCardsClientSide(this.value)">
-        </form>
-
-    </div>
+                   onkeyup="applyAllFilters()">
+        </div>
+    </form>
 </div>
 
 {{-- Cards Grid --}}
@@ -481,6 +526,8 @@
         <div class="doc-card"
              data-title="{{ strtolower($doc->regname) }}"
              data-code="{{ strtolower($doc->regcode ?? '') }}"
+             data-month="{{ strtolower($doc->month ?? '') }}"
+             data-year="{{ $doc->year ?? '' }}"
              data-month-year="{{ strtolower($doc->month_year ?? '') }}"
              data-program="{{ strtolower($doc->prog_name) }}">
 
@@ -826,23 +873,68 @@
         }
     }
 
-    // Client-side instant filter
-    function filterCardsClientSide(query) {
-        const q = (query || '').toLowerCase().trim();
+    // Select program filter pill
+    function selectProgramFilter(prog, event) {
+        if (event) event.preventDefault();
+        const hiddenInput = document.getElementById('hiddenProgramInput');
+        if (hiddenInput) {
+            hiddenInput.value = prog;
+        }
+        document.querySelectorAll('.program-tab-btn').forEach(btn => {
+            if (btn.getAttribute('data-prog') === prog) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        applyAllFilters();
+    }
+
+    // Unified client-side filter (Program + Month + Year + Search)
+    function applyAllFilters() {
+        const selectedProgram = (document.getElementById('hiddenProgramInput') ? document.getElementById('hiddenProgramInput').value : 'ALL').toUpperCase();
+        const selectedMonth = (document.getElementById('filterMonth') ? document.getElementById('filterMonth').value : 'ALL').toLowerCase();
+        const selectedYear = (document.getElementById('filterYear') ? document.getElementById('filterYear').value : 'ALL').toLowerCase();
+        const q = (document.getElementById('searchDocsInput') ? document.getElementById('searchDocsInput').value : '').toLowerCase().trim();
+
         const cards = document.querySelectorAll('.doc-card');
+        let visibleCount = 0;
 
         cards.forEach(card => {
             const title = card.getAttribute('data-title') || '';
             const code = card.getAttribute('data-code') || '';
-            const monthYear = card.getAttribute('data-month-year') || '';
+            const prog = (card.getAttribute('data-program') || '').toUpperCase();
+            const month = (card.getAttribute('data-month') || '').toLowerCase();
+            const year = (card.getAttribute('data-year') || '').toLowerCase();
+            const monthYear = (card.getAttribute('data-month-year') || '').toLowerCase();
             const desc = card.querySelector('.doc-card-desc') ? card.querySelector('.doc-card-desc').textContent.toLowerCase() : '';
 
-            if (!q || title.includes(q) || code.includes(q) || monthYear.includes(q) || desc.includes(q)) {
+            // Match Program
+            const matchProgram = (selectedProgram === 'ALL' || prog === selectedProgram);
+            // Match Month
+            const matchMonth = (selectedMonth === 'all' || month === selectedMonth || monthYear.includes(selectedMonth));
+            // Match Year
+            const matchYear = (selectedYear === 'all' || year === selectedYear || monthYear.includes(selectedYear));
+            // Match Search
+            const matchSearch = (!q || title.includes(q) || code.includes(q) || monthYear.includes(q) || desc.includes(q));
+
+            if (matchProgram && matchMonth && matchYear && matchSearch) {
                 card.style.display = 'flex';
+                visibleCount++;
             } else {
                 card.style.display = 'none';
             }
         });
+
+        // Toggle reset button
+        const resetBtn = document.getElementById('btnResetFilters');
+        if (resetBtn) {
+            if (selectedProgram !== 'ALL' || selectedMonth !== 'all' || selectedYear !== 'all' || q !== '') {
+                resetBtn.style.setProperty('display', 'inline-flex', 'important');
+            } else {
+                resetBtn.style.setProperty('display', 'none', 'important');
+            }
+        }
     }
 </script>
 @endpush

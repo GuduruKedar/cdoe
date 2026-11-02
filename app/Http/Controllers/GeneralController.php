@@ -94,6 +94,46 @@ class GeneralController extends Controller
     }
 
     /**
+     * Get distinct month and year list for filter dropdowns.
+     *
+     * @return array{months: array<string>, years: array<string>}
+     */
+    public static function getFilterOptions(): array
+    {
+        $allMonthYears = PprDetail::whereNotNull('month_year')
+            ->where('month_year', '!=', '')
+            ->distinct()
+            ->pluck('month_year')
+            ->toArray();
+
+        $months = ['Jan', 'July'];
+        $years = ['2026', '2025', '2024', '2023', '2022', '2021'];
+
+        foreach ($allMonthYears as $my) {
+            $parts = preg_split('/\s+/', trim((string) $my));
+            if (! empty($parts[0])) {
+                $m = ucfirst(strtolower($parts[0]));
+                if (! in_array($m, $months)) {
+                    $months[] = $m;
+                }
+            }
+            if (! empty($parts[1]) && is_numeric($parts[1])) {
+                $y = (string) $parts[1];
+                if (! in_array($y, $years)) {
+                    $years[] = $y;
+                }
+            }
+        }
+
+        rsort($years);
+
+        return [
+            'months' => array_values($months),
+            'years' => array_values($years),
+        ];
+    }
+
+    /**
      * Main General Regulations Hub (Cards View).
      * Accessible by ALL roles.
      */
@@ -106,7 +146,8 @@ class GeneralController extends Controller
         $menus = MenuService::getMenusForUser($user);
 
         $activeProgram = strtoupper(trim($request->query('program', 'ALL')));
-        $activeMonthYear = trim($request->query('month_year', 'ALL'));
+        $activeMonth = trim($request->query('month', 'ALL'));
+        $activeYear = trim($request->query('year', 'ALL'));
         $search = trim($request->query('q', ''));
 
         $query = PprDetail::query();
@@ -116,9 +157,14 @@ class GeneralController extends Controller
             $query->where('prog_name', $activeProgram);
         }
 
-        // Filter by month & year (e.g. Jan 2022, July 2022)
-        if ($activeMonthYear && $activeMonthYear !== 'ALL') {
-            $query->where('month_year', $activeMonthYear);
+        // Filter by month (e.g. Jan, July)
+        if ($activeMonth && $activeMonth !== 'ALL') {
+            $query->where('month_year', 'ILIKE', "%{$activeMonth}%");
+        }
+
+        // Filter by year (e.g. 2022, 2023)
+        if ($activeYear && $activeYear !== 'ALL') {
+            $query->where('month_year', 'ILIKE', "%{$activeYear}%");
         }
 
         // Search in title, code, month_year, description, filename
@@ -149,18 +195,21 @@ class GeneralController extends Controller
         $isMainAdmin = self::canManage();
         $programMap = self::PROGRAM_MAP;
         $monthYears = self::getAvailableMonthYears();
+        $filterOptions = self::getFilterOptions();
 
         return view('general.index', compact(
             'menus',
             'user',
             'documents',
             'activeProgram',
-            'activeMonthYear',
+            'activeMonth',
+            'activeYear',
             'search',
             'counts',
             'isMainAdmin',
             'programMap',
-            'monthYears'
+            'monthYears',
+            'filterOptions'
         ));
     }
 
@@ -183,13 +232,15 @@ class GeneralController extends Controller
         $documents = PprDetail::orderBy('created_at', 'desc')->paginate(20);
         $programMap = self::PROGRAM_MAP;
         $monthYears = self::getAvailableMonthYears();
+        $filterOptions = self::getFilterOptions();
 
         return view('general.manage', compact(
             'menus',
             'user',
             'documents',
             'programMap',
-            'monthYears'
+            'monthYears',
+            'filterOptions'
         ));
     }
 

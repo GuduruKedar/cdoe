@@ -30,6 +30,32 @@ class PprDetail extends Model
     ];
 
     /**
+     * Extracted month from month_year (e.g. "Jan" from "Jan 2022").
+     */
+    public function getMonthAttribute(): ?string
+    {
+        if (! $this->month_year) {
+            return null;
+        }
+        $parts = preg_split('/\s+/', trim($this->month_year));
+
+        return $parts[0] ?? null;
+    }
+
+    /**
+     * Extracted year from month_year (e.g. "2022" from "Jan 2022").
+     */
+    public function getYearAttribute(): ?string
+    {
+        if (! $this->month_year) {
+            return null;
+        }
+        $parts = preg_split('/\s+/', trim($this->month_year));
+
+        return $parts[1] ?? null;
+    }
+
+    /**
      * Get icon class based on file type / extension.
      */
     public function getFileIconAttribute(): string
