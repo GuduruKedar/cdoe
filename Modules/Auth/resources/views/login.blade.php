@@ -32,6 +32,9 @@
 
         body {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
             height: 100vh;
             max-height: 100vh;
             overflow: hidden;
@@ -44,8 +47,8 @@
             position: relative;
         }
 
-        /* Animated natural background canvas (No red tint, smooth subtle Ken Burns zoom animation) */
-        .bg-animated-canvas {
+        /* Static natural background (No motion, crisp sharp text rendering) */
+        .bg-canvas {
             position: fixed;
             inset: 0;
             width: 100%;
@@ -54,30 +57,15 @@
             overflow: hidden;
             pointer-events: none;
         }
-        .bg-image-zoom {
+        .bg-image {
             position: absolute;
-            top: -1.5%;
-            left: -1.5%;
-            width: 103%;
-            height: 103%;
-            background-image: url('{{ asset("images/u-block.jpg") }}');
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('{{ asset("images/campus-bg.jpeg") }}');
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
-            animation: kenBurnsSmooth 24s ease-in-out infinite alternate;
-            will-change: transform;
-            transform-origin: center center;
-        }
-        @keyframes kenBurnsSmooth {
-            0% {
-                transform: scale(1) translate(0, 0);
-            }
-            50% {
-                transform: scale(1.015) translate(-0.8%, -0.5%);
-            }
-            100% {
-                transform: scale(1.025) translate(0.6%, 0.3%);
-            }
         }
         .bg-overlay {
             position: absolute;
@@ -291,23 +279,17 @@
                 0 25px 60px -10px rgba(0, 0, 0, 0.60),
                 0 0 25px rgba(220, 38, 38, 0.18),
                 0 12px 25px -5px rgba(0, 0, 0, 0.35);
-            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                        box-shadow 0.35s ease,
-                        border-color 0.35s ease,
-                        background 0.35s ease;
-            will-change: transform, box-shadow;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
         }
 
-        /* Subtle smooth growth and soft light-red glass glow when user enters or focuses the form */
+        /* Soft light-red glass glow when user enters or focuses the form (Static, no scaling/popup to keep text crisp) */
         .auth-card-wrapper:hover,
         .auth-card-wrapper:focus-within {
-            transform: translateY(-3px) scale(1.02);
             border-color: rgba(254, 202, 202, 0.85);
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.28) 0%, rgba(220, 38, 38, 0.20) 60%, rgba(255, 255, 255, 0.18) 100%);
             box-shadow:
-                0 32px 75px -10px rgba(0, 0, 0, 0.68),
-                0 16px 32px -6px rgba(0, 0, 0, 0.40),
-                0 0 32px rgba(239, 68, 68, 0.30);
+                0 28px 65px -10px rgba(0, 0, 0, 0.65),
+                0 14px 28px -6px rgba(0, 0, 0, 0.38),
+                0 0 28px rgba(239, 68, 68, 0.25);
         }
 
         .auth-card {
@@ -700,9 +682,9 @@
 </head>
 <body>
 
-    {{-- Natural Animated Background (Smooth Subtle Ken Burns Zoom, No Red Tint) --}}
-    <div class="bg-animated-canvas" aria-hidden="true">
-        <div class="bg-image-zoom"></div>
+    {{-- Static Natural Background (Crisp sharp background, no motion) --}}
+    <div class="bg-canvas" aria-hidden="true">
+        <div class="bg-image"></div>
         <div class="bg-overlay"></div>
     </div>
 

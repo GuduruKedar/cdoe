@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Examinations\Http\Controllers\CgpaMarksDownloadController;
 use Modules\Examinations\Http\Controllers\CgpaMarksUploadController;
+use Modules\Examinations\Http\Controllers\ExamReportController;
 use Modules\Examinations\Http\Controllers\ExamResultsController;
 use Modules\Examinations\Http\Controllers\MarksKpiController;
 
@@ -49,6 +50,12 @@ Route::middleware(['web'])->group(function () {
     Route::get('examinations/markskpi', [MarksKpiController::class, 'index'])
         ->name('examinations.markskpi');
     Route::get('examinations/marks-kpi', [MarksKpiController::class, 'index']);
+
+    // ================= EXAM REPORT HUB =================
+    Route::get('examinations/examreport', [ExamReportController::class, 'index'])
+        ->name('examinations.examreport');
+    Route::get('examinations/examreport/export-csv', [ExamReportController::class, 'exportCsv'])
+        ->name('examinations.examreport.export_csv');
 
     // Resource catch-all
     Route::resource('examinations', ExamResultsController::class)

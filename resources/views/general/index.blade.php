@@ -535,13 +535,6 @@
             <span>PPR Details</span>
         </h1>
     </div>
-
-    @if ($isMainAdmin)
-        <button type="button" class="btn-upload-trigger" data-bs-toggle="modal" data-bs-target="#uploadDocModal">
-            <i class="bi bi-cloud-arrow-up-fill"></i>
-            <span>Upload PPR Document</span>
-        </button>
-    @endif
 </div>
 
 {{-- Filter & Control Card --}}
