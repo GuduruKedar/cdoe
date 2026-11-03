@@ -1,84 +1,175 @@
 @extends('layouts.app')
 
 @section('page_title', 'Student Dashboard')
+@section('hideTitle', true)
+@section('hidePageSub', true)
 
 @section('content')
 <div class="cdoe-dashboard-wrap">
 
-    {{-- ================= 1. HERO BANNER ================= --}}
+    {{-- ================= 1. CLEAN SINGLE-LINE GREETING HEADER ================= --}}
     @php
         $hour = (int) date('H');
         $greeting = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good evening');
     @endphp
 
-    <div class="dash-hero-card">
-        <div class="dash-hero-content">
-            <div class="dash-hero-badge">
-                <i class="bi bi-mortarboard-fill me-1"></i> Vignan Online CDOE • Student Portal
-            </div>
-            <h1 class="dash-hero-title">
-                {{ $greeting }}, <span class="dash-hero-name">{{ $userName }}</span>!
-            </h1>
-            <p class="dash-hero-sub">
-                Welcome to your student learning and academic portal. Check your enrolled degree curriculum, track examination results, and access student services.
-            </p>
-
-            <div class="dash-hero-actions">
-                <a href="{{ route('examinations.stdmarks') }}" class="dash-hero-btn primary">
-                    <i class="bi bi-file-earmark-check"></i>
-                    <span>My Examination Results</span>
-                </a>
-            </div>
+    <div class="dash-single-line-header">
+        <div class="dash-single-left">
+            <span class="dash-single-title">Dashboard</span>
+            <span class="dash-single-sep">::</span>
+            <span class="dash-single-greeting">{{ $greeting }}, <strong class="dash-user-glow">{{ $studentDisplayName }}</strong>!</span>
         </div>
-
-        <div class="dash-hero-aside">
-            <div class="dash-hero-emblem-wrap">
-                <img src="{{ asset('images/vignan-emblem.png') }}" class="dash-hero-emblem" alt="Vignan Emblem">
-            </div>
-            <div class="dash-session-pill">
-                <span class="dash-pulse-dot"></span>
-                <span>Session 2026-2027 • Enrolled</span>
+        <div class="dash-single-right">
+            <div class="dash-session-chip text-nowrap" style="white-space: nowrap; flex-shrink: 0;">
+                <span class="dash-pulse-dot" style="background: #10b981;"></span>
+                <span>
+                    @if(!empty($isPreview))
+                        <span class="text-warning-emphasis fw-bold">Student Role Preview (ID: {{ $student->register_no ?? 'Demo' }})</span>
+                        <span class="text-muted mx-2">•</span>
+                    @endif
+                    Session 2026-2027 • Active Student
+                </span>
             </div>
         </div>
     </div>
 
-    {{-- ================= 2. STUDENT STATS ================= --}}
-    <div class="dash-stat-grid">
-        <div class="dash-stat-card blue">
-            <div class="dash-stat-header">
-                <div class="dash-stat-icon blue"><i class="bi bi-award-fill"></i></div>
-                <span class="dash-stat-tag blue">Status</span>
-            </div>
-            <div class="dash-stat-val">Active</div>
-            <div class="dash-stat-label">Enrolment Status</div>
-            <div class="dash-stat-footer">
-                <i class="bi bi-check-circle-fill text-success me-1"></i> Registered Student Account
-            </div>
+    {{-- ================= 2. UNIFIED 8-BOX GRID (All Same Size as Raise Ticket) ================= --}}
+    <div class="row g-3">
+
+        {{-- Box 1: Enrolled Degree --}}
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <a href="{{ route('admissions.info') }}" class="service-action-card">
+                <div class="service-icon-box blue">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <div class="service-content">
+                    <div class="service-title">{{ $studentStats['program'] }}</div>
+                    <div class="service-desc text-truncate" title="{{ $studentStats['program_full'] }} • Batch: {{ $studentStats['batch'] }}">
+                        {{ $studentStats['program_full'] }} • Batch: {{ $studentStats['batch'] }}
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right service-arrow"></i>
+            </a>
         </div>
 
-        <div class="dash-stat-card amber">
-            <div class="dash-stat-header">
-                <div class="dash-stat-icon amber"><i class="bi bi-file-text-fill"></i></div>
-                <span class="dash-stat-tag amber">Results</span>
-            </div>
-            <div class="dash-stat-val">{{ number_format($stats['marks'] ?? 0) }}</div>
-            <div class="dash-stat-label">Total Graded Memos</div>
-            <div class="dash-stat-footer">
-                <i class="bi bi-clock-history me-1"></i> Consolidated Grade Cards
-            </div>
+        {{-- Box 2: Semester & Subjects --}}
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <a href="{{ route('academics.subjectlist') }}" class="service-action-card">
+                <div class="service-icon-box green">
+                    <i class="bi bi-journal-bookmark-fill"></i>
+                </div>
+                <div class="service-content">
+                    <div class="service-title">Semester {{ $studentStats['current_sem'] }}</div>
+                    <div class="service-desc text-truncate" title="{{ $studentStats['total_subjects'] }} Registered Subjects • {{ $studentStats['status'] }} Student">
+                        {{ $studentStats['total_subjects'] }} Registered Subjects • {{ $studentStats['status'] }}
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right service-arrow"></i>
+            </a>
         </div>
 
-        <div class="dash-stat-card crimson">
-            <div class="dash-stat-header">
-                <div class="dash-stat-icon crimson"><i class="bi bi-building"></i></div>
-                <span class="dash-stat-tag crimson">Degree</span>
-            </div>
-            <div class="dash-stat-val">{{ number_format($stats['programs'] ?? 0) }}</div>
-            <div class="dash-stat-label">Active Programs</div>
-            <div class="dash-stat-footer">
-                <i class="bi bi-mortarboard me-1"></i> Online Distance Learning
-            </div>
+        {{-- Box 3: Evaluation (SGPA / CGPA) --}}
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <a href="{{ route('examinations.mmview') }}" class="service-action-card">
+                <div class="service-icon-box amber">
+                    <i class="bi bi-award-fill"></i>
+                </div>
+                <div class="service-content">
+                    <div class="service-title">
+                        @if($studentStats['latest_sgpa'] !== '—')
+                            {{ number_format((float)$studentStats['latest_sgpa'], 2) }} SGPA
+                        @else
+                            Evaluated
+                        @endif
+                    </div>
+                    <div class="service-desc text-truncate" title="Consolidated CGPA: {{ $studentStats['latest_cgpa'] }} • {{ $studentStats['passed'] }} Passed • {{ $studentStats['backlogs'] }} Backlogs">
+                        CGPA: {{ $studentStats['latest_cgpa'] }} • {{ $studentStats['passed'] }} Passed • {{ $studentStats['backlogs'] }} Backlogs
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right service-arrow"></i>
+            </a>
         </div>
+
+        {{-- Box 4: Support Status --}}
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <a href="{{ route('visa.ticketraise') }}" class="service-action-card">
+                <div class="service-icon-box crimson">
+                    <i class="bi bi-headset"></i>
+                </div>
+                <div class="service-content">
+                    <div class="service-title">{{ $studentStats['tickets_count'] }} Support Tickets</div>
+                    <div class="service-desc text-truncate" title="{{ $studentStats['open_tickets'] }} Open/In Process • VISA Helpdesk">
+                        {{ $studentStats['open_tickets'] }} Open / In Process • VISA Helpdesk
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right service-arrow"></i>
+            </a>
+        </div>
+
+        {{-- Box 5: Examination Results --}}
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <a href="{{ route('examinations.mmview') }}" class="service-action-card">
+                <div class="service-icon-box blue">
+                    <i class="bi bi-file-earmark-check-fill"></i>
+                </div>
+                <div class="service-content">
+                    <div class="service-title">Examination Results</div>
+                    <div class="service-desc text-truncate" title="View semester marks memo, SGPA & CGPA grade cards">
+                        View semester marks memo, SGPA & CGPA grade cards
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right service-arrow"></i>
+            </a>
+        </div>
+
+        {{-- Box 6: My Subject List --}}
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <a href="{{ route('academics.subjectlist') }}" class="service-action-card">
+                <div class="service-icon-box green">
+                    <i class="bi bi-book-half"></i>
+                </div>
+                <div class="service-content">
+                    <div class="service-title">My Subject List</div>
+                    <div class="service-desc text-truncate" title="Curriculum syllabus, course codes & credit details">
+                        Curriculum syllabus, course codes & credit details
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right service-arrow"></i>
+            </a>
+        </div>
+
+        {{-- Box 7: Admission Info --}}
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <a href="{{ route('admissions.info') }}" class="service-action-card">
+                <div class="service-icon-box amber">
+                    <i class="bi bi-person-lines-fill"></i>
+                </div>
+                <div class="service-content">
+                    <div class="service-title">Admission Info</div>
+                    <div class="service-desc text-truncate" title="Personal details, application number & student identity">
+                        Personal details, application number & student identity
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right service-arrow"></i>
+            </a>
+        </div>
+
+        {{-- Box 8: Raise Ticket (Reference size box) --}}
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <a href="{{ route('visa.ticketraise') }}" class="service-action-card">
+                <div class="service-icon-box crimson">
+                    <i class="bi bi-ticket-detailed-fill"></i>
+                </div>
+                <div class="service-content">
+                    <div class="service-title">Raise Ticket</div>
+                    <div class="service-desc text-truncate" title="Submit queries for academic, exam, or general support">
+                        Submit queries for academic, exam, or general support
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right service-arrow"></i>
+            </a>
+        </div>
+
     </div>
 
 </div>
@@ -86,48 +177,125 @@
 
 @push('styles')
 <style>
-.cdoe-dashboard-wrap { display: flex; flex-direction: column; gap: 24px; }
-.dash-hero-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-card);
-    border-radius: 18px;
-    padding: 32px 36px;
+.cdoe-dashboard-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 1. Header */
+.dash-single-line-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 28px;
-    box-shadow: var(--card-shadow);
-    backdrop-filter: blur(12px);
-    position: relative;
-    overflow: hidden;
+    padding: 12px 18px;
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-card, #e2e8f0);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    flex-wrap: wrap;
+    gap: 12px;
 }
-.dash-hero-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--theme-gradient); }
-.dash-hero-badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; background: var(--theme-primary-light); color: var(--theme-primary); border: 1px solid var(--theme-focus-ring); font-size: 12px; font-weight: 700; margin-bottom: 12px; }
-.dash-hero-title { font-size: 28px; font-weight: 800; color: var(--text-primary); margin-bottom: 10px; }
-.dash-hero-name { color: var(--theme-primary); }
-.dash-hero-sub { color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 22px; max-width: 580px; }
-.dash-hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.dash-hero-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.2s ease; }
-.dash-hero-btn.primary { background: var(--theme-gradient); color: #fff !important; box-shadow: 0 4px 14px var(--theme-glow); }
-.dash-hero-aside { display: flex; flex-direction: column; align-items: center; gap: 14px; flex-shrink: 0; }
-.dash-hero-emblem-wrap { width: 90px; height: 90px; border-radius: 20px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; padding: 12px; box-shadow: var(--card-shadow); }
-.dash-hero-emblem { width: 100%; height: 100%; object-fit: contain; }
-.dash-session-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 999px; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); }
-.dash-pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; }
+.dash-single-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-primary, #0f172a);
+}
+.dash-single-sep {
+    color: #94a3b8;
+    margin: 0 4px;
+}
+.dash-single-greeting {
+    font-size: 1rem;
+    color: var(--text-secondary, #475569);
+}
+.dash-user-glow {
+    color: #0f3b60;
+    font-weight: 700;
+}
+.dash-session-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #334155;
+}
+.dash-pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
 
-.dash-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; }
-.dash-stat-card { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 16px; padding: 22px 24px; box-shadow: var(--card-shadow); backdrop-filter: blur(12px); display: flex; flex-direction: column; }
-.dash-stat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.dash-stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-.dash-stat-icon.blue { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
-.dash-stat-icon.amber { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
-.dash-stat-icon.crimson { background: rgba(193, 18, 31, 0.12); color: #c1121f; }
-.dash-stat-tag { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; }
-.dash-stat-tag.blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
-.dash-stat-tag.amber { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-.dash-stat-tag.crimson { background: rgba(193, 18, 31, 0.1); color: #c1121f; }
-.dash-stat-val { font-size: 32px; font-weight: 800; color: var(--text-primary); line-height: 1; margin-bottom: 6px; }
-.dash-stat-label { font-size: 13.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px; }
-.dash-stat-footer { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-subtle); font-size: 11.5px; color: var(--text-muted); }
+/* 2. Uniform 8 Boxes (All same size as Raise Ticket) */
+.service-action-card {
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-card, #e2e8f0);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+    color: inherit;
+    min-height: 86px;
+    height: 100%;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+.service-action-card:hover {
+    border-color: #0f3b60;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(15, 59, 96, 0.08);
+    color: inherit;
+}
+.service-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+.service-icon-box.blue { background: #eff6ff; color: #1e40af; }
+.service-icon-box.green { background: #f0fdf4; color: #15803d; }
+.service-icon-box.amber { background: #fffbeb; color: #b45309; }
+.service-icon-box.crimson { background: #fef2f2; color: #b91c1c; }
+
+.service-content {
+    flex-grow: 1;
+    min-width: 0;
+}
+.service-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.service-desc {
+    font-size: 0.76rem;
+    color: #64748b;
+    line-height: 1.35;
+}
+.service-arrow {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+.service-action-card:hover .service-arrow {
+    transform: translateX(4px);
+    color: #0f3b60;
+}
 </style>
 @endpush

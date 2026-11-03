@@ -70,23 +70,25 @@ class ExamReportController extends Controller
             ->orderBy('exam_mon_yyyy')
             ->pluck('exam_mon_yyyy');
 
-        // Build query based on active tab
-        $query = $this->buildReportQuery($tab, [
+        // Build query based on active tab (Batch, Semester, Exam Month removed across all reports)
+        $filters = [
             'program' => $program,
-            'batch' => $batch,
-            'sem' => $sem,
-            'exam_mon' => $examMon,
+            'batch' => 'all',
+            'sem' => 'all',
+            'exam_mon' => 'all',
             'q' => $q,
-        ]);
+        ];
+
+        $query = $this->buildReportQuery($tab, $filters);
 
         $records = $query->paginate($perPage);
 
         // Summary counts for quick stats
         $counts = $this->getSummaryCounts([
             'program' => $program,
-            'batch' => $batch,
-            'sem' => $sem,
-            'exam_mon' => $examMon,
+            'batch' => 'all',
+            'sem' => 'all',
+            'exam_mon' => 'all',
             'q' => $q,
         ]);
 
@@ -123,9 +125,9 @@ class ExamReportController extends Controller
 
         $filters = [
             'program' => $request->input('program', 'all'),
-            'batch' => $request->input('batch', 'all'),
-            'sem' => $request->input('sem', 'all'),
-            'exam_mon' => $request->input('exam_mon', 'all'),
+            'batch' => 'all',
+            'sem' => 'all',
+            'exam_mon' => 'all',
             'q' => trim((string) $request->input('q', '')),
         ];
 
@@ -166,25 +168,31 @@ class ExamReportController extends Controller
                 });
             } elseif ($tab === 'toppers') {
                 fputcsv($handle, [
-                    'Rank', 'Register No', 'Student Name', 'Program', 'Batch', 'Semester',
-                    'SGPA', 'CGPA', 'Division', 'Total Credits', 'Exam Month',
+                    'Rank', 'Register No', 'Student Name', 'Program', 'Batch',
+                    'Total Marks Earned', 'Max Total Marks', 'Internal Marks (FA)', 'External Marks (SA)',
+                    'Percentage (%)', 'Total Subjects', 'Credits',
                 ]);
 
                 $index = 1;
                 $query->chunk(500, function ($rows) use ($handle, &$index) {
                     foreach ($rows as $r) {
+                        $pct = ($r->total_max_marks > 0)
+                            ? number_format(($r->total_earned_marks / $r->total_max_marks) * 100, 2).'%'
+                            : '—';
+
                         fputcsv($handle, [
                             $index++,
                             $r->regno ?? '',
                             $r->student_name ?? '',
                             $r->program_short_name ?? '',
                             $r->batch ?? '',
-                            $r->s_sem ? 'Semester '.$r->s_sem : '',
-                            number_format((float) ($r->sgpa ?? 0), 2),
-                            number_format((float) ($r->cgpa ?? 0), 2),
-                            $r->division_name ?? '',
+                            $r->total_earned_marks ?? 0,
+                            $r->total_max_marks ?? 0,
+                            $r->total_fa_earned ?? 0,
+                            $r->total_sa_earned ?? 0,
+                            $pct,
+                            $r->total_subjects ?? '',
                             $r->total_credits ?? '',
-                            $r->exam_mon_yyyy ?? '',
                         ]);
                     }
                 });
@@ -300,17 +308,30 @@ class ExamReportController extends Controller
                     $q->whereNull('mc.division_name')
                         ->orWhere('mc.division_name', '!=', 'FAIL');
                 })
-                ->whereRaw("mc.sgpa_perc ~ '^[0-9]+(\\.[0-9]+)?$'")
+                ->where('mc.letter_grade', '!=', 'F')
+                // Only count REGULAR examinations — exclude any reappear exam rows
+                ->where(function ($q) {
+                    $q->where('mc.mm_type', 'REGULAR')
+                        ->orWhereNull('mc.mm_type');
+                })
+                ->where(function ($q) {
+                    $q->whereNull('mc.mm_type')
+                        ->orWhere('mc.mm_type', 'NOT ILIKE', '%REAP%');
+                })
+                // Toppers merit list excludes students who have any reappear or fail history
+                ->whereNotIn('mc.regno', function ($sq) {
+                    $sq->select('regno')
+                        ->from('examinations.marks_cgpa')
+                        ->where('mm_type', 'ILIKE', '%REAP%')
+                        ->orWhere('letter_grade', 'F')
+                        ->orWhere('division_name', 'FAIL');
+                })
                 ->groupBy([
                     'mc.regno',
                     'sr.student_name',
                     'p.program_short_name',
                     'sr.progid',
                     DB::raw('COALESCE(mc.batch, sr.adm_batch_code)'),
-                    'mc.s_sem',
-                    'mc.s_year',
-                    'mc.exam_mon_yyyy',
-                    'mc.division_name',
                 ])
                 ->select([
                     'mc.regno',
@@ -318,31 +339,21 @@ class ExamReportController extends Controller
                     'p.program_short_name',
                     'sr.progid',
                     DB::raw('COALESCE(mc.batch, sr.adm_batch_code) as batch'),
-                    'mc.s_sem',
-                    'mc.s_year',
-                    'mc.exam_mon_yyyy',
-                    'mc.division_name',
+                    DB::raw("SUM(CASE WHEN mc.total_earned ~ '^[0-9]+(\\.[0-9]+)?$' THEN mc.total_earned::numeric ELSE 0 END) as total_earned_marks"),
+                    DB::raw("SUM(CASE WHEN mc.total_conducted ~ '^[0-9]+(\\.[0-9]+)?$' THEN mc.total_conducted::numeric ELSE 0 END) as total_max_marks"),
+                    DB::raw("SUM(CASE WHEN mc.fa_earned ~ '^[0-9]+(\\.[0-9]+)?$' THEN mc.fa_earned::numeric ELSE 0 END) as total_fa_earned"),
+                    DB::raw("SUM(CASE WHEN mc.sa_earned ~ '^[0-9]+(\\.[0-9]+)?$' THEN mc.sa_earned::numeric ELSE 0 END) as total_sa_earned"),
+                    DB::raw('COUNT(*) as total_subjects'),
+                    DB::raw('SUM(mc.credits) as total_credits'),
                     DB::raw("MAX(CASE WHEN mc.sgpa_perc ~ '^[0-9]+(\\.[0-9]+)?$' THEN mc.sgpa_perc::numeric ELSE 0 END) as sgpa"),
                     DB::raw("MAX(CASE WHEN mc.cgpa_perc ~ '^[0-9]+(\\.[0-9]+)?$' THEN mc.cgpa_perc::numeric ELSE 0 END) as cgpa"),
-                    DB::raw('SUM(mc.credits) as total_credits'),
-                    DB::raw('COUNT(*) as total_subjects'),
                     DB::raw('MAX(mc.mmno) as mmno'),
-                ]);
+                    DB::raw('MAX(mc.division_name) as division_name'),
+                ])
+                ->havingRaw("SUM(CASE WHEN mc.total_earned ~ '^[0-9]+(\\.[0-9]+)?$' THEN mc.total_earned::numeric ELSE 0 END) > 0");
 
             if (! empty($f['program']) && $f['program'] !== 'all') {
                 $query->where('sr.progid', (int) $f['program']);
-            }
-            if (! empty($f['batch']) && $f['batch'] !== 'all') {
-                $query->where(function ($q) use ($f) {
-                    $q->where('mc.batch', $f['batch'])
-                        ->orWhere('sr.adm_batch_code', $f['batch']);
-                });
-            }
-            if (! empty($f['sem']) && $f['sem'] !== 'all') {
-                $query->where('mc.s_sem', (int) $f['sem']);
-            }
-            if (! empty($f['exam_mon']) && $f['exam_mon'] !== 'all') {
-                $query->where('mc.exam_mon_yyyy', $f['exam_mon']);
             }
             if (! empty($f['q'])) {
                 $search = $f['q'];
@@ -352,7 +363,7 @@ class ExamReportController extends Controller
                 });
             }
 
-            return $query->orderByDesc('sgpa')->orderByDesc('cgpa')->orderBy('mc.regno');
+            return $query->orderByDesc('total_earned_marks')->orderBy('mc.regno');
         }
 
         // Default: CGPA Report

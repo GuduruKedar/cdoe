@@ -1,31 +1,13 @@
 @extends('layouts.app')
 
 @section('page_title', 'Exam Report')
+@section('hideTitle', true)
+@section('hidePageSub', true)
 
 @section('content')
 <div class="cdoe-examreport-wrapper">
 
-    {{-- ================= 1. PAGE HEADER ================= --}}
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3">
-        <div>
-            <h1 class="page-main-heading mb-1 d-flex align-items-center gap-2">
-                <span class="heading-icon-badge">
-                    <i class="bi bi-file-earmark-bar-graph-fill"></i>
-                </span>
-                Exam Report
-            </h1>
-            <p class="text-muted small mb-0">
-                Examination results tabulation, backlog fail reports, top performers & SGPA/CGPA analytics
-            </p>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-light text-dark border px-3 py-2 fs-7">
-                <i class="bi bi-calendar2-check me-1 text-primary"></i> Academic Year {{ date('Y') }}
-            </span>
-        </div>
-    </div>
-
-    {{-- ================= 2. SKETCH NAVIGATION TABS ================= --}}
+    {{-- ================= 1. SKETCH NAVIGATION TABS ================= --}}
     {{-- Matches hand-drawn wireframe sketch: [Fail Report] [Toppers] [CGPA Rep] [...] --}}
     <div class="sketch-tabs-container mb-3">
         <div class="sketch-tabs-nav d-flex align-items-center gap-2 flex-wrap">
@@ -84,7 +66,6 @@
     </div>
 
     {{-- ================= 3. FILTER TOOLBAR & EXPORT BUTTONS ================= --}}
-    {{-- Matches sketch: [Program Filter 1] [Batch Filter 2] [Filter 3] [Search] ... [CSV] [Print] --}}
     <div class="sketch-filter-card mb-3">
         <form method="GET" action="{{ route('examinations.examreport') }}" id="examReportFilterForm">
             <input type="hidden" name="tab" value="{{ $tab }}">
@@ -92,8 +73,8 @@
 
             <div class="row g-2 align-items-end">
 
-                {{-- Filter 1: Program (Program dropdown from sketch) --}}
-                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                {{-- Filter 1: Program (Filter 1) --}}
+                <div class="col-xl-4 col-lg-4 col-md-5 col-sm-12">
                     <label class="filter-field-label">
                         <i class="bi bi-mortarboard-fill me-1 text-primary"></i> Program (Filter 1)
                     </label>
@@ -107,53 +88,8 @@
                     </select>
                 </div>
 
-                {{-- Filter 2: Batch (Batch dropdown from sketch) --}}
-                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-                    <label class="filter-field-label">
-                        <i class="bi bi-people-fill me-1 text-primary"></i> Batch (Filter 2)
-                    </label>
-                    <select name="batch" class="form-select filter-select-custom" onchange="this.form.submit()">
-                        <option value="all">All Batches</option>
-                        @foreach($batches as $b)
-                            <option value="{{ $b }}" {{ $batch === $b ? 'selected' : '' }}>
-                                {{ str_replace('_', ' ', $b) }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Filter 3: Semester (Filter 3 from sketch) --}}
-                <div class="col-xl-2 col-lg-2 col-md-4 col-sm-6">
-                    <label class="filter-field-label">
-                        <i class="bi bi-layers-fill me-1 text-primary"></i> Semester (Filter 3)
-                    </label>
-                    <select name="sem" class="form-select filter-select-custom" onchange="this.form.submit()">
-                        <option value="all">All Semesters</option>
-                        @foreach($semesters as $s)
-                            <option value="{{ $s }}" {{ (string)$sem === (string)$s ? 'selected' : '' }}>
-                                Semester {{ $s }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Filter 4: Exam Month/Year --}}
-                <div class="col-xl-2 col-lg-2 col-md-4 col-sm-6">
-                    <label class="filter-field-label">
-                        <i class="bi bi-calendar3 me-1 text-primary"></i> Exam Month
-                    </label>
-                    <select name="exam_mon" class="form-select filter-select-custom" onchange="this.form.submit()">
-                        <option value="all">All Exam Months</option>
-                        @foreach($examMonths as $em)
-                            <option value="{{ $em }}" {{ $examMon === $em ? 'selected' : '' }}>
-                                {{ $em }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Search Box (Search from sketch) --}}
-                <div class="col-xl-4 col-lg-6 col-md-8 col-sm-12">
+                {{-- Search (for all reports) --}}
+                <div class="col-xl-5 col-lg-5 col-md-7 col-sm-12">
                     <label class="filter-field-label">
                         <i class="bi bi-search me-1 text-primary"></i> Search
                     </label>
@@ -161,12 +97,12 @@
                         <input type="text"
                                name="q"
                                class="form-control filter-search-input"
-                               placeholder="Search Reg No, Name, Subject..."
+                               placeholder="{{ $tab === 'fail' ? 'Search Reg No, Name, Subject...' : 'Search Reg No, Student Name...' }}"
                                value="{{ $q }}">
                         <button class="btn btn-primary px-3" type="submit" title="Apply Search">
                             <i class="bi bi-search"></i> Filter
                         </button>
-                        @if($program !== 'all' || $batch !== 'all' || $sem !== 'all' || $examMon !== 'all' || !empty($q))
+                        @if($program !== 'all' || !empty($q))
                             <a href="{{ route('examinations.examreport', ['tab' => $tab, 'per_page' => $perPage]) }}"
                                class="btn btn-outline-secondary"
                                title="Reset Filters">
@@ -176,53 +112,30 @@
                     </div>
                 </div>
 
-                {{-- Bottom Action Row: Filter summary + CSV & PDF Export (Right aligned as in sketch) --}}
-                <div class="col-12 mt-2 pt-2 border-top d-flex align-items-center justify-content-between flex-wrap gap-2">
-                    <div class="d-flex align-items-center gap-2 flex-wrap text-muted small">
-                        <span class="active-filter-indicator">
-                            <i class="bi bi-funnel-fill text-primary"></i>
-                            @if($program === 'all' && $batch === 'all' && $sem === 'all' && $examMon === 'all' && empty($q))
-                                Showing all programs & batches
-                            @else
-                                Filters:
-                                <strong>
-                                    {{ $program !== 'all' ? 'Prog #' . $program . ' | ' : '' }}
-                                    {{ $batch !== 'all' ? str_replace('_', ' ', $batch) . ' | ' : '' }}
-                                    {{ $sem !== 'all' ? 'Sem ' . $sem . ' | ' : '' }}
-                                    {{ $examMon !== 'all' ? $examMon . ' | ' : '' }}
-                                    {{ $q ? '"' . $q . '"' : '' }}
-                                </strong>
-                            @endif
-                        </span>
-                        <span class="badge bg-secondary-subtle text-secondary border">
-                            {{ number_format($records->total()) }} total {{ $tab === 'fail' ? 'failed subject rows' : 'student rows' }}
-                        </span>
-                    </div>
+                {{-- Export Buttons (CSV and PDF) --}}
+                <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12 d-flex align-items-center justify-content-md-end gap-2 mt-2 mt-md-0">
+                    <a href="{{ route('examinations.examreport.export_csv', request()->query()) }}"
+                       class="btn-export-sketch btn-export-csv"
+                       title="Download CSV Spreadsheet">
+                        <i class="bi bi-file-earmark-spreadsheet-fill me-1 text-success"></i> CSV
+                    </a>
 
-                    {{-- Export Buttons (CSV and PDF as indicated in wireframe sketch) --}}
-                    <div class="d-flex align-items-center gap-2">
-                        {{-- CSV Export --}}
-                        <a href="{{ route('examinations.examreport.export_csv', request()->query()) }}"
-                           class="btn-export-sketch btn-export-csv"
-                           title="Download CSV Spreadsheet">
-                            <i class="bi bi-file-earmark-spreadsheet-fill me-1 text-success"></i> CSV
-                        </a>
-
-                        {{-- PDF / Print Export --}}
-                        <button type="button"
-                                class="btn-export-sketch btn-export-pdf"
-                                onclick="window.print()"
-                                title="Print or Save as PDF">
-                            <i class="bi bi-file-earmark-pdf-fill me-1 text-danger"></i> PDF
-                        </button>
-                    </div>
+                    <button type="button"
+                            class="btn-export-sketch btn-export-pdf"
+                            onclick="window.print()"
+                            title="Print or Save as PDF">
+                        <i class="bi bi-file-earmark-pdf-fill me-1 text-danger"></i> PDF
+                    </button>
                 </div>
 
             </div>
         </form>
     </div>
+        </form>
+    </div>
 
-    {{-- ================= 4. SUMMARY METRIC STRIP ================= --}}
+    {{-- ================= 4. SUMMARY METRIC STRIP (For Fail & CGPA tabs) ================= --}}
+    @if($tab !== 'toppers')
     <div class="row g-2 mb-3">
         <div class="col-xl-3 col-sm-6">
             <div class="summary-metric-card">
@@ -261,6 +174,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     {{-- ================= 5. MAIN DATA CONTAINER ================= --}}
     <div class="sketch-table-card">
@@ -274,7 +188,7 @@
                     </span>
                 @elseif($tab === 'toppers')
                     <span class="report-badge-pill gold">
-                        <i class="bi bi-trophy-fill me-1"></i> Top Performers & Merit List
+                        <i class="bi bi-trophy-fill me-1"></i> Top Performers (Ranked by Total Earned Marks)
                     </span>
                 @else
                     <span class="report-badge-pill blue">
@@ -334,13 +248,12 @@
                             <th style="min-width: 200px;">Student Name</th>
                             <th>Program</th>
                             <th>Batch</th>
-                            <th class="text-center">Sem</th>
-                            <th class="text-center" style="min-width: 90px;">SGPA</th>
-                            <th class="text-center" style="min-width: 90px;">CGPA</th>
-                            <th>Division</th>
-                            <th class="text-center">Total Credits</th>
-                            <th class="text-center">Subjects</th>
-                            <th class="text-center">Exam Month</th>
+                            <th class="text-center" style="min-width: 130px;">Total Earned Marks</th>
+                            <th class="text-center" style="min-width: 90px;">Internal (FA)</th>
+                            <th class="text-center" style="min-width: 90px;">External (SA)</th>
+                            <th class="text-center" style="min-width: 90px;">Percentage</th>
+                            <th class="text-center" style="min-width: 70px;">Subjects</th>
+                            <th class="text-center" style="min-width: 70px;">Credits</th>
                             <th class="text-center" style="width: 90px;">Action</th>
                         </tr>
                     @else
@@ -423,6 +336,7 @@
                         @elseif($tab === 'toppers')
                             @php
                                 $rank = $startNumber + $index;
+                                $pct = ($row->total_max_marks > 0) ? number_format(($row->total_earned_marks / $row->total_max_marks) * 100, 2) : 0;
                             @endphp
                             <tr>
                                 <td class="text-center">
@@ -454,24 +368,18 @@
                                     {{ str_replace('_', ' ', $row->batch ?: '—') }}
                                 </td>
                                 <td class="text-center font-monospace">
-                                    <span class="badge bg-light text-dark border">S{{ $row->s_sem }}</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace fw-bold px-2 py-1 fs-7">
-                                        {{ number_format((float)($row->sgpa ?? 0), 2) }}
+                                    <span class="badge bg-success font-monospace px-2 py-1 fs-7 fw-bold">
+                                        {{ $row->total_earned_marks }}
                                     </span>
+                                    <span class="text-muted small">/ {{ $row->total_max_marks }}</span>
                                 </td>
-                                <td class="text-center">
-                                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle font-monospace fw-bold px-2 py-1 fs-7">
-                                        {{ number_format((float)($row->cgpa ?? 0), 2) }}
-                                    </span>
+                                <td class="text-center font-monospace">{{ $row->total_fa_earned ?? '—' }}</td>
+                                <td class="text-center font-monospace">{{ $row->total_sa_earned ?? '—' }}</td>
+                                <td class="text-center font-monospace fw-bold text-success">
+                                    {{ $pct }}%
                                 </td>
-                                <td class="small fw-semibold text-truncate" style="max-width: 180px;">
-                                    {{ $row->division_name ?: 'DISTINCTION' }}
-                                </td>
-                                <td class="text-center font-monospace">{{ $row->total_credits ?? '—' }}</td>
                                 <td class="text-center font-monospace">{{ $row->total_subjects ?? '—' }}</td>
-                                <td class="text-center small text-nowrap">{{ $row->exam_mon_yyyy ?: '—' }}</td>
+                                <td class="text-center font-monospace">{{ $row->total_credits ?? '—' }}</td>
                                 <td class="text-center">
                                     <a href="{{ route('examinations.results.memo', ['memo' => $row->regno]) }}"
                                        class="btn btn-sm btn-outline-primary py-0 px-2"

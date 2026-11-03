@@ -601,7 +601,7 @@
             <i class="bi bi-list"></i>
         </button>
         <div class="brand-logo-card">
-            <img src="{{ asset('images/vignan-emblem.png') }}?v={{ file_exists(public_path('images/vignan-emblem.png')) ? filemtime(public_path('images/vignan-emblem.png')) : '1.0' }}" class="brand-emblem" alt="Vignan Emblem">
+            <img src="{{ asset('images/vignan-logo-rect.jpeg') }}?v={{ file_exists(public_path('images/vignan-logo-rect.jpeg')) ? filemtime(public_path('images/vignan-logo-rect.jpeg')) : '1.0' }}" class="brand-emblem" alt="Vignan Logo">
         </div>
         <span class="brand-title">
             <span class="d-none d-sm-inline">{{ str_starts_with($currentRoleName ?? '', 'CDOE') ? $currentRoleName : 'CDOE ' . ($currentRoleName ?: 'Administrator') }}</span>

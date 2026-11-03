@@ -695,7 +695,7 @@ html.dark .modal-backdrop.show {
 }
 
 .brand-logo-card {
-    width: 36px;
+    width: auto;
     height: 36px;
     background: transparent;
     border: none;
@@ -708,25 +708,28 @@ html.dark .modal-backdrop.show {
     transition: transform 0.2s ease;
 }
 .brand-logo-card:hover {
-    transform: scale(1.06);
+    transform: scale(1.04);
 }
 .brand-logo-card img,
 .brand-emblem {
-    width: 100%;
-    height: 100%;
+    height: 36px;
+    width: auto;
+    max-width: 120px;
+    aspect-ratio: 1600 / 534;
     object-fit: contain;
     display: block;
-    filter: contrast(1.1) saturate(1.2);
+    filter: contrast(1.05) saturate(1.1);
 }
 html.dark .brand-logo-card {
-    background: transparent;
-    border: none;
-    box-shadow: none;
+    background: #ffffff;
+    border-radius: 6px;
+    padding: 2px 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
     backdrop-filter: none;
 }
 html.dark .brand-logo-card img,
 html.dark .brand-emblem {
-    filter: brightness(1.12) contrast(1.1) saturate(1.2) drop-shadow(0 0 4px rgba(255, 255, 255, 0.25));
+    filter: none;
 }
 
 .brand-title {
@@ -971,8 +974,10 @@ html.dark .user-pill-btn:hover {
     gap: 10px;
 }
 .sidebar-brand-emblem {
-    width: 30px;
+    width: auto;
     height: 30px;
+    max-width: 95px;
+    aspect-ratio: 1600 / 534;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -1117,8 +1122,14 @@ body.sidebar-collapsed .main {
         gap: 8px !important;
     }
     .brand-logo-card {
-        width: 32px !important;
+        width: auto !important;
         height: 32px !important;
+    }
+    .brand-logo-card img,
+    .brand-emblem {
+        width: auto !important;
+        height: 32px !important;
+        max-width: 100px !important;
     }
     .brand-title {
         font-size: 15px !important;

@@ -33,10 +33,17 @@ class ExamReportTest extends TestCase
         }
 
         $response->assertStatus(200);
-        $response->assertSee('Exam Report');
+        $response->assertDontSee('Examination results tabulation, backlog fail reports');
         $response->assertSee('Fail Report');
         $response->assertSee('Toppers');
         $response->assertSee('CGPA Report');
+        $response->assertSee('Program (Filter 1)');
+        $response->assertSee('Search');
+        $response->assertDontSee('Batch (Filter 2)');
+        $response->assertDontSee('All Batches');
+        $response->assertDontSee('Semester (Filter 3)');
+        $response->assertDontSee('All Semesters');
+        $response->assertDontSee('All Exam Months');
         $response->assertSee('200 rows');
     }
 
@@ -47,8 +54,51 @@ class ExamReportTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Toppers');
-        $response->assertSee('SGPA');
-        $response->assertSee('CGPA');
+        $response->assertSee('Total Earned Marks');
+        $response->assertSee('Internal (FA)');
+        $response->assertSee('External (SA)');
+        $response->assertSee('Program (Filter 1)');
+        $response->assertSee('Search');
+        $response->assertDontSee('Batch (Filter 2)');
+        $response->assertDontSee('All Batches');
+        $response->assertDontSee('Semester (Filter 3)');
+        $response->assertDontSee('All Semesters');
+        $response->assertDontSee('All Exam Months');
+        $response->assertSee('CSV');
+        $response->assertSee('PDF');
+    }
+
+    public function test_exam_report_toppers_page_2_loads(): void
+    {
+        $response = $this->withSession($this->getAdminSession())
+            ->get('/examinations/examreport?tab=toppers&page=2');
+
+        $response->assertStatus(200);
+        $response->assertSee('Total Earned Marks');
+        $response->assertSee('Program (Filter 1)');
+        $response->assertDontSee('Batch (Filter 2)');
+    }
+
+    public function test_exam_report_toppers_excludes_reappear(): void
+    {
+        $response = $this->withSession($this->getAdminSession())
+            ->get('/examinations/examreport?tab=toppers');
+
+        $response->assertStatus(200);
+        // Student 261BHANU99 had reappear records and must not be in toppers
+        $response->assertDontSee('261BHANU99');
+        // Regular top performer must appear
+        $response->assertSee('251DC01087');
+    }
+
+    public function test_exam_report_toppers_csv_export(): void
+    {
+        $response = $this->withSession($this->getAdminSession())
+            ->get('/examinations/examreport/export-csv?tab=toppers');
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('text/csv', (string) $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('exam_report_toppers', (string) $response->headers->get('Content-Disposition'));
     }
 
     public function test_exam_report_cgpa_tab_loads(): void
@@ -59,6 +109,15 @@ class ExamReportTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('CGPA Report');
         $response->assertSee('Backlogs');
+        $response->assertSee('Program (Filter 1)');
+        $response->assertSee('Search');
+        $response->assertDontSee('Batch (Filter 2)');
+        $response->assertDontSee('All Batches');
+        $response->assertDontSee('Semester (Filter 3)');
+        $response->assertDontSee('All Semesters');
+        $response->assertDontSee('All Exam Months');
+        $response->assertSee('CSV');
+        $response->assertSee('PDF');
     }
 
     public function test_exam_report_csv_export_streams_csv(): void

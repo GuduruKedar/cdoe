@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page_title', 'Curriculum & Subject List')
+@section('page_title', !empty($isStudent) ? 'My Registered Subjects' : 'Curriculum & Subject List')
 
 @section('content')
 <div class="cdoe-subjects-container">
@@ -10,60 +10,106 @@
         <form method="GET" action="{{ url()->current() }}" id="filterForm">
             <div class="row g-2 align-items-end">
 
-                <div class="col-lg-3 col-md-4 col-sm-6">
-                    <label class="filter-label">
-                        <i class="bi bi-tag-fill me-1"></i> Subject Type
-                    </label>
-                    <select name="subtype" class="form-select filter-select-blue">
-                        <option value="all">Select Subject Type ▼</option>
-                        @foreach($subtypes as $st)
-                            <option value="{{ $st }}" {{ $type === $st ? 'selected' : '' }}>{{ $st }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                @if(!empty($isStudent))
+                    {{-- Student View Filters --}}
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <label class="filter-label">
+                            <i class="bi bi-layers-fill me-1 text-primary"></i> Semester
+                        </label>
+                        <select name="sem" class="form-select filter-select-blue" onchange="this.form.submit()">
+                            <option value="all">All Semesters ▼</option>
+                            @foreach($availableSemesters ?? [] as $sVal)
+                                <option value="{{ $sVal }}" {{ (string)($sem ?? '') === (string)$sVal ? 'selected' : '' }}>
+                                    Semester {{ $sVal }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                <div class="col-lg-3 col-md-4 col-sm-6">
-                    <label class="filter-label">
-                        <i class="bi bi-display me-1"></i> Delivery Mode
-                    </label>
-                    <select name="submode" class="form-select filter-select-blue">
-                        <option value="all">Select Delivery Mode ▼</option>
-                        @foreach($submodes as $sm)
-                            <option value="{{ $sm }}" {{ $mode === $sm ? 'selected' : '' }}>{{ $sm }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                    <div class="col-lg-5 col-md-5 col-sm-12">
+                        <label class="filter-label">
+                            <i class="bi bi-search me-1 text-primary"></i> Search Subject
+                        </label>
+                        <input type="text" name="q" class="form-control filter-input-search" placeholder="Search course code or subject title..." value="{{ $q ?? '' }}">
+                    </div>
 
-                <div class="col-lg-3 col-md-4 col-sm-12">
-                    <label class="filter-label">
-                        <i class="bi bi-search me-1"></i> Search
-                    </label>
-                    <input type="text" name="q" class="form-control filter-input-search" placeholder="Subject code or title..." value="{{ $q ?? '' }}">
-                </div>
+                    <div class="col-lg-4 col-md-3 col-sm-12 text-end d-flex align-items-center justify-content-end gap-2 flex-wrap">
+                        <button type="submit" class="btn btn-action btn-apply">
+                            <i class="bi bi-search me-1"></i> Filter
+                        </button>
+                        <a href="{{ url()->current() }}" class="btn btn-action btn-clear">
+                            <i class="bi bi-trash3-fill me-1"></i> Clear
+                        </a>
+                        <a href="{{ request()->is('*subjectsview*') ? route('academics.subjectsview.export', request()->all()) : route('academics.subjectlist.export', request()->all()) }}" class="btn btn-action btn-download">
+                            <i class="bi bi-download me-1"></i> Download
+                        </a>
+                    </div>
+                @else
+                    {{-- Faculty / Staff View Filters --}}
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <label class="filter-label">
+                            <i class="bi bi-tag-fill me-1"></i> Subject Type
+                        </label>
+                        <select name="subtype" class="form-select filter-select-blue">
+                            <option value="all">Select Subject Type ▼</option>
+                            @foreach($subtypes ?? [] as $st)
+                                <option value="{{ $st }}" {{ ($type ?? '') === $st ? 'selected' : '' }}>{{ $st }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                <div class="col-lg-3 col-md-12 text-end d-flex align-items-center justify-content-end gap-2 flex-wrap">
-                    <button type="submit" class="btn btn-action btn-apply">
-                        <i class="bi bi-search me-1"></i> Apply Filter
-                    </button>
-                    <a href="{{ url()->current() }}" class="btn btn-action btn-clear">
-                        <i class="bi bi-trash3-fill me-1"></i> Clear All
-                    </a>
-                    <a href="{{ request()->is('*subjectsview*') ? route('academics.subjectsview.export', request()->all()) : route('academics.subjectlist.export', request()->all()) }}" class="btn btn-action btn-download">
-                        <i class="bi bi-download me-1"></i> Download
-                    </a>
-                </div>
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <label class="filter-label">
+                            <i class="bi bi-display me-1"></i> Delivery Mode
+                        </label>
+                        <select name="submode" class="form-select filter-select-blue">
+                            <option value="all">Select Delivery Mode ▼</option>
+                            @foreach($submodes ?? [] as $sm)
+                                <option value="{{ $sm }}" {{ ($mode ?? '') === $sm ? 'selected' : '' }}>{{ $sm }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-sm-12">
+                        <label class="filter-label">
+                            <i class="bi bi-search me-1"></i> Search
+                        </label>
+                        <input type="text" name="q" class="form-control filter-input-search" placeholder="Subject code or title..." value="{{ $q ?? '' }}">
+                    </div>
+
+                    <div class="col-lg-3 col-md-12 text-end d-flex align-items-center justify-content-end gap-2 flex-wrap">
+                        <button type="submit" class="btn btn-action btn-apply">
+                            <i class="bi bi-search me-1"></i> Apply Filter
+                        </button>
+                        <a href="{{ url()->current() }}" class="btn btn-action btn-clear">
+                            <i class="bi bi-trash3-fill me-1"></i> Clear All
+                        </a>
+                        <a href="{{ request()->is('*subjectsview*') ? route('academics.subjectsview.export', request()->all()) : route('academics.subjectlist.export', request()->all()) }}" class="btn btn-action btn-download">
+                            <i class="bi bi-download me-1"></i> Download
+                        </a>
+                    </div>
+                @endif
             </div>
         </form>
     </div>
 
     {{-- Banner --}}
     <div class="active-filters-ribbon mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <div class="d-flex align-items-center gap-2">
-            <span>📌 <strong>Curriculum Catalog:</strong></span>
-            <span class="text-muted small">Showing accredited courses and subject codes</span>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            @if(!empty($isStudent))
+                <span>📌 <strong>My Registered Curriculum Subjects:</strong></span>
+                <span class="text-primary fw-bold">{{ $student->student_name ?? 'Student' }} ({{ $student->register_no }})</span>
+                <span class="badge bg-primary-subtle text-primary border">{{ $student->program?->program_short_name ?? 'Online Degree' }}</span>
+                @if(!empty($isPreview))
+                    <span class="badge bg-warning-subtle text-warning-emphasis border">Student Role Preview</span>
+                @endif
+            @else
+                <span>📌 <strong>Curriculum Catalog:</strong></span>
+                <span class="text-muted small">Showing accredited courses and subject codes</span>
+            @endif
         </div>
         <div class="d-flex align-items-center gap-3">
-            <span>📊 <strong>Total Subjects:</strong> {{ $totalRecords }}</span>
+            <span>📊 <strong>{{ !empty($isStudent) ? 'Registered Courses' : 'Total Subjects' }}:</strong> {{ $totalRecords }}</span>
             <span>|</span>
             <span>🔍 <strong>Filtered:</strong> {{ $filteredCount }}</span>
         </div>
@@ -74,38 +120,84 @@
         <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle mb-0 cdoe-pink-table">
                 <thead>
-                    <tr>
-                        <th style="width: 50px;">S.No.</th>
-                        <th style="width: 120px;">Subject Code</th>
-                        <th>Subject Name</th>
-                        <th style="width: 140px;">Type</th>
-                        <th style="width: 60px; text-align: center;">L</th>
-                        <th style="width: 60px; text-align: center;">T</th>
-                        <th style="width: 60px; text-align: center;">P</th>
-                        <th style="width: 60px; text-align: center;">C</th>
-                        <th style="width: 80px; text-align: center;">Credits</th>
-                        <th style="width: 120px; text-align: center;">Mode</th>
-                        <th style="width: 110px;">Effective Date</th>
-                    </tr>
+                    @if(!empty($isStudent))
+                        <tr>
+                            <th style="width: 50px;" class="text-center">S.No.</th>
+                            <th style="width: 130px;">Subject Code</th>
+                            <th>Subject Name</th>
+                            <th style="width: 80px;" class="text-center">Sem</th>
+                            <th style="width: 110px;" class="text-center">Type</th>
+                            <th style="width: 55px;" class="text-center">L</th>
+                            <th style="width: 55px;" class="text-center">T</th>
+                            <th style="width: 55px;" class="text-center">P</th>
+                            <th style="width: 55px;" class="text-center">C</th>
+                            <th style="width: 80px;" class="text-center">Credits</th>
+                            <th style="width: 110px;" class="text-center">Reg Type</th>
+                            <th style="width: 110px;" class="text-center">Reg Date</th>
+                        </tr>
+                    @else
+                        <tr>
+                            <th style="width: 50px;">S.No.</th>
+                            <th style="width: 120px;">Subject Code</th>
+                            <th>Subject Name</th>
+                            <th style="width: 140px;">Type</th>
+                            <th style="width: 60px; text-align: center;">L</th>
+                            <th style="width: 60px; text-align: center;">T</th>
+                            <th style="width: 60px; text-align: center;">P</th>
+                            <th style="width: 60px; text-align: center;">C</th>
+                            <th style="width: 80px; text-align: center;">Credits</th>
+                            <th style="width: 120px; text-align: center;">Mode</th>
+                            <th style="width: 110px;">Effective Date</th>
+                        </tr>
+                    @endif
                 </thead>
                 <tbody>
                     @forelse($subjects as $idx => $s)
-                        <tr>
-                            <td class="text-center font-monospace text-muted">{{ $subjects->firstItem() + $idx }}</td>
-                            <td><strong class="font-monospace text-primary">{{ $s->subcode }}</strong></td>
-                            <td class="fw-semibold">{{ $s->subname }}</td>
-                            <td><span class="badge bg-secondary-subtle text-secondary">{{ $s->subtype ?: 'THEORY' }}</span></td>
-                            <td class="text-center font-monospace">{{ $s->l }}</td>
-                            <td class="text-center font-monospace">{{ $s->t }}</td>
-                            <td class="text-center font-monospace">{{ $s->p }}</td>
-                            <td class="text-center font-monospace">{{ $s->c }}</td>
-                            <td class="text-center font-monospace fw-bold text-success">{{ $s->credits }}</td>
-                            <td class="text-center"><span class="badge bg-info-subtle text-info font-monospace">{{ $s->submode ?: 'REGULAR' }}</span></td>
-                            <td class="small text-muted">{{ $s->subdate ? \Carbon\Carbon::parse($s->subdate)->format('d-m-Y') : '—' }}</td>
-                        </tr>
+                        @if(!empty($isStudent))
+                            {{-- Course Registration Row --}}
+                            <tr>
+                                <td class="text-center font-monospace text-muted">{{ $subjects->firstItem() + $idx }}</td>
+                                <td><strong class="font-monospace text-primary">{{ $s->subcode }}</strong></td>
+                                <td class="fw-semibold">{{ $s->subject?->subname ?: '—' }}</td>
+                                <td class="text-center font-monospace">
+                                    <span class="badge bg-light text-dark border">Sem {{ $s->s_sem }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary-subtle text-secondary">{{ $s->subject?->subtype ?: 'THEORY' }}</span>
+                                </td>
+                                <td class="text-center font-monospace">{{ $s->subject?->l ?? 0 }}</td>
+                                <td class="text-center font-monospace">{{ $s->subject?->t ?? 0 }}</td>
+                                <td class="text-center font-monospace">{{ $s->subject?->p ?? 0 }}</td>
+                                <td class="text-center font-monospace">{{ $s->subject?->c ?? 0 }}</td>
+                                <td class="text-center font-monospace fw-bold text-success">{{ $s->subject?->credits ?? 4 }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-success-subtle text-success font-monospace">{{ $s->reg_type ?: 'REGULAR' }}</span>
+                                </td>
+                                <td class="text-center small text-muted">
+                                    {{ $s->reg_date ? \Carbon\Carbon::parse($s->reg_date)->format('d-m-Y') : '—' }}
+                                </td>
+                            </tr>
+                        @else
+                            {{-- Master Subject Row --}}
+                            <tr>
+                                <td class="text-center font-monospace text-muted">{{ $subjects->firstItem() + $idx }}</td>
+                                <td><strong class="font-monospace text-primary">{{ $s->subcode }}</strong></td>
+                                <td class="fw-semibold">{{ $s->subname }}</td>
+                                <td><span class="badge bg-secondary-subtle text-secondary">{{ $s->subtype ?: 'THEORY' }}</span></td>
+                                <td class="text-center font-monospace">{{ $s->l }}</td>
+                                <td class="text-center font-monospace">{{ $s->t }}</td>
+                                <td class="text-center font-monospace">{{ $s->p }}</td>
+                                <td class="text-center font-monospace">{{ $s->c }}</td>
+                                <td class="text-center font-monospace fw-bold text-success">{{ $s->credits }}</td>
+                                <td class="text-center"><span class="badge bg-info-subtle text-info font-monospace">{{ $s->submode ?: 'REGULAR' }}</span></td>
+                                <td class="small text-muted">{{ $s->subdate ? \Carbon\Carbon::parse($s->subdate)->format('d-m-Y') : '—' }}</td>
+                            </tr>
+                        @endif
                     @empty
                         <tr>
-                            <td colspan="11" class="text-center py-5 text-muted">No subjects found matching query.</td>
+                            <td colspan="{{ !empty($isStudent) ? '12' : '11' }}" class="text-center py-5 text-muted">
+                                No registered subjects found matching query.
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

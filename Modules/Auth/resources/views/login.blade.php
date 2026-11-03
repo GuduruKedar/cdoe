@@ -314,10 +314,12 @@
         }
 
         .portal-shield-img {
-            width: 44px;
             height: 44px;
+            width: auto;
+            max-width: 145px;
+            aspect-ratio: 1600 / 534;
             object-fit: contain;
-            margin: 0 auto 6px;
+            margin: 0 auto 8px;
             display: block;
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
         }
@@ -668,8 +670,9 @@
                 border-radius: 20px;
             }
             .portal-shield-img {
-                width: 44px;
                 height: 44px;
+                width: auto;
+                max-width: 130px;
             }
             .auth-portal-title {
                 font-size: 20px;
@@ -817,9 +820,9 @@
         <div class="auth-card-wrapper">
             <main class="auth-card">
 
-                {{-- Header with Vignan Emblem --}}
+                {{-- Header with Vignan Logo --}}
                 <div class="auth-card-header">
-                    <img src="{{ asset('images/vignan-emblem.png') }}"
+                    <img src="{{ asset('images/vignan-logo-rect.jpeg') }}?v={{ file_exists(public_path('images/vignan-logo-rect.jpeg')) ? filemtime(public_path('images/vignan-logo-rect.jpeg')) : '1.0' }}"
                          alt="VFSTR Vignan University"
                          class="portal-shield-img">
                     <div class="auth-institution-tag">
@@ -949,17 +952,17 @@
 
                         <div class="contact-row">
                             <strong>Name:</strong>
-                            <span>Mr. D. V. N. S. M. Karthik</span>
+                            <span>Mr. T. Venkatesh</span>
                         </div>
 
                         <div class="contact-row">
-                            <strong>Email:</strong>
-                            <a href="mailto:dmk_cdoe@vignan.ac.in">dmk_cdoe@vignan.ac.in</a>
+                            <strong>Designation:</strong>
+                            <span>Jr. Assistant</span>
                         </div>
 
                         <div class="contact-row">
                             <strong>Phone:</strong>
-                            <a href="tel:8886852292">8886852292</a>
+                            <a href="tel:7842988298">7842988298</a>
                         </div>
                     </div>
 

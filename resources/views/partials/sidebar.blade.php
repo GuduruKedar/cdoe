@@ -4,7 +4,7 @@
     <div class="sidebar-header">
         <div class="sidebar-brand">
             <div class="brand-logo-card">
-                <img src="{{ asset('images/vignan-emblem.png') }}" class="sidebar-brand-emblem" alt="Vignan Emblem">
+                <img src="{{ asset('images/vignan-logo-rect.jpeg') }}?v={{ file_exists(public_path('images/vignan-logo-rect.jpeg')) ? filemtime(public_path('images/vignan-logo-rect.jpeg')) : '1.0' }}" class="sidebar-brand-emblem" alt="Vignan Logo">
             </div>
             <span class="sidebar-brand-title">CDOE PORTAL</span>
         </div>
