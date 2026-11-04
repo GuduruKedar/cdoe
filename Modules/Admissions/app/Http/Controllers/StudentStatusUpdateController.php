@@ -23,70 +23,48 @@ class StudentStatusUpdateController extends Controller
      * @var array<string, array{label: string, badge_class: string, icon: string, description: string}>
      */
     protected array $statuses = [
-        'Active / Admitted' => [
-            'label' => 'Active / Admitted',
-            'badge_class' => 'badge-status-admitted',
+        'ACTIVE' => [
+            'label' => 'ACTIVE',
+            'badge_class' => 'badge-status-active',
             'icon' => 'bi-check-circle-fill',
-            'description' => 'Active student in good standing',
+            'description' => 'Active student enrolled in good standing',
         ],
-        'Debarred' => [
-            'label' => 'Debarred',
-            'badge_class' => 'badge-status-debarred',
-            'icon' => 'bi-slash-circle-fill',
-            'description' => 'Debarred due to examination or disciplinary misconduct',
+        'DISCONTINUED' => [
+            'label' => 'DISCONTINUED',
+            'badge_class' => 'badge-status-discontinued',
+            'icon' => 'bi-x-circle-fill',
+            'description' => 'Student has discontinued their studies',
         ],
-        'Suspended' => [
-            'label' => 'Suspended',
-            'badge_class' => 'badge-status-suspended',
-            'icon' => 'bi-pause-circle-fill',
-            'description' => 'Temporarily suspended pending administrative review',
-        ],
-        'Semester Break' => [
-            'label' => 'Semester Break',
-            'badge_class' => 'badge-status-semester-break',
-            'icon' => 'bi-calendar2-range-fill',
-            'description' => 'Approved temporary break between academic semesters',
-        ],
-        'Study Break' => [
-            'label' => 'Study Break',
-            'badge_class' => 'badge-status-study-break',
-            'icon' => 'bi-book-half',
-            'description' => 'Official leave of absence or extended study break',
-        ],
-        'Fee Blocked' => [
-            'label' => 'Fee Blocked',
-            'badge_class' => 'badge-status-fee-blocked',
-            'icon' => 'bi-lock-fill',
-            'description' => 'Access restricted due to outstanding fee dues',
+        'GRADUATED' => [
+            'label' => 'GRADUATED',
+            'badge_class' => 'badge-status-graduated',
+            'icon' => 'bi-mortarboard-fill',
+            'description' => 'Student has successfully graduated and completed degree requirements',
         ],
     ];
 
     /**
-     * Normalize status string into one of the 6 canonical statuses.
+     * Normalize status string into one of the 3 canonical statuses: ACTIVE, DISCONTINUED, GRADUATED.
      */
     public static function normalizeStatus(?string $status): string
     {
         $status = trim((string) $status);
-        if ($status === '' || strcasecmp($status, 'Admitted') === 0 || strcasecmp($status, 'Active') === 0 || strcasecmp($status, 'Active / Admitted') === 0) {
-            return 'Active / Admitted';
+        if ($status === '' || strcasecmp($status, 'Admitted') === 0 || strcasecmp($status, 'Active') === 0 || strcasecmp($status, 'Active / Admitted') === 0 || strcasecmp($status, 'ACTIVE') === 0) {
+            return 'ACTIVE';
         }
-        if (strcasecmp($status, 'Debarr') === 0 || strcasecmp($status, 'Debarred') === 0) {
-            return 'Debarred';
+        if (strcasecmp($status, 'Discontinued') === 0 || strcasecmp($status, 'DISCONTINUED') === 0 || strcasecmp($status, 'Debarr') === 0 || strcasecmp($status, 'Debarred') === 0 || strcasecmp($status, 'Suspend') === 0 || strcasecmp($status, 'Suspended') === 0 || strcasecmp($status, 'Semester Break') === 0 || strcasecmp($status, 'Study Break') === 0 || strcasecmp($status, 'Fee Blocked') === 0) {
+            return 'DISCONTINUED';
         }
-        if (strcasecmp($status, 'Suspend') === 0 || strcasecmp($status, 'Suspended') === 0) {
-            return 'Suspended';
-        }
-        if (strcasecmp($status, 'Semester break') === 0 || strcasecmp($status, 'Semester Break') === 0) {
-            return 'Semester Break';
-        }
-        if (strcasecmp($status, 'Study break') === 0 || strcasecmp($status, 'Study Break') === 0) {
-            return 'Study Break';
-        }
-        if (strcasecmp($status, 'Fee blocked') === 0 || strcasecmp($status, 'Fee Blocked') === 0) {
-            return 'Fee Blocked';
+        if (strcasecmp($status, 'Graduated') === 0 || strcasecmp($status, 'GRADUATED') === 0 || strcasecmp($status, 'Completed') === 0 || strcasecmp($status, 'Alumni') === 0 || strcasecmp($status, 'Passed') === 0) {
+            return 'GRADUATED';
         }
 
-        return $status;
+        $upper = strtoupper($status);
+        if (in_array($upper, ['ACTIVE', 'DISCONTINUED', 'GRADUATED'], true)) {
+            return $upper;
+        }
+
+        return 'ACTIVE';
     }
 
     /**

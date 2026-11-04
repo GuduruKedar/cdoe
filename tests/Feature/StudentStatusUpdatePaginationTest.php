@@ -57,5 +57,32 @@ class StudentStatusUpdatePaginationTest extends TestCase
         $this->assertLessThanOrEqual($viewData['maxAllowed'], $viewData['perPage']);
         $this->assertEquals($viewData['maxAllowed'], $viewData['perPage']);
     }
+
+    public function test_stdstatusupdate_has_exact_three_statuses(): void
+    {
+        $response = $this->withSession($this->getAdminSession())
+            ->get('/admissions/stdstatusupdate');
+
+        $response->assertStatus(200);
+
+        $viewData = $response->original->getData();
+        $statusKeys = array_keys($viewData['statuses']);
+
+        $this->assertEquals(['ACTIVE', 'DISCONTINUED', 'GRADUATED'], $statusKeys);
+    }
+
+    public function test_stdstatusupdate_dropdown_renders_active_discontinued_graduated(): void
+    {
+        $response = $this->withSession($this->getAdminSession())
+            ->get('/admissions/stdstatusupdate?regno=261CC01014');
+
+        $response->assertStatus(200);
+        $response->assertSee('<option value="ACTIVE"', false);
+        $response->assertSee('<option value="DISCONTINUED"', false);
+        $response->assertSee('<option value="GRADUATED"', false);
+        $response->assertDontSee('Debarred');
+        $response->assertDontSee('Semester Break');
+        $response->assertDontSee('Fee Blocked');
+    }
 }
 

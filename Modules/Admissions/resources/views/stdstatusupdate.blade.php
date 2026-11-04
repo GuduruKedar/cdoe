@@ -77,7 +77,7 @@
             $normalizedCurrent = \Modules\Admissions\Http\Controllers\StudentStatusUpdateController::normalizeStatus($student->std_status);
             $meta = $statuses[$normalizedCurrent] ?? [
                 'label' => $normalizedCurrent,
-                'badge_class' => 'badge-status-admitted',
+                'badge_class' => 'badge-status-active',
                 'icon' => 'bi-check-circle-fill',
             ];
         @endphp
@@ -322,10 +322,10 @@
                     <tbody>
                         @foreach ($students as $idx => $item)
                             @php
-                                $itemStatus = \Modules\Admissions\Http\Controllers\StudentStatusUpdateController::normalizeStatus($item->std_status ?? 'Active / Admitted');
+                                $itemStatus = \Modules\Admissions\Http\Controllers\StudentStatusUpdateController::normalizeStatus($item->std_status ?? 'ACTIVE');
                                 $itemMeta = $statuses[$itemStatus] ?? [
                                     'label' => $itemStatus,
-                                    'badge_class' => 'badge-status-admitted',
+                                    'badge_class' => 'badge-status-active',
                                     'icon' => 'bi-check-circle-fill',
                                 ];
                                 $reg = $item->register_no ?: $item->application_no;
@@ -474,36 +474,27 @@
         color: var(--text-primary, #0f172a);
     }
 
-    /* Status Badges */
+    /* Status Badges for ACTIVE, DISCONTINUED, GRADUATED */
+    .badge-status-active,
     .badge-status-admitted {
         background: rgba(16, 185, 129, 0.12);
         color: #059669;
         border: 1px solid rgba(16, 185, 129, 0.25);
     }
-    .badge-status-debarred {
+    .badge-status-discontinued,
+    .badge-status-debarred,
+    .badge-status-suspended,
+    .badge-status-fee-blocked,
+    .badge-status-semester-break,
+    .badge-status-study-break {
         background: rgba(239, 68, 68, 0.12);
         color: #dc2626;
         border: 1px solid rgba(239, 68, 68, 0.25);
     }
-    .badge-status-suspended {
-        background: rgba(245, 158, 11, 0.12);
-        color: #d97706;
-        border: 1px solid rgba(245, 158, 11, 0.25);
-    }
-    .badge-status-semester-break {
-        background: rgba(6, 182, 212, 0.12);
-        color: #0891b2;
-        border: 1px solid rgba(6, 182, 212, 0.25);
-    }
-    .badge-status-study-break {
+    .badge-status-graduated {
         background: rgba(59, 130, 246, 0.12);
         color: #2563eb;
         border: 1px solid rgba(59, 130, 246, 0.25);
-    }
-    .badge-status-fee-blocked {
-        background: rgba(100, 116, 139, 0.12);
-        color: #475569;
-        border: 1px solid rgba(100, 116, 139, 0.25);
     }
 
     /* Update Action Box */
