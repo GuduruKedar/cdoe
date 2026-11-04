@@ -79,10 +79,9 @@
                         <i class="bi bi-mortarboard-fill me-1 text-primary"></i> Program (Filter 1)
                     </label>
                     <select name="program" class="form-select filter-select-custom" onchange="this.form.submit()">
-                        <option value="all">All Programs</option>
-                        @foreach($programs as $p)
-                            <option value="{{ $p->program_id }}" {{ (string)$program === (string)$p->program_id ? 'selected' : '' }}>
-                                {{ $p->program_short_name ?: $p->program_code }}
+                        @foreach($programOptions as $optValue => $optLabel)
+                            <option value="{{ $optValue }}" {{ (string)$program === (string)$optValue ? 'selected' : '' }}>
+                                {{ $optLabel }}
                             </option>
                         @endforeach
                     </select>
@@ -129,8 +128,6 @@
                 </div>
 
             </div>
-        </form>
-    </div>
         </form>
     </div>
 
@@ -298,7 +295,7 @@
                                 </td>
                                 <td>
                                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
-                                        {{ $row->program_short_name ?: 'N/A' }}
+                                        {{ $row->program_display_name ?? $row->program_short_name ?? 'N/A' }}
                                     </span>
                                 </td>
                                 <td class="small text-nowrap">
@@ -361,7 +358,7 @@
                                 </td>
                                 <td>
                                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
-                                        {{ $row->program_short_name ?: 'N/A' }}
+                                        {{ $row->program_display_name ?? $row->program_short_name ?? 'N/A' }}
                                     </span>
                                 </td>
                                 <td class="small text-nowrap">
@@ -405,7 +402,7 @@
                                 </td>
                                 <td>
                                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
-                                        {{ $row->program_short_name ?: 'N/A' }}
+                                        {{ $row->program_display_name ?? $row->program_short_name ?? 'N/A' }}
                                     </span>
                                 </td>
                                 <td class="small text-nowrap">

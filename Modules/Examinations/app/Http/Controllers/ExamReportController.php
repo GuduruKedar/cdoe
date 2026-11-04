@@ -44,6 +44,7 @@ class ExamReportController extends Controller
 
         // Distinct filter options
         $programs = Programs::orderBy('program_id')->get(['program_id', 'program_code', 'program_short_name']);
+        $programOptions = self::getProgramFilterOptions();
 
         $batches = StudentRegistration::whereNotNull('adm_batch_code')
             ->where('adm_batch_code', '!=', '')
@@ -107,7 +108,8 @@ class ExamReportController extends Controller
             'semesters',
             'examMonths',
             'records',
-            'counts'
+            'counts',
+            'programOptions'
         ));
     }
 
@@ -152,7 +154,7 @@ class ExamReportController extends Controller
                             $index++,
                             $r->regno ?? '',
                             $r->student_name ?? '',
-                            $r->program_short_name ?? '',
+                            $r->program_display_name ?? $r->program_short_name ?? '',
                             $r->batch ?? '',
                             $r->s_sem ? 'Semester '.$r->s_sem : '',
                             $r->subcode ?? '',
@@ -184,7 +186,7 @@ class ExamReportController extends Controller
                             $index++,
                             $r->regno ?? '',
                             $r->student_name ?? '',
-                            $r->program_short_name ?? '',
+                            $r->program_display_name ?? $r->program_short_name ?? '',
                             $r->batch ?? '',
                             $r->total_earned_marks ?? 0,
                             $r->total_max_marks ?? 0,
@@ -209,7 +211,7 @@ class ExamReportController extends Controller
                             $index++,
                             $r->regno ?? '',
                             $r->student_name ?? '',
-                            $r->program_short_name ?? '',
+                            $r->program_display_name ?? $r->program_short_name ?? '',
                             $r->batch ?? '',
                             $r->s_sem ? 'Semester '.$r->s_sem : '',
                             number_format((float) ($r->sgpa ?? 0), 2),
@@ -241,6 +243,7 @@ class ExamReportController extends Controller
             $query = DB::table('examinations.marks_cgpa as mc')
                 ->leftJoin('admissions.student_registrations as sr', 'mc.regno', '=', 'sr.register_no')
                 ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
+                ->leftJoin('master.electives as e', 'sr.electiveid', '=', 'e.elective_id')
                 ->leftJoin('academics.subjects as sub', 'mc.subcode', '=', 'sub.subcode')
                 ->where(function ($q) {
                     $q->where('mc.letter_grade', 'F')
@@ -252,6 +255,16 @@ class ExamReportController extends Controller
                     'sr.student_name',
                     'p.program_short_name',
                     'sr.progid',
+                    'sr.electiveid',
+                    'e.elective_short_name',
+                    DB::raw("CASE 
+                        WHEN sr.progid = 1 AND sr.electiveid = 107 THEN 'MBA — HRM'
+                        WHEN sr.progid = 1 AND sr.electiveid = 108 THEN 'MBA — FINANCE'
+                        WHEN sr.progid = 1 AND e.elective_short_name IS NOT NULL THEN 'MBA (' || e.elective_short_name || ')'
+                        WHEN sr.progid = 1 THEN 'MBA'
+                        WHEN p.program_short_name IS NOT NULL THEN p.program_short_name
+                        ELSE 'Online Degree'
+                    END as program_display_name"),
                     DB::raw('COALESCE(mc.batch, sr.adm_batch_code) as batch'),
                     'mc.s_sem',
                     'mc.s_year',
@@ -272,9 +285,7 @@ class ExamReportController extends Controller
                     'mc.smmno',
                 ]);
 
-            if (! empty($f['program']) && $f['program'] !== 'all') {
-                $query->where('sr.progid', (int) $f['program']);
-            }
+            $this->applyProgramFilter($query, $f['program'] ?? null);
             if (! empty($f['batch']) && $f['batch'] !== 'all') {
                 $query->where(function ($q) use ($f) {
                     $q->where('mc.batch', $f['batch'])
@@ -304,6 +315,7 @@ class ExamReportController extends Controller
             $query = DB::table('examinations.marks_cgpa as mc')
                 ->leftJoin('admissions.student_registrations as sr', 'mc.regno', '=', 'sr.register_no')
                 ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
+                ->leftJoin('master.electives as e', 'sr.electiveid', '=', 'e.elective_id')
                 ->where(function ($q) {
                     $q->whereNull('mc.division_name')
                         ->orWhere('mc.division_name', '!=', 'FAIL');
@@ -331,13 +343,33 @@ class ExamReportController extends Controller
                     'sr.student_name',
                     'p.program_short_name',
                     'sr.progid',
+                    'sr.electiveid',
+                    'e.elective_short_name',
                     DB::raw('COALESCE(mc.batch, sr.adm_batch_code)'),
+                    DB::raw("CASE 
+                        WHEN sr.progid = 1 AND sr.electiveid = 107 THEN 'MBA — HRM'
+                        WHEN sr.progid = 1 AND sr.electiveid = 108 THEN 'MBA — FINANCE'
+                        WHEN sr.progid = 1 AND e.elective_short_name IS NOT NULL THEN 'MBA (' || e.elective_short_name || ')'
+                        WHEN sr.progid = 1 THEN 'MBA'
+                        WHEN p.program_short_name IS NOT NULL THEN p.program_short_name
+                        ELSE 'Online Degree'
+                    END"),
                 ])
                 ->select([
                     'mc.regno',
                     'sr.student_name',
                     'p.program_short_name',
                     'sr.progid',
+                    'sr.electiveid',
+                    'e.elective_short_name',
+                    DB::raw("CASE 
+                        WHEN sr.progid = 1 AND sr.electiveid = 107 THEN 'MBA — HRM'
+                        WHEN sr.progid = 1 AND sr.electiveid = 108 THEN 'MBA — FINANCE'
+                        WHEN sr.progid = 1 AND e.elective_short_name IS NOT NULL THEN 'MBA (' || e.elective_short_name || ')'
+                        WHEN sr.progid = 1 THEN 'MBA'
+                        WHEN p.program_short_name IS NOT NULL THEN p.program_short_name
+                        ELSE 'Online Degree'
+                    END as program_display_name"),
                     DB::raw('COALESCE(mc.batch, sr.adm_batch_code) as batch'),
                     DB::raw("SUM(CASE WHEN mc.total_earned ~ '^[0-9]+(\\.[0-9]+)?$' THEN mc.total_earned::numeric ELSE 0 END) as total_earned_marks"),
                     DB::raw("SUM(CASE WHEN mc.total_conducted ~ '^[0-9]+(\\.[0-9]+)?$' THEN mc.total_conducted::numeric ELSE 0 END) as total_max_marks"),
@@ -352,9 +384,7 @@ class ExamReportController extends Controller
                 ])
                 ->havingRaw("SUM(CASE WHEN mc.total_earned ~ '^[0-9]+(\\.[0-9]+)?$' THEN mc.total_earned::numeric ELSE 0 END) > 0");
 
-            if (! empty($f['program']) && $f['program'] !== 'all') {
-                $query->where('sr.progid', (int) $f['program']);
-            }
+            $this->applyProgramFilter($query, $f['program'] ?? null);
             if (! empty($f['q'])) {
                 $search = $f['q'];
                 $query->where(function ($q) use ($search) {
@@ -370,23 +400,44 @@ class ExamReportController extends Controller
         $query = DB::table('examinations.marks_cgpa as mc')
             ->leftJoin('admissions.student_registrations as sr', 'mc.regno', '=', 'sr.register_no')
             ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
+            ->leftJoin('master.electives as e', 'sr.electiveid', '=', 'e.elective_id')
             ->groupBy([
                 'mc.regno',
                 'sr.student_name',
                 'p.program_short_name',
                 'sr.progid',
+                'sr.electiveid',
+                'e.elective_short_name',
                 DB::raw('COALESCE(mc.batch, sr.adm_batch_code)'),
                 'mc.s_sem',
                 'mc.s_year',
                 'mc.exam_mon_yyyy',
                 'mc.results_mon_yyyy',
                 'mc.division_name',
+                DB::raw("CASE 
+                    WHEN sr.progid = 1 AND sr.electiveid = 107 THEN 'MBA — HRM'
+                    WHEN sr.progid = 1 AND sr.electiveid = 108 THEN 'MBA — FINANCE'
+                    WHEN sr.progid = 1 AND e.elective_short_name IS NOT NULL THEN 'MBA (' || e.elective_short_name || ')'
+                    WHEN sr.progid = 1 THEN 'MBA'
+                    WHEN p.program_short_name IS NOT NULL THEN p.program_short_name
+                    ELSE 'Online Degree'
+                END"),
             ])
             ->select([
                 'mc.regno',
                 'sr.student_name',
                 'p.program_short_name',
                 'sr.progid',
+                'sr.electiveid',
+                'e.elective_short_name',
+                DB::raw("CASE 
+                    WHEN sr.progid = 1 AND sr.electiveid = 107 THEN 'MBA — HRM'
+                    WHEN sr.progid = 1 AND sr.electiveid = 108 THEN 'MBA — FINANCE'
+                    WHEN sr.progid = 1 AND e.elective_short_name IS NOT NULL THEN 'MBA (' || e.elective_short_name || ')'
+                    WHEN sr.progid = 1 THEN 'MBA'
+                    WHEN p.program_short_name IS NOT NULL THEN p.program_short_name
+                    ELSE 'Online Degree'
+                END as program_display_name"),
                 DB::raw('COALESCE(mc.batch, sr.adm_batch_code) as batch'),
                 'mc.s_sem',
                 'mc.s_year',
@@ -401,9 +452,7 @@ class ExamReportController extends Controller
                 DB::raw('MAX(mc.mmno) as mmno'),
             ]);
 
-        if (! empty($f['program']) && $f['program'] !== 'all') {
-            $query->where('sr.progid', (int) $f['program']);
-        }
+        $this->applyProgramFilter($query, $f['program'] ?? null);
         if (! empty($f['batch']) && $f['batch'] !== 'all') {
             $query->where(function ($q) use ($f) {
                 $q->where('mc.batch', $f['batch'])
@@ -433,11 +482,12 @@ class ExamReportController extends Controller
     private function getSummaryCounts(array $f): array
     {
         $base = DB::table('examinations.marks_cgpa as mc')
-            ->leftJoin('admissions.student_registrations as sr', 'mc.regno', '=', 'sr.register_no');
+            ->leftJoin('admissions.student_registrations as sr', 'mc.regno', '=', 'sr.register_no')
+            ->leftJoin('master.programs as p', 'sr.progid', '=', 'p.program_id')
+            ->leftJoin('master.electives as e', 'sr.electiveid', '=', 'e.elective_id');
 
-        if (! empty($f['program']) && $f['program'] !== 'all') {
-            $base->where('sr.progid', (int) $f['program']);
-        }
+        $this->applyProgramFilter($base, $f['program'] ?? null);
+
         if (! empty($f['batch']) && $f['batch'] !== 'all') {
             $base->where(function ($q) use ($f) {
                 $q->where('mc.batch', $f['batch'])
@@ -464,7 +514,7 @@ class ExamReportController extends Controller
             DB::raw('COUNT(DISTINCT mc.regno) as total_students'),
             DB::raw("COUNT(CASE WHEN mc.letter_grade = 'F' THEN 1 END) as total_failed_subjects"),
             DB::raw("COUNT(DISTINCT CASE WHEN mc.letter_grade = 'F' THEN mc.regno END) as students_with_backlogs"),
-            DB::raw("COUNT(DISTINCT CASE WHEN (mc.division_name IS NULL OR mc.division_name != 'FAIL') AND mc.sgpa_perc ~ '^[0-9]+(\\.[0-9]+)?$' AND mc.sgpa_perc::numeric >= 8.5 THEN mc.regno END) as total_toppers"),
+            DB::raw("COUNT(DISTINCT CASE WHEN (mc.division_name IS NULL OR mc.division_name != 'FAIL') AND mc.letter_grade != 'F' AND (mc.mm_type = 'REGULAR' OR mc.mm_type IS NULL) AND (mc.mm_type IS NULL OR mc.mm_type NOT ILIKE '%REAP%') THEN mc.regno END) as total_toppers"),
         ])->first();
 
         return [
@@ -473,5 +523,77 @@ class ExamReportController extends Controller
             'students_with_backlogs' => (int) ($rowStats->students_with_backlogs ?? 0),
             'toppers' => (int) ($rowStats->total_toppers ?? 0),
         ];
+    }
+
+    /**
+     * Supported program and specialization filter options.
+     */
+    public static function getProgramFilterOptions(): array
+    {
+        return [
+            'all' => 'All Programs',
+            'mba_hrm' => 'MBA — HRM',
+            'mba_finance' => 'MBA — FINANCE',
+            'mba_other' => 'MBA (all other MBA)',
+            'bca_all' => 'BCA (all)',
+            'bba_all' => 'BBA (all)',
+            'mca_all' => 'MCA (all)',
+        ];
+    }
+
+    /**
+     * Apply program and specialization / branch filtering.
+     * Joins: examinations.marks_cgpa -> admissions.student_registrations -> master.programs & master.electives.
+     */
+    private function applyProgramFilter($query, ?string $program): void
+    {
+        if (empty($program) || $program === 'all') {
+            return;
+        }
+
+        switch ($program) {
+            case 'mba_hrm':
+                $query->where('sr.progid', 1)
+                    ->where('sr.electiveid', 107);
+                break;
+
+            case 'mba_finance':
+                $query->where('sr.progid', 1)
+                    ->where('sr.electiveid', 108);
+                break;
+
+            case 'mba_other':
+                $query->where('sr.progid', 1)
+                    ->where(function ($q) {
+                        $q->whereNotIn('sr.electiveid', [107, 108])
+                            ->orWhereNull('sr.electiveid');
+                    });
+                break;
+
+            case 'bca_all':
+            case '4':
+                $query->where('sr.progid', 4);
+                break;
+
+            case 'bba_all':
+            case '3':
+                $query->where('sr.progid', 3);
+                break;
+
+            case 'mca_all':
+            case '2':
+                $query->where('sr.progid', 2);
+                break;
+
+            case '1':
+                $query->where('sr.progid', 1);
+                break;
+
+            default:
+                if (is_numeric($program)) {
+                    $query->where('sr.progid', (int) $program);
+                }
+                break;
+        }
     }
 }

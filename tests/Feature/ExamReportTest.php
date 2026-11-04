@@ -129,4 +129,41 @@ class ExamReportTest extends TestCase
         $this->assertStringContainsString('text/csv', (string) $response->headers->get('Content-Type'));
         $this->assertStringContainsString('exam_report_fail', (string) $response->headers->get('Content-Disposition'));
     }
+
+    public function test_exam_report_program_dropdown_has_specialization_options(): void
+    {
+        $response = $this->withSession($this->getAdminSession())
+            ->get('/examinations/examreport');
+
+        $response->assertStatus(200);
+        $response->assertSee('MBA — HRM');
+        $response->assertSee('MBA — FINANCE');
+        $response->assertSee('MBA (all other MBA)');
+        $response->assertSee('BCA (all)');
+        $response->assertSee('BBA (all)');
+        $response->assertSee('MCA (all)');
+    }
+
+    public function test_exam_report_filters_by_specializations(): void
+    {
+        // 1. MBA — HRM
+        $hrmResp = $this->withSession($this->getAdminSession())
+            ->get('/examinations/examreport?tab=toppers&program=mba_hrm');
+        $hrmResp->assertStatus(200);
+        $hrmResp->assertSee('MBA — HRM');
+        $hrmResp->assertSee('251DC01425'); // Top MBA - HRM student
+
+        // 2. MBA — FINANCE
+        $finResp = $this->withSession($this->getAdminSession())
+            ->get('/examinations/examreport?tab=toppers&program=mba_finance');
+        $finResp->assertStatus(200);
+        $finResp->assertSee('MBA — FINANCE');
+        $finResp->assertSee('251DC01278'); // Top MBA - Finance student
+
+        // 3. BCA (all)
+        $bcaResp = $this->withSession($this->getAdminSession())
+            ->get('/examinations/examreport?tab=toppers&program=bca_all');
+        $bcaResp->assertStatus(200);
+        $bcaResp->assertSee('251DJ01004'); // Top BCA student
+    }
 }
