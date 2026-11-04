@@ -23,6 +23,16 @@ class StudentDocument extends Model
         'log_timestamp' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function ($doc) {
+            if (empty($doc->doc_id)) {
+                $maxId = (int) (static::max('doc_id') ?? 100);
+                $doc->doc_id = $maxId + 1;
+            }
+        });
+    }
+
     public function student(): BelongsTo
     {
         return $this->belongsTo(StudentRegistration::class, 'application_no', 'application_no');

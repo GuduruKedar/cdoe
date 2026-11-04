@@ -148,7 +148,7 @@
                     <select id="docTypeSelect" class="form-select cdoe-select">
                         <option value="">-- Choose Document Type --</option>
                         <optgroup label="Core Academic & ID (Photo = JPG, Rest = PDF)">
-                            <option value="photo" data-ext="jpg,jpeg,png" data-isimage="1">Passport Photo (JPG / JPEG / PNG)</option>
+                            <option value="photo" data-ext="jpg,jpeg,png" data-isimage="1">Passport Size Photo (JPG / JPEG / PNG)</option>
                             <option value="10th" data-ext="pdf" data-isimage="0">10th / SSC Certificate (PDF)</option>
                             <option value="inter" data-ext="pdf" data-isimage="0">Intermediate / +2 Certificate (PDF)</option>
                             <option value="ug" data-ext="pdf" data-isimage="0">UG Degree / Marks Memo (PDF)</option>
@@ -168,13 +168,14 @@
                 </div>
 
                 <div class="col-lg-5 col-md-5">
-                    <label class="form-label fw-semibold small text-muted mb-1">CHOOSE FILE</label>
+                    <label class="form-label fw-semibold small text-muted mb-1">CHOOSE FILE(S)</label>
                     <input type="file"
                            id="fileInput"
                            class="form-control cdoe-form-control"
-                           accept=".jpg,.jpeg,.png,.pdf">
+                           accept=".jpg,.jpeg,.png,.pdf"
+                           multiple>
                     <div class="form-text small mt-1" id="fileHelpText">
-                        <i class="bi bi-info-circle me-1"></i> Select a document type first. Photos accept JPG/PNG; all other documents require PDF.
+                        <i class="bi bi-info-circle me-1"></i> Select a document type first. Photos accept JPG/PNG; all other documents require PDF. (Multiple files allowed)
                     </div>
                 </div>
 
@@ -188,29 +189,34 @@
 
             {{-- Staged Files Queue (Line by line preview) --}}
             <div class="border rounded-3 p-3 mb-3 queue-container">
-                <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
                     <span class="fw-bold" style="color: var(--text-primary); font-size: 14px;">
                         <i class="bi bi-list-check me-1 text-primary"></i> Preview Selected Files (Line by Line)
                     </span>
-                    <span class="badge bg-secondary rounded-pill" id="queueCountBadge">0 files staged</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-secondary rounded-pill" id="queueCountBadge">0 files staged</span>
+                    </div>
                 </div>
 
                 <div class="table-responsive">
                     <table class="table align-middle mb-0 cdoe-table" id="queueTable">
                         <thead>
                             <tr>
-                                <th style="width: 5%;">#</th>
-                                <th style="width: 15%;">Reg No</th>
-                                <th style="width: 20%;">Doc Type</th>
+                                <th style="width: 5%; text-align: center;">
+                                    <input type="checkbox" id="selectAllQueueCheckbox" class="form-check-input" checked title="Select All / Deselect All">
+                                </th>
+                                <th style="width: 4%;">#</th>
+                                <th style="width: 14%;">Reg No</th>
+                                <th style="width: 18%;">Doc Type</th>
                                 <th style="width: 25%;">File Name</th>
-                                <th style="width: 15%;">Preview</th>
+                                <th style="width: 14%;">Preview</th>
                                 <th style="width: 10%;">Size</th>
                                 <th style="width: 10%; text-align: center;">Action</th>
                             </tr>
                         </thead>
                         <tbody id="queueTableBody">
                             <tr id="emptyQueueRow">
-                                <td colspan="7" class="text-center py-4 text-muted">
+                                <td colspan="8" class="text-center py-4 text-muted">
                                     <i class="bi bi-cloud-arrow-up display-6 d-block mb-2 text-muted"></i>
                                     <span>No files staged yet. Select document type and file above, then click <strong>Add to Queue</strong>.</span>
                                 </td>
@@ -348,7 +354,7 @@
 
     // Document types definition
     const docTypesConfig = {
-        'photo': { label: 'Passport Photo', ext: ['jpg','jpeg','png','webp'], isImage: true },
+        'photo': { label: 'Passport Size Photo', ext: ['jpg','jpeg','png','webp'], isImage: true },
         '10th': { label: '10th / SSC Certificate', ext: ['pdf'], isImage: false },
         'inter': { label: 'Intermediate / +2 Certificate', ext: ['pdf'], isImage: false },
         'ug': { label: 'UG Degree / Marks Memo', ext: ['pdf'], isImage: false },
@@ -371,7 +377,7 @@
 
         if (val === 'photo') {
             fileInput.setAttribute('accept', '.jpg,.jpeg,.png,.webp');
-            helpText.innerHTML = '<span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i> Passport Photo selected: Acceptable formats are JPG, JPEG, PNG</span>';
+            helpText.innerHTML = '<span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i> Passport Size Photo selected: Acceptable formats are JPG, JPEG, PNG</span>';
         } else if (val) {
             fileInput.setAttribute('accept', '.pdf');
             helpText.innerHTML = '<span class="text-primary fw-semibold"><i class="bi bi-file-earmark-pdf-fill me-1"></i> ' + (docTypesConfig[val]?.label || val) + ' selected: Acceptable format is strictly PDF</span>';
@@ -560,42 +566,80 @@
         }
 
         if (!fileInput.files || fileInput.files.length === 0) {
-            alert('Please browse and select a file.');
+            alert('Please browse and select one or more files.');
             fileInput.focus();
             return;
         }
 
-        const file = fileInput.files[0];
-        const ext = file.name.split('.').pop().toLowerCase();
+        let addedCount = 0;
+        for (let i = 0; i < fileInput.files.length; i++) {
+            const file = fileInput.files[i];
+            const ext = file.name.split('.').pop().toLowerCase();
 
-        // Validation rule: photo must be jpg/jpeg/png/webp; else all pdf
-        if (docType === 'photo' && !['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
-            alert('Passport Photo must be in JPG, JPEG, or PNG format.');
-            return;
-        } else if (docType !== 'photo' && ext !== 'pdf') {
-            alert(`Document '${docTypesConfig[docType]?.label || docType}' must be in PDF format.`);
-            return;
+            // Validation rule: photo must be jpg/jpeg/png/webp; else all pdf
+            if (docType === 'photo' && !['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+                alert(`File '${file.name}' is not in JPG/JPEG/PNG format. Passport Size Photo must be in JPG, JPEG, or PNG format.`);
+                continue;
+            } else if (docType !== 'photo' && ext !== 'pdf') {
+                alert(`File '${file.name}' is not in PDF format. Document '${docTypesConfig[docType]?.label || docType}' must be in PDF format.`);
+                continue;
+            }
+
+            // Add to queue array
+            const queueItem = {
+                id: 'queue_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5) + '_' + i,
+                application_no: currentAppNo,
+                register_no: currentRegNo,
+                doctype: docType,
+                doctypename: docTypesConfig[docType]?.label || docType,
+                file: file,
+                filename: file.name,
+                filesize: (file.size / 1024).toFixed(1) + ' KB',
+                isImage: docType === 'photo',
+                objectUrl: docType === 'photo' ? URL.createObjectURL(file) : null,
+                selected: true
+            };
+
+            fileQueue.push(queueItem);
+            addedCount++;
         }
 
-        // Add to queue array
-        const queueItem = {
-            id: 'queue_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-            application_no: currentAppNo,
-            register_no: currentRegNo,
-            doctype: docType,
-            doctypename: docTypesConfig[docType]?.label || docType,
-            file: file,
-            filename: file.name,
-            filesize: (file.size / 1024).toFixed(1) + ' KB',
-            isImage: docType === 'photo',
-            objectUrl: docType === 'photo' ? URL.createObjectURL(file) : null
-        };
+        if (addedCount > 0) {
+            renderQueue();
+            fileInput.value = '';
+        }
+    });
 
-        fileQueue.push(queueItem);
-        renderQueue();
+    window.toggleQueueItemSelection = function(id, isChecked) {
+        const item = fileQueue.find(i => i.id === id);
+        if (item) {
+            item.selected = isChecked;
+        }
+        updateQueueSelectionState();
+    };
 
-        // Reset file input
-        fileInput.value = '';
+    function updateQueueSelectionState() {
+        const selectedCount = fileQueue.filter(i => i.selected !== false).length;
+        const countSpan = document.getElementById('queueUploadCount');
+        const badge = document.getElementById('queueCountBadge');
+        const selectAllCb = document.getElementById('selectAllQueueCheckbox');
+        const uploadBtn = document.getElementById('uploadAllQueueBtn');
+
+        if (countSpan) countSpan.textContent = selectedCount;
+        if (badge) badge.textContent = `${fileQueue.length} file(s) staged (${selectedCount} selected)`;
+        if (uploadBtn) uploadBtn.disabled = (selectedCount === 0);
+
+        if (selectAllCb) {
+            selectAllCb.checked = (fileQueue.length > 0 && selectedCount === fileQueue.length);
+            selectAllCb.indeterminate = (selectedCount > 0 && selectedCount < fileQueue.length);
+        }
+    }
+
+    document.getElementById('selectAllQueueCheckbox')?.addEventListener('change', function() {
+        const isChecked = this.checked;
+        fileQueue.forEach(item => { item.selected = isChecked; });
+        document.querySelectorAll('.queue-item-checkbox').forEach(cb => { cb.checked = isChecked; });
+        updateQueueSelectionState();
     });
 
     function renderQueue() {
@@ -603,11 +647,12 @@
         const badge = document.getElementById('queueCountBadge');
         const countSpan = document.getElementById('queueUploadCount');
         const actionBar = document.getElementById('queueActionBar');
+        const selectAllCb = document.getElementById('selectAllQueueCheckbox');
 
         if (fileQueue.length === 0) {
             tbody.innerHTML = `
                 <tr id="emptyQueueRow">
-                    <td colspan="7" class="text-center py-4 text-muted">
+                    <td colspan="8" class="text-center py-4 text-muted">
                         <i class="bi bi-cloud-arrow-up display-6 d-block mb-2 text-muted"></i>
                         <span>No files staged yet. Select document type and file above, then click <strong>Add to Queue</strong>.</span>
                     </td>
@@ -616,19 +661,32 @@
             badge.textContent = '0 files staged';
             badge.className = 'badge bg-secondary rounded-pill';
             actionBar.style.setProperty('display', 'none', 'important');
+            if (selectAllCb) {
+                selectAllCb.checked = false;
+                selectAllCb.indeterminate = false;
+            }
             return;
         }
 
-        badge.textContent = `${fileQueue.length} files staged`;
+        const selectedCount = fileQueue.filter(i => i.selected !== false).length;
+        badge.textContent = `${fileQueue.length} file(s) staged (${selectedCount} selected)`;
         badge.className = 'badge bg-primary rounded-pill';
-        countSpan.textContent = fileQueue.length;
+        countSpan.textContent = selectedCount;
         actionBar.style.setProperty('display', 'flex', 'important');
+
+        if (selectAllCb) {
+            selectAllCb.checked = (selectedCount === fileQueue.length);
+            selectAllCb.indeterminate = (selectedCount > 0 && selectedCount < fileQueue.length);
+        }
 
         tbody.innerHTML = '';
         fileQueue.forEach((item, idx) => {
             const tr = document.createElement('tr');
             tr.id = item.id;
             tr.innerHTML = `
+                <td class="text-center">
+                    <input type="checkbox" class="form-check-input queue-item-checkbox" data-id="${item.id}" ${item.selected !== false ? 'checked' : ''} onchange="toggleQueueItemSelection('${item.id}', this.checked)" title="Select this document">
+                </td>
                 <td class="fw-bold text-muted">${idx + 1}</td>
                 <td><span class="badge bg-secondary-subtle text-secondary font-monospace">${item.register_no}</span></td>
                 <td><span class="badge ${item.isImage ? 'bg-primary' : 'bg-info text-dark'}">${item.doctypename}</span></td>
@@ -653,6 +711,8 @@
             `;
             tbody.appendChild(tr);
         });
+
+        updateQueueSelectionState();
     }
 
     function removeFromQueue(id) {
@@ -669,18 +729,23 @@
 
     // Upload All Queued Files
     document.getElementById('uploadAllQueueBtn').addEventListener('click', async function() {
-        if (fileQueue.length === 0) return;
+        const itemsToUpload = fileQueue.filter(item => item.selected !== false);
+        if (itemsToUpload.length === 0) {
+            alert('Please select at least one document to upload (or check "Select All").');
+            return;
+        }
 
         const btn = this;
         const originalHtml = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Uploading line by line...';
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span> Uploading ${itemsToUpload.length} document(s)...`;
 
         let successCount = 0;
         let failCount = 0;
+        const successfulIds = [];
 
-        for (let i = 0; i < fileQueue.length; i++) {
-            const item = fileQueue[i];
+        for (let i = 0; i < itemsToUpload.length; i++) {
+            const item = itemsToUpload[i];
             const formData = new FormData();
             formData.append('application_no', item.application_no);
             formData.append('register_no', item.register_no);
@@ -691,34 +756,42 @@
                 const response = await fetch("{{ route('admissions.docupload.upload') }}", {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
                     },
                     body: formData
                 });
                 const resData = await response.json();
                 if (resData.success) {
                     successCount++;
+                    successfulIds.push(item.id);
                 } else {
                     failCount++;
                     alert(`Error uploading ${item.filename}: ${resData.message}`);
                 }
             } catch (err) {
                 failCount++;
-                console.error(err);
+                console.error('Upload error for ' + item.filename, err);
+                alert(`Network or server error uploading ${item.filename}. Please try again.`);
             }
         }
 
         btn.disabled = false;
         btn.innerHTML = originalHtml;
 
-        fileQueue = [];
+        // Keep only failed / unselected items in queue
+        fileQueue = fileQueue.filter(item => !successfulIds.includes(item.id));
         renderQueue();
 
         if (currentAppNo) {
             loadStudentDocuments(currentAppNo);
         }
 
-        alert(`Upload complete! Successfully uploaded ${successCount} document(s).` + (failCount > 0 ? ` (${failCount} failed)` : ''));
+        if (failCount === 0) {
+            alert(`Upload complete! Successfully uploaded ${successCount} document(s).`);
+        } else {
+            alert(`Upload complete! Successfully uploaded ${successCount} document(s). (${failCount} failed, remaining in queue for retry)`);
+        }
     });
 
     // Delete existing document

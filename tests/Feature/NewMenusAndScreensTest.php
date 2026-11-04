@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Common\Services\MenuService;
 use App\Common\Services\RoleService;
 use Illuminate\Http\UploadedFile;
+use Modules\Admissions\Models\StudentRegistration;
 use Tests\TestCase;
 
 class NewMenusAndScreensTest extends TestCase
@@ -63,7 +64,7 @@ class NewMenusAndScreensTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Student Document');
         $response->assertSee('Upload');
-        $response->assertSee('Passport Photo');
+        $response->assertSee('Passport Size Photo');
         $response->assertSee('10th / SSC Certificate');
     }
 
@@ -212,13 +213,17 @@ class NewMenusAndScreensTest extends TestCase
 
     public function test_document_upload_validation(): void
     {
+        $student = StudentRegistration::first();
+        $appNo = $student ? $student->application_no : 20260110001;
+        $regNo = $student ? $student->register_no : '261CC01001';
+
         // Try uploading jpg for a pdf requirement
         $file = UploadedFile::fake()->create('marksheet.jpg', 100, 'image/jpeg');
 
         $response = $this->withSession($this->getAdminSession())
             ->postJson('/admissions/docupload/upload', [
-                'application_no' => 2026010001,
-                'register_no' => '261CC01001',
+                'application_no' => $appNo,
+                'register_no' => $regNo,
                 'doctype' => '10th',
                 'file' => $file,
             ]);

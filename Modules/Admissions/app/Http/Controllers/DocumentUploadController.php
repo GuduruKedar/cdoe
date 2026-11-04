@@ -8,6 +8,7 @@ use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Modules\Admissions\Models\Programs;
@@ -33,7 +34,7 @@ class DocumentUploadController extends Controller
         $isStudent = ($userType === 1);
 
         $docTypes = [
-            'photo' => 'Student Photograph (Passport Size)',
+            'photo' => 'Passport Size Photo',
             'ssc' => 'SSC / 10th Class Marks Memo',
             'inter' => 'Intermediate / +2 / Diploma Certificate',
             'ug' => 'Undergraduate (UG) Degree Certificate & Consolidated Memo',
@@ -226,7 +227,7 @@ class DocumentUploadController extends Controller
             if (! in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Photo must be in JPG/JPEG/PNG format.',
+                    'message' => 'Passport Size Photo must be in JPG/JPEG/PNG format.',
                 ], 422);
             }
         } else {
@@ -252,44 +253,58 @@ class DocumentUploadController extends Controller
         $userCode = session('user.usercode', $user->usercode ?? 'SYSTEM');
         $ip = $request->ip();
 
-        $doc = StudentDocument::create([
-            'application_no' => (string) $appNo,
-            'register_no' => $regNo,
-            'docno' => $docNo,
-            'docname' => $file->getClientOriginalName(),
-            'doctype' => $docType,
-            'docfile' => $storedPath,
-            'lock_status' => 0,
-            'log_userid' => $userCode,
-            'log_ipaddress' => $ip,
-            'log_timestamp' => now(),
-        ]);
-
-        $insertedId = $doc->doc_id;
-
-        ActivityLogger::log('ADMISSION', 'DOC_UPLOAD', "Uploaded {$docType} for student {$regNo} (App: {$appNo})", [
-            'application_no' => $appNo,
-            'register_no' => $regNo,
-            'doctype' => $docType,
-            'doc_id' => $insertedId,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => "Document '{$docType}' uploaded successfully.",
-            'document' => [
-                'doc_id' => $insertedId,
-                'application_no' => $appNo,
+        try {
+            $doc = StudentDocument::create([
+                'application_no' => (string) $appNo,
                 'register_no' => $regNo,
                 'docno' => $docNo,
                 'docname' => $file->getClientOriginalName(),
                 'doctype' => $docType,
                 'docfile' => $storedPath,
-                'file_url' => asset('storage/'.$storedPath),
-                'is_image' => in_array($docType, ['photo', 'avatar', 'image'], true),
-                'log_timestamp' => now()->format('Y-m-d H:i:s'),
-            ],
-        ]);
+                'lock_status' => 0,
+                'log_userid' => $userCode,
+                'log_ipaddress' => $ip,
+                'log_timestamp' => now(),
+            ]);
+
+            $insertedId = $doc->doc_id;
+
+            ActivityLogger::log('ADMISSION', 'DOC_UPLOAD', "Uploaded {$docType} for student {$regNo} (App: {$appNo})", [
+                'application_no' => $appNo,
+                'register_no' => $regNo,
+                'doctype' => $docType,
+                'doc_id' => $insertedId,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Document '{$docType}' uploaded successfully.",
+                'document' => [
+                    'doc_id' => $insertedId,
+                    'application_no' => $appNo,
+                    'register_no' => $regNo,
+                    'docno' => $docNo,
+                    'docname' => $file->getClientOriginalName(),
+                    'doctype' => $docType,
+                    'docfile' => $storedPath,
+                    'file_url' => asset('storage/'.$storedPath),
+                    'is_image' => in_array($docType, ['photo', 'avatar', 'image'], true),
+                    'log_timestamp' => now()->format('Y-m-d H:i:s'),
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Document upload failure: '.$e->getMessage(), [
+                'exception' => $e,
+                'application_no' => $appNo,
+                'register_no' => $regNo,
+                'doctype' => $docType,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save document in database: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

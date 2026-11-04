@@ -80,6 +80,9 @@ Route::middleware(['web'])->group(function () {
     Route::get('admissions/admdataupload', [AdmissionDataUploadController::class, 'index']);
     Route::post('admissions/admdataupload', [AdmissionDataUploadController::class, 'upload']);
     Route::get('admissions/docuploadsd', [DocumentUploadController::class, 'index']);
+    Route::post('admissions/docuploadsd/upload', [DocumentUploadController::class, 'upload']);
+    Route::get('admissions/docuploadsd/student-documents', [DocumentUploadController::class, 'getStudentDocuments']);
+    Route::get('admissions/docuploadsd/student-lookup', [DocumentUploadController::class, 'lookupStudent']);
     Route::get('admissions/docdownloadsd', [DocumentViewController::class, 'index']);
     Route::get('admissions/addatauplaodsd', [AdmissionDataUploadController::class, 'index']);
     Route::post('admissions/addatauplaodsd', [AdmissionDataUploadController::class, 'upload']);
