@@ -71,10 +71,10 @@ class ExamReportController extends Controller
             ->orderBy('exam_mon_yyyy')
             ->pluck('exam_mon_yyyy');
 
-        // Build query based on active tab (Batch, Semester, Exam Month removed across all reports)
+        // Build query based on active tab
         $filters = [
             'program' => $program,
-            'batch' => 'all',
+            'batch' => $batch,
             'sem' => 'all',
             'exam_mon' => 'all',
             'q' => $q,
@@ -87,7 +87,7 @@ class ExamReportController extends Controller
         // Summary counts for quick stats
         $counts = $this->getSummaryCounts([
             'program' => $program,
-            'batch' => 'all',
+            'batch' => $batch,
             'sem' => 'all',
             'exam_mon' => 'all',
             'q' => $q,
@@ -127,7 +127,7 @@ class ExamReportController extends Controller
 
         $filters = [
             'program' => $request->input('program', 'all'),
-            'batch' => 'all',
+            'batch' => $request->input('batch', 'all'),
             'sem' => 'all',
             'exam_mon' => 'all',
             'q' => trim((string) $request->input('q', '')),
@@ -265,7 +265,7 @@ class ExamReportController extends Controller
                         WHEN p.program_short_name IS NOT NULL THEN p.program_short_name
                         ELSE 'Online Degree'
                     END as program_display_name"),
-                    DB::raw('COALESCE(mc.batch, sr.adm_batch_code) as batch'),
+                    DB::raw('COALESCE(NULLIF(mc.batch, \'\'), sr.adm_batch_code) as batch'),
                     'mc.s_sem',
                     'mc.s_year',
                     'mc.subcode',
@@ -345,7 +345,7 @@ class ExamReportController extends Controller
                     'sr.progid',
                     'sr.electiveid',
                     'e.elective_short_name',
-                    DB::raw('COALESCE(mc.batch, sr.adm_batch_code)'),
+                    DB::raw('COALESCE(NULLIF(mc.batch, \'\'), sr.adm_batch_code)'),
                     DB::raw("CASE 
                         WHEN sr.progid = 1 AND sr.electiveid = 107 THEN 'MBA — HRM'
                         WHEN sr.progid = 1 AND sr.electiveid = 108 THEN 'MBA — FINANCE'
@@ -370,7 +370,7 @@ class ExamReportController extends Controller
                         WHEN p.program_short_name IS NOT NULL THEN p.program_short_name
                         ELSE 'Online Degree'
                     END as program_display_name"),
-                    DB::raw('COALESCE(mc.batch, sr.adm_batch_code) as batch'),
+                    DB::raw('COALESCE(NULLIF(mc.batch, \'\'), sr.adm_batch_code) as batch'),
                     DB::raw("SUM(CASE WHEN mc.total_earned ~ '^[0-9]+(\\.[0-9]+)?$' THEN mc.total_earned::numeric ELSE 0 END) as total_earned_marks"),
                     DB::raw("SUM(CASE WHEN mc.total_conducted ~ '^[0-9]+(\\.[0-9]+)?$' THEN mc.total_conducted::numeric ELSE 0 END) as total_max_marks"),
                     DB::raw("SUM(CASE WHEN mc.fa_earned ~ '^[0-9]+(\\.[0-9]+)?$' THEN mc.fa_earned::numeric ELSE 0 END) as total_fa_earned"),
@@ -385,6 +385,12 @@ class ExamReportController extends Controller
                 ->havingRaw("SUM(CASE WHEN mc.total_earned ~ '^[0-9]+(\\.[0-9]+)?$' THEN mc.total_earned::numeric ELSE 0 END) > 0");
 
             $this->applyProgramFilter($query, $f['program'] ?? null);
+            if (! empty($f['batch']) && $f['batch'] !== 'all') {
+                $query->where(function ($q) use ($f) {
+                    $q->where('mc.batch', $f['batch'])
+                        ->orWhere('sr.adm_batch_code', $f['batch']);
+                });
+            }
             if (! empty($f['q'])) {
                 $search = $f['q'];
                 $query->where(function ($q) use ($search) {
@@ -408,7 +414,7 @@ class ExamReportController extends Controller
                 'sr.progid',
                 'sr.electiveid',
                 'e.elective_short_name',
-                DB::raw('COALESCE(mc.batch, sr.adm_batch_code)'),
+                DB::raw('COALESCE(NULLIF(mc.batch, \'\'), sr.adm_batch_code)'),
                 'mc.s_sem',
                 'mc.s_year',
                 'mc.exam_mon_yyyy',
@@ -438,7 +444,7 @@ class ExamReportController extends Controller
                     WHEN p.program_short_name IS NOT NULL THEN p.program_short_name
                     ELSE 'Online Degree'
                 END as program_display_name"),
-                DB::raw('COALESCE(mc.batch, sr.adm_batch_code) as batch'),
+                DB::raw('COALESCE(NULLIF(mc.batch, \'\'), sr.adm_batch_code) as batch'),
                 'mc.s_sem',
                 'mc.s_year',
                 'mc.exam_mon_yyyy',

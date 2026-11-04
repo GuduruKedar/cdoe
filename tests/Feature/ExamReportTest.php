@@ -38,9 +38,9 @@ class ExamReportTest extends TestCase
         $response->assertSee('Toppers');
         $response->assertSee('CGPA Report');
         $response->assertSee('Program (Filter 1)');
+        $response->assertSee('Batch (Filter 2)');
+        $response->assertSee('All Batches');
         $response->assertSee('Search');
-        $response->assertDontSee('Batch (Filter 2)');
-        $response->assertDontSee('All Batches');
         $response->assertDontSee('Semester (Filter 3)');
         $response->assertDontSee('All Semesters');
         $response->assertDontSee('All Exam Months');
@@ -58,9 +58,9 @@ class ExamReportTest extends TestCase
         $response->assertSee('Internal (FA)');
         $response->assertSee('External (SA)');
         $response->assertSee('Program (Filter 1)');
+        $response->assertSee('Batch (Filter 2)');
+        $response->assertSee('All Batches');
         $response->assertSee('Search');
-        $response->assertDontSee('Batch (Filter 2)');
-        $response->assertDontSee('All Batches');
         $response->assertDontSee('Semester (Filter 3)');
         $response->assertDontSee('All Semesters');
         $response->assertDontSee('All Exam Months');
@@ -76,7 +76,7 @@ class ExamReportTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Total Earned Marks');
         $response->assertSee('Program (Filter 1)');
-        $response->assertDontSee('Batch (Filter 2)');
+        $response->assertSee('Batch (Filter 2)');
     }
 
     public function test_exam_report_toppers_excludes_reappear(): void
@@ -110,14 +110,27 @@ class ExamReportTest extends TestCase
         $response->assertSee('CGPA Report');
         $response->assertSee('Backlogs');
         $response->assertSee('Program (Filter 1)');
+        $response->assertSee('Batch (Filter 2)');
+        $response->assertSee('All Batches');
         $response->assertSee('Search');
-        $response->assertDontSee('Batch (Filter 2)');
-        $response->assertDontSee('All Batches');
         $response->assertDontSee('Semester (Filter 3)');
         $response->assertDontSee('All Semesters');
         $response->assertDontSee('All Exam Months');
         $response->assertSee('CSV');
         $response->assertSee('PDF');
+    }
+
+    public function test_exam_report_toppers_january_2026_batch_example(): void
+    {
+        $response = $this->withSession($this->getAdminSession())
+            ->get('/examinations/examreport?tab=toppers&batch=JANUARY_2026');
+
+        $response->assertStatus(200);
+        // User reference example: 261CC01224 (473 marks) Rank 1, 261CC01469 (472 marks) Rank 2
+        $response->assertSee('261CC01224');
+        $response->assertSee('473');
+        $response->assertSee('261CC01469');
+        $response->assertSee('472');
     }
 
     public function test_exam_report_csv_export_streams_csv(): void

@@ -74,7 +74,7 @@
             <div class="row g-2 align-items-end">
 
                 {{-- Filter 1: Program (Filter 1) --}}
-                <div class="col-xl-4 col-lg-4 col-md-5 col-sm-12">
+                <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12">
                     <label class="filter-field-label">
                         <i class="bi bi-mortarboard-fill me-1 text-primary"></i> Program (Filter 1)
                     </label>
@@ -87,8 +87,23 @@
                     </select>
                 </div>
 
+                {{-- Filter 2: Batch (Filter 2) --}}
+                <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12">
+                    <label class="filter-field-label">
+                        <i class="bi bi-calendar3 me-1 text-primary"></i> Batch (Filter 2)
+                    </label>
+                    <select name="batch" class="form-select filter-select-custom" onchange="this.form.submit()">
+                        <option value="all">All Batches</option>
+                        @foreach($batches as $b)
+                            <option value="{{ $b }}" {{ (string)$batch === (string)$b ? 'selected' : '' }}>
+                                {{ str_replace('_', ' ', $b) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 {{-- Search (for all reports) --}}
-                <div class="col-xl-5 col-lg-5 col-md-7 col-sm-12">
+                <div class="col-xl-4 col-lg-4 col-md-8 col-sm-12">
                     <label class="filter-field-label">
                         <i class="bi bi-search me-1 text-primary"></i> Search
                     </label>
@@ -101,7 +116,7 @@
                         <button class="btn btn-primary px-3" type="submit" title="Apply Search">
                             <i class="bi bi-search"></i> Filter
                         </button>
-                        @if($program !== 'all' || !empty($q))
+                        @if($program !== 'all' || $batch !== 'all' || !empty($q))
                             <a href="{{ route('examinations.examreport', ['tab' => $tab, 'per_page' => $perPage]) }}"
                                class="btn btn-outline-secondary"
                                title="Reset Filters">
@@ -112,7 +127,7 @@
                 </div>
 
                 {{-- Export Buttons (CSV and PDF) --}}
-                <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12 d-flex align-items-center justify-content-md-end gap-2 mt-2 mt-md-0">
+                <div class="col-xl-2 col-lg-2 col-md-4 col-sm-12 d-flex align-items-center justify-content-md-end gap-2 mt-2 mt-md-0">
                     <a href="{{ route('examinations.examreport.export_csv', request()->query()) }}"
                        class="btn-export-sketch btn-export-csv"
                        title="Download CSV Spreadsheet">
