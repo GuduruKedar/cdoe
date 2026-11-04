@@ -84,5 +84,18 @@ class StudentStatusUpdatePaginationTest extends TestCase
         $response->assertDontSee('Semester Break');
         $response->assertDontSee('Fee Blocked');
     }
+
+    public function test_stdstatusupdate_renders_updated_batch_for_bhanuprasad(): void
+    {
+        $response = $this->withSession($this->getAdminSession())
+            ->get('/admissions/stdstatusupdate?regno=261BHANU99');
+
+        $response->assertStatus(200);
+        $response->assertSee('Y.BHANUPRASAD');
+        $response->assertSee('261BHANU99');
+        $response->assertSee('Batch:');
+        $response->assertSee('JANUARY_2025');
+        $response->assertDontSee('JANUARY_2026');
+    }
 }
 
