@@ -6,6 +6,7 @@ use App\Common\Services\MenuService;
 use App\Common\Traits\RequiresLogin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\Academics\Models\CourseRegistration;
 use Modules\Admissions\Models\StudentRegistration;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -75,7 +76,7 @@ class CourseRegistrationDownloadController extends Controller
 
         // Build query joined with student name for richness
         $query = CourseRegistration::from("{$crTable} as cr")
-            ->leftJoin("{$srTable} as sr", 'cr.appno', '=', 'sr.application_no')
+            ->leftJoin("{$srTable} as sr", DB::raw('cr.appno::text'), '=', 'sr.application_no')
             ->select(
                 'cr.semcode',
                 'cr.classno',
@@ -168,7 +169,7 @@ class CourseRegistrationDownloadController extends Controller
         $srTable = (new StudentRegistration)->getTable();
 
         $query = CourseRegistration::from("{$crTable} as cr")
-            ->leftJoin("{$srTable} as sr", 'cr.appno', '=', 'sr.application_no')
+            ->leftJoin("{$srTable} as sr", DB::raw('cr.appno::text'), '=', 'sr.application_no')
             ->select(
                 'cr.semcode',
                 'cr.classno',

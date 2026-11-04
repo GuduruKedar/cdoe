@@ -132,6 +132,38 @@ class StudentStatusUpdateController extends Controller
         // Get past searched students history (limit 10)
         $searchedHistory = $this->getSearchHistory();
 
+        // Paginated student records (default: 10 per page, editable box bounded by max count)
+        $studentsQuery = StudentRegistration::with('program')
+            ->whereNotNull('register_no')
+            ->where('register_no', '!=', '');
+
+        $tableSearch = trim((string) $request->input('table_search', ''));
+        if ($tableSearch !== '') {
+            $studentsQuery->where(function ($q) use ($tableSearch) {
+                $q->where('register_no', 'ILIKE', "%{$tableSearch}%")
+                    ->orWhere('application_no', 'ILIKE', "%{$tableSearch}%")
+                    ->orWhere('student_name', 'ILIKE', "%{$tableSearch}%")
+                    ->orWhere('mobile', 'ILIKE', "%{$tableSearch}%")
+                    ->orWhere('personal_email', 'ILIKE', "%{$tableSearch}%");
+            });
+        }
+
+        $totalMatchingCount = (clone $studentsQuery)->count();
+        $defaultPerPage = 10;
+        $maxAllowed = max(1, $totalMatchingCount);
+
+        $perPageInput = $request->query('per_page');
+        if ($perPageInput !== null && $perPageInput !== '') {
+            $requested = (int) $perPageInput;
+            $perPage = max(1, min($requested, $maxAllowed));
+        } else {
+            $perPage = $defaultPerPage;
+        }
+
+        $students = $studentsQuery->orderBy('application_no', 'desc')
+            ->paginate($perPage)
+            ->withQueryString();
+
         return view('admissions::stdstatusupdate', [
             'user' => $user,
             'menus' => $menus,
@@ -140,6 +172,11 @@ class StudentStatusUpdateController extends Controller
             'studentNotFound' => $studentNotFound,
             'statuses' => $this->statuses,
             'searchedHistory' => $searchedHistory,
+            'students' => $students,
+            'perPage' => $perPage,
+            'maxAllowed' => $maxAllowed,
+            'defaultPerPage' => $defaultPerPage,
+            'tableSearch' => $tableSearch,
         ]);
     }
 
@@ -201,8 +238,19 @@ class StudentStatusUpdateController extends Controller
 
         $lookupKey = $student->register_no ?: $student->application_no;
 
+        $redirectParams = ['regno' => $lookupKey];
+        if ($request->filled('per_page')) {
+            $redirectParams['per_page'] = $request->input('per_page');
+        }
+        if ($request->filled('page')) {
+            $redirectParams['page'] = $request->input('page');
+        }
+        if ($request->filled('table_search')) {
+            $redirectParams['table_search'] = $request->input('table_search');
+        }
+
         return redirect()
-            ->route('admissions.stdstatusupdate', ['regno' => $lookupKey])
+            ->route('admissions.stdstatusupdate', $redirectParams)
             ->with('success', "Status successfully updated to '{$normalizedStatus}' for {$student->student_name} ({$lookupKey}).");
     }
 

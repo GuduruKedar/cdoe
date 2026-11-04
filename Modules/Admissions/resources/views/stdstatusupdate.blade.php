@@ -166,6 +166,11 @@
                 <form action="{{ route('admissions.stdstatusupdate.update') }}" method="POST" id="statusUpdateForm">
                     @csrf
                     <input type="hidden" name="application_no" value="{{ $student->application_no }}">
+                    <input type="hidden" name="per_page" value="{{ $perPage }}">
+                    <input type="hidden" name="page" value="{{ request('page', 1) }}">
+                    @if (request()->filled('table_search'))
+                        <input type="hidden" name="table_search" value="{{ request('table_search') }}">
+                    @endif
 
                     <div class="row g-3 align-items-end">
                         {{-- Dropdown --}}
@@ -208,18 +213,99 @@
         </div>
     @endif
 
-    {{-- ================= 2. HISTORY OF PAST 10 SEARCHED STUDENTS ================= --}}
+    {{-- ================= 2. STUDENT STATUS RECORDS (PAGINATED) ================= --}}
     <div class="history-card p-3 rounded-3 border shadow-sm">
-        <div class="d-flex align-items-center justify-content-between mb-2.5 flex-wrap gap-2">
-            <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 14px;">
-                <i class="bi bi-clock-history text-primary"></i> History of Past 10 Searched Students
-            </h6>
-            <span class="badge bg-light text-muted border px-2 py-1 small">
-                Showing {{ count($searchedHistory) }} Records
-            </span>
+        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 14px;">
+                    <i class="bi bi-people-fill text-primary"></i> Student Status Records
+                </h6>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 small fw-semibold">
+                    Total: {{ number_format($students->total()) }} Records
+                </span>
+            </div>
+
+            <div class="d-flex align-items-center gap-2.5 flex-wrap">
+                {{-- Quick Table Filter Search --}}
+                <form action="{{ route('admissions.stdstatusupdate') }}" method="GET" class="d-inline-flex align-items-center m-0">
+                    @if (request()->filled('regno'))
+                        <input type="hidden" name="regno" value="{{ request('regno') }}">
+                    @endif
+                    <input type="hidden" name="per_page" value="{{ $perPage }}">
+                    <div class="input-group input-group-sm" style="width: 230px;">
+                        <input
+                            type="text"
+                            name="table_search"
+                            class="form-control"
+                            placeholder="Filter table..."
+                            value="{{ $tableSearch }}"
+                            style="font-size: 12.5px;">
+                        @if ($tableSearch)
+                            <a href="{{ route('admissions.stdstatusupdate', array_merge(request()->except(['table_search', 'page']), ['per_page' => $perPage])) }}" class="btn btn-outline-secondary" title="Clear filter">
+                                <i class="bi bi-x"></i>
+                            </a>
+                        @endif
+                        <button class="btn btn-outline-secondary" type="submit" title="Filter list">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                {{-- Editable Per-Page Input Box (Cannot exceed max) --}}
+                <form id="perPageForm" action="{{ route('admissions.stdstatusupdate') }}" method="GET" class="d-inline-flex align-items-center m-0">
+                    @if (request()->filled('regno'))
+                        <input type="hidden" name="regno" value="{{ request('regno') }}">
+                    @endif
+                    @if (request()->filled('table_search'))
+                        <input type="hidden" name="table_search" value="{{ request('table_search') }}">
+                    @endif
+                    <div class="per-page-badge d-inline-flex align-items-center gap-1.5 py-1 px-2.5 border rounded-2"
+                         title="Change records per page (1 to {{ $maxAllowed }})">
+                        <label for="perPageInput" class="small fw-semibold text-muted text-nowrap mb-0" style="font-size: 12px; cursor: pointer;">
+                            Show
+                        </label>
+                        <input
+                            type="number"
+                            name="per_page"
+                            id="perPageInput"
+                            class="form-control form-control-sm text-center fw-bold text-primary per-page-input-box"
+                            value="{{ min($perPage, $maxAllowed) }}"
+                            min="1"
+                            max="{{ $maxAllowed }}"
+                            data-max="{{ $maxAllowed }}"
+                            title="Edit records per page (1 to {{ $maxAllowed }}) and press Enter"
+                            aria-label="Records per page">
+                        <span class="text-muted small text-nowrap" style="font-size: 12px;">
+                            / <strong class="text-dark">{{ number_format($maxAllowed) }}</strong> max
+                        </span>
+                    </div>
+                </form>
+            </div>
         </div>
 
+        {{-- Optional Recent Searched Chips if available --}}
         @if (!empty($searchedHistory))
+            <div class="recent-chips-bar d-flex align-items-center gap-1.5 flex-wrap pb-2.5 mb-2.5 border-bottom">
+                <span class="text-muted smaller fw-semibold d-inline-flex align-items-center gap-1" style="font-size: 11.5px;">
+                    <i class="bi bi-clock-history"></i> Recent:
+                </span>
+                @foreach ($searchedHistory as $h)
+                    @php
+                        $hReg = $h['reg_no'] ?? ($h['application_no'] ?? '');
+                    @endphp
+                    @if ($hReg)
+                        <a href="{{ route('admissions.stdstatusupdate', array_merge(request()->except('page'), ['regno' => $hReg])) }}"
+                           class="badge bg-light text-dark border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1 recent-chip {{ $searchedRegNo === $hReg ? 'border-primary text-primary fw-bold' : '' }}"
+                           title="{{ $h['name'] }} ({{ $h['status'] }})">
+                            <span class="font-monospace">{{ $hReg }}</span>
+                            <span class="text-truncate" style="max-width: 100px;">{{ $h['name'] }}</span>
+                        </a>
+                    @endif
+                @endforeach
+            </div>
+        @endif
+
+        @if ($students->count() > 0)
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0 history-table">
                     <thead>
@@ -234,31 +320,34 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($searchedHistory as $idx => $item)
+                        @foreach ($students as $idx => $item)
                             @php
-                                $itemStatus = \Modules\Admissions\Http\Controllers\StudentStatusUpdateController::normalizeStatus($item['status'] ?? 'Active / Admitted');
+                                $itemStatus = \Modules\Admissions\Http\Controllers\StudentStatusUpdateController::normalizeStatus($item->std_status ?? 'Active / Admitted');
                                 $itemMeta = $statuses[$itemStatus] ?? [
                                     'label' => $itemStatus,
                                     'badge_class' => 'badge-status-admitted',
                                     'icon' => 'bi-check-circle-fill',
                                 ];
-                                $reg = $item['reg_no'] ?? ($item['application_no'] ?? '');
+                                $reg = $item->register_no ?: $item->application_no;
+                                $isSelected = ($student && ($student->application_no === $item->application_no || $student->register_no === $item->register_no));
                             @endphp
-                            <tr>
-                                <td class="text-muted small fw-semibold">{{ $idx + 1 }}</td>
+                            <tr class="{{ $isSelected ? 'table-primary-subtle' : '' }}">
+                                <td class="text-muted small fw-semibold">
+                                    {{ ($students->currentPage() - 1) * $students->perPage() + $idx + 1 }}
+                                </td>
                                 <td>
-                                    <a href="{{ route('admissions.stdstatusupdate', ['regno' => $reg]) }}" class="font-monospace fw-bold text-primary text-decoration-none">
+                                    <a href="{{ route('admissions.stdstatusupdate', array_merge(request()->query(), ['regno' => $reg])) }}" class="font-monospace fw-bold text-primary text-decoration-none">
                                         {{ $reg }}
                                     </a>
                                 </td>
-                                <td class="fw-semibold text-dark text-truncate" style="max-width: 180px;" title="{{ $item['name'] }}">
-                                    {{ $item['name'] }}
+                                <td class="fw-semibold text-dark text-truncate" style="max-width: 180px;" title="{{ $item->student_name }}">
+                                    {{ $item->student_name }}
                                 </td>
                                 <td class="text-dark small">
-                                    {{ $item['phone'] }}
+                                    {{ $item->mobile ?: '—' }}
                                 </td>
-                                <td class="small text-muted text-truncate" style="max-width: 190px;" title="{{ $item['email'] }}">
-                                    {{ $item['email'] }}
+                                <td class="small text-muted text-truncate" style="max-width: 190px;" title="{{ $item->personal_email ?: $item->ofc_mail }}">
+                                    {{ $item->personal_email ?: ($item->ofc_mail ?: '—') }}
                                 </td>
                                 <td>
                                     <span class="badge {{ $itemMeta['badge_class'] }} px-2 py-1 fw-semibold small d-inline-flex align-items-center gap-1">
@@ -266,8 +355,11 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
-                                    <a href="{{ route('admissions.stdstatusupdate', ['regno' => $reg]) }}" class="btn btn-sm btn-outline-primary py-0.5 px-2 fw-semibold d-inline-flex align-items-center gap-1" style="font-size: 12px;">
-                                        <i class="bi bi-pencil-square"></i> Select
+                                    <a href="{{ route('admissions.stdstatusupdate', array_merge(request()->query(), ['regno' => $reg])) }}"
+                                       class="btn btn-sm {{ $isSelected ? 'btn-primary text-white' : 'btn-outline-primary' }} py-0.5 px-2 fw-semibold d-inline-flex align-items-center gap-1"
+                                       style="font-size: 12px;">
+                                        <i class="bi {{ $isSelected ? 'bi-check-circle-fill' : 'bi-pencil-square' }}"></i>
+                                        {{ $isSelected ? 'Selected' : 'Select' }}
                                     </a>
                                 </td>
                             </tr>
@@ -275,10 +367,20 @@
                     </tbody>
                 </table>
             </div>
+
+            {{-- Pagination footer with Bootstrap 5 links --}}
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pt-3 border-top mt-2">
+                <span class="text-muted small">
+                    Showing <strong>{{ $students->firstItem() ?? 0 }}</strong> to <strong>{{ $students->lastItem() ?? 0 }}</strong> of <strong>{{ number_format($students->total()) }}</strong> records
+                </span>
+                <div class="pagination-wrapper">
+                    {{ $students->withQueryString()->links('pagination::bootstrap-5') }}
+                </div>
+            </div>
         @else
             <div class="text-center py-4 text-muted small">
                 <i class="bi bi-inbox fs-3 d-block mb-1 text-muted opacity-50"></i>
-                No searched students recorded yet.
+                No student records found matching the criteria.
             </div>
         @endif
     </div>
@@ -437,6 +539,45 @@
         border-bottom: 1px solid var(--border-card, #e2e8f0);
         font-size: 13px;
     }
+
+    /* Per-Page Editable Box */
+    .per-page-badge {
+        background: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-card, #cbd5e1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .per-page-badge:focus-within {
+        border-color: var(--theme-primary, #4f46e5);
+        box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+    }
+    .per-page-input-box {
+        width: 70px;
+        height: 28px;
+        padding: 2px 6px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--theme-primary, #4f46e5);
+        border: 1px solid var(--border-subtle, #cbd5e1);
+        border-radius: 5px;
+        background: var(--bg-main, #ffffff);
+    }
+    .per-page-input-box:focus {
+        border-color: var(--theme-primary, #4f46e5);
+        box-shadow: none;
+    }
+    .table-primary-subtle {
+        background-color: rgba(79, 70, 229, 0.08) !important;
+    }
+    .recent-chip {
+        font-size: 11px;
+        transition: all 0.15s ease;
+    }
+    .recent-chip:hover {
+        background: rgba(79, 70, 229, 0.1) !important;
+        color: var(--theme-primary, #4f46e5) !important;
+        border-color: var(--theme-primary, #4f46e5) !important;
+    }
 </style>
 
 {{-- ================= SCRIPTS ================= --}}
@@ -514,5 +655,53 @@
             form.submit();
         }
     }
+
+    // Editable Per-Page Input: Enforce max records count and submit on change / Enter
+    (function () {
+        const perPageInput = document.getElementById('perPageInput');
+        const perPageForm = document.getElementById('perPageForm');
+        if (!perPageInput || !perPageForm) return;
+
+        const maxVal = parseInt(perPageInput.getAttribute('data-max') || perPageInput.getAttribute('max') || '1');
+        const minVal = 1;
+        const initialVal = parseInt(perPageInput.value) || 10;
+
+        // Real-time prevention: user cannot type any number greater than max records count
+        perPageInput.addEventListener('input', function () {
+            if (this.value === '') return;
+            let num = parseInt(this.value);
+            if (isNaN(num)) {
+                this.value = minVal;
+            } else if (num > maxVal) {
+                this.value = maxVal;
+            } else if (num < minVal) {
+                this.value = minVal;
+            }
+        });
+
+        function submitIfChanged() {
+            let num = parseInt(perPageInput.value);
+            if (isNaN(num) || num < minVal) {
+                num = minVal;
+                perPageInput.value = minVal;
+            } else if (num > maxVal) {
+                num = maxVal;
+                perPageInput.value = maxVal;
+            }
+
+            if (num !== initialVal) {
+                perPageForm.submit();
+            }
+        }
+
+        perPageInput.addEventListener('blur', submitIfChanged);
+        perPageInput.addEventListener('change', submitIfChanged);
+        perPageInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitIfChanged();
+            }
+        });
+    })();
 </script>
 @endsection

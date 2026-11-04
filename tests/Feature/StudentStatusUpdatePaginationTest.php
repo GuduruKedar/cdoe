@@ -1,0 +1,61 @@
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class StudentStatusUpdatePaginationTest extends TestCase
+{
+    protected function getAdminSession(): array
+    {
+        return [
+            'user' => [
+                'usercode' => '02266',
+                'role_id' => 2,
+                'user_type' => 2,
+            ],
+        ];
+    }
+
+    public function test_stdstatusupdate_page_loads_with_default_10_records(): void
+    {
+        $response = $this->withSession($this->getAdminSession())
+            ->get('/admissions/stdstatusupdate');
+
+        $response->assertStatus(200);
+        $response->assertSee('Student Status Records');
+        $response->assertSee('name="per_page"', false);
+        $response->assertSee('value="10"', false);
+
+        $viewData = $response->original->getData();
+        $this->assertEquals(10, $viewData['perPage']);
+        $this->assertCount(10, $viewData['students']);
+    }
+
+    public function test_stdstatusupdate_custom_per_page(): void
+    {
+        $response = $this->withSession($this->getAdminSession())
+            ->get('/admissions/stdstatusupdate?per_page=25');
+
+        $response->assertStatus(200);
+        $response->assertSee('value="25"', false);
+
+        $viewData = $response->original->getData();
+        $this->assertEquals(25, $viewData['perPage']);
+        $this->assertCount(25, $viewData['students']);
+    }
+
+    public function test_stdstatusupdate_per_page_cannot_cross_max(): void
+    {
+        // When requesting a number greater than max, it must clamp to maxAllowed
+        $response = $this->withSession($this->getAdminSession())
+            ->get('/admissions/stdstatusupdate?per_page=999999');
+
+        $response->assertStatus(200);
+
+        $viewData = $response->original->getData();
+        $this->assertLessThanOrEqual($viewData['maxAllowed'], $viewData['perPage']);
+        $this->assertEquals($viewData['maxAllowed'], $viewData['perPage']);
+    }
+}
+
